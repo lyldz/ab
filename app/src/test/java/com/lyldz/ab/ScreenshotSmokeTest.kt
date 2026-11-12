@@ -76,5 +76,6 @@ abstract class ScreenshotBase(private val prefix: String) {
 class ScreenshotSmokeTest : ScreenshotBase("light")
 
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34], qualifiers = "w411dp-h891dp-normal-night-xxhdpi")
+// farklı SDK = ayrı Robolectric kum havuzu: DataStore durumu açık tema testiyle paylaşılmaz
+@Config(sdk = [33], qualifiers = "w411dp-h891dp-normal-night-xxhdpi")
 class ScreenshotNightSmokeTest : ScreenshotBase("dark")
