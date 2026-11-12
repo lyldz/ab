@@ -34,6 +34,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import com.lyldz.ab.ui.theme.Ab
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
@@ -251,12 +253,11 @@ private fun WelcomePage(onStart: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Box(
-            Modifier.size(220.dp).clip(RoundedCornerShape(56.dp)).background(colorResource(R.color.ic_launcher_background)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(220.dp))
-        }
+        Image(
+            painterResource(if (Ab.isDark) R.drawable.ic_wordmark_light else R.drawable.ic_wordmark),
+            contentDescription = stringResource(R.string.app_name),
+            modifier = Modifier.width(280.dp),
+        )
         Spacer(Modifier.height(32.dp))
         Text(
             stringResource(R.string.onb_title),
