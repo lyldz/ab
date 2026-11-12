@@ -1,0 +1,10 @@
+name: Özellik isteği
+description: Yeni bir fikir öner
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Ne istiyorsun ve neden?
+    validations:
+      required: true

@@ -1,0 +1,6 @@
+ab (Persian for "water") is a simple water tracker that replaces annoying fixed-time pings with a schedule worked out to the minute from your goal and your day.
+
+• Smart reminders: how much to drink, and how often, from your goal and routine hours
+• One-tap logging from the notification and the widget
+• Goal adjusts to your weight, activity level and the city temperature fetched once each morning
+• No ads, no account, no analytics; the internet is used once a day for the temperature only

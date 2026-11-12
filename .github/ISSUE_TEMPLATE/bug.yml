@@ -1,0 +1,19 @@
+name: Hata bildirimi
+description: Bir şey beklediğin gibi çalışmıyor
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Ne oldu?
+      description: Beklediğin ve gördüğün davranış
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Cihaz ve Android sürümü
+  - type: input
+    id: version
+    attributes:
+      label: Uygulama sürümü

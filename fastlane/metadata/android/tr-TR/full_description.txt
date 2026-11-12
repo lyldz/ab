@@ -1,0 +1,6 @@
+ab (Farsça "su"), sabit saatli bunaltıcı bildirimler yerine hedefini ve gün aralığını dakikaya bölen sade bir su takibi uygulamasıdır.
+
+• Akıllı hatırlatma: hedef ve rutin saatlerinden kaç dakikada bir ne kadar içeceğini hesaplar
+• Bildirimden ve widget'tan tek dokunuşla kayıt
+• Hedef kilona, hareket seviyene ve sabah bir kez alınan şehir sıcaklığına göre ayarlanır
+• Reklam, hesap ve analitik yok; internet yalnızca günde bir sıcaklık için kullanılır
