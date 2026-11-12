@@ -5,8 +5,11 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import com.lyldz.ab.R
+import com.lyldz.ab.core.PACE_TOLERANCE_ML
 import com.lyldz.ab.core.Plan
 import com.lyldz.ab.core.nextPlan
+import com.lyldz.ab.core.paceMl
+import com.lyldz.ab.core.roundTo10
 import com.lyldz.ab.core.tempExtraMl
 import androidx.glance.appwidget.updateAll
 import com.lyldz.ab.data.AbRepository
@@ -114,15 +117,29 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
      */
     suspend fun refreshNotification(zone: ZoneId = ZoneId.systemDefault()) {
         if (!Notifier.isShowing(context)) return
-        val (t, plan) = planNow(ZonedDateTime.now(zone))
+        val now = ZonedDateTime.now(zone)
+        val (t, plan) = planNow(now)
         val drank = fmtMl(t.drankMl)
         val goal = fmtMl(t.goalMl)
+        val done = t.drankMl >= t.goalMl
+        val title = if (done) context.getString(R.string.notif_title_done) else paceTitle(t, now.hour * 60 + now.minute)
         val text = when {
-            t.drankMl >= t.goalMl -> context.getString(R.string.notif_text_done, drank, goal)
+            done -> context.getString(R.string.home_progress, drank, goal)
             plan != null -> context.getString(R.string.notif_text_after, drank, goal, fmtTime(plan.nextAtMin))
             else -> context.getString(R.string.home_progress, drank, goal)
         }
-        Notifier.show(context, text, t.drankMl, t.goalMl, t.settings.cupMl, quiet = true)
+        Notifier.show(context, title, text, t.drankMl, t.goalMl, t.settings.cupMl, quiet = true)
+    }
+
+    /** Bildirim başlığı: tempoya göre "X ml geridesin / ilerdesin / tam tempodasın" (ana ekranla aynı kural). */
+    private fun paceTitle(t: AbRepository.Today, nowMin: Int): String {
+        val s = t.settings
+        val diff = paceMl(t.goalMl, s.windowStartMin, s.windowEndMin, nowMin) - t.drankMl
+        return when {
+            diff >= PACE_TOLERANCE_ML -> context.getString(R.string.pace_behind, fmtMl(roundTo10(diff)))
+            diff <= -PACE_TOLERANCE_ML -> context.getString(R.string.pace_ahead, fmtMl(roundTo10(-diff)))
+            else -> context.getString(R.string.pace_on)
+        }
     }
 
     suspend fun onFire(notify: Boolean, zone: ZoneId = ZoneId.systemDefault()) {
@@ -132,7 +149,7 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
             // alarm erken/geç gelebilir; yalnızca zamanı gelmişse göster
             if (plan != null && plan.nextAtMin <= now.hour * 60 + now.minute) {
                 val text = context.getString(R.string.notif_text, fmtMl(plan.amountMl), fmtMl(t.drankMl), fmtMl(t.goalMl))
-                Notifier.show(context, text, t.drankMl, t.goalMl, t.settings.cupMl)
+                Notifier.show(context, paceTitle(t, now.hour * 60 + now.minute), text, t.drankMl, t.goalMl, t.settings.cupMl)
                 repo.markNotified(System.currentTimeMillis())
             }
         }

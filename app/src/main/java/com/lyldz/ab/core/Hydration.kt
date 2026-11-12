@@ -10,6 +10,9 @@ const val MIN_GOAL_ML = 1500
 const val ML_PER_KG = 25
 const val GOAL_WARN_ML = 5000
 
+/** Tempo farkı bu değerin altındaysa "tam tempodasın" denir (ana ekran ve bildirim ortak). */
+const val PACE_TOLERANCE_ML = 50
+
 /** Günün tahmini en yüksek sıcaklığına göre ek su. Soğukta düşürme yok. */
 fun tempExtraMl(maxTempC: Double): Int = when (maxTempC.roundToInt()) {
     in Int.MIN_VALUE..20 -> 0

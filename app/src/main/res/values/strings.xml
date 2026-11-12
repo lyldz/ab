@@ -29,7 +29,6 @@
     <string name="added">Added %1$s ml</string>
     <string name="undo">Undo</string>
     <string name="channel_name">Reminders</string>
-    <string name="notif_title">A glass of water will do you good</string>
     <string name="notif_text">Drink %1$s ml · %2$s / %3$s ml</string>
     <string name="notif_custom">Custom</string>
     <string name="notif_custom_hint">ml</string>
@@ -51,7 +50,6 @@
     <string name="onb_tagline">A simple water reminder that plans your day to the minute.</string>
     <string name="onb_profile_title">Let\'s set it up for you</string>
     <string name="notif_text_after">%1$s / %2$s ml · Next reminder: %3$s</string>
-    <string name="notif_text_done">Goal reached today · %1$s / %2$s ml</string>
     <string name="records_title">Today\'s records</string>
     <string name="records_empty">No records yet</string>
     <string name="src_app">App</string>
@@ -109,4 +107,5 @@
     <string name="pace_checkpoint">Target at %1$s: %2$s ml total (%3$s ml more)</string>
     <string name="pace_checkpoint_done">Target at %1$s: %2$s ml total, you are already there</string>
     <string name="pitcher_legend">Dashed line: where you should be by now</string>
+    <string name="notif_title_done">Goal reached today</string>
 </resources>

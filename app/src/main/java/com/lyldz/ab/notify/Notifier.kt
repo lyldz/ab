@@ -43,7 +43,7 @@ object Notifier {
      * uygulamayı açmadan miktar yazılan "Özel" satır içi giriş.
      */
     @SuppressLint("MissingPermission") // areNotificationsEnabled() izni kapsar
-    fun show(ctx: Context, text: String, drankMl: Int, goalMl: Int, cupMl: Int, quiet: Boolean = false) {
+    fun show(ctx: Context, title: String, text: String, drankMl: Int, goalMl: Int, cupMl: Int, quiet: Boolean = false) {
         val nm = NotificationManagerCompat.from(ctx)
         if (!nm.areNotificationsEnabled()) return
 
@@ -58,7 +58,7 @@ object Notifier {
 
         val n = NotificationCompat.Builder(ctx, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_ab)
-            .setContentTitle(ctx.getString(R.string.notif_title))
+            .setContentTitle(title)
             .setContentText(text)
             .setOnlyAlertOnce(quiet) // güncellemede ses/titreşim tekrar etmez
             .setProgress(goalMl, drankMl.coerceAtMost(goalMl), false)

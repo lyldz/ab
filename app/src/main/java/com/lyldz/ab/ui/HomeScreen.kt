@@ -56,6 +56,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
+import com.lyldz.ab.core.PACE_TOLERANCE_ML
 import com.lyldz.ab.core.nextPlan
 import com.lyldz.ab.core.paceMl
 import com.lyldz.ab.core.roundTo10
@@ -126,8 +127,8 @@ fun HomeScreen(
                             val diff = pace - today.drankMl
                             Text(
                                 when {
-                                    diff >= 50 -> stringResource(R.string.pace_behind, fmtMl(roundTo10(diff)))
-                                    diff <= -50 -> stringResource(R.string.pace_ahead, fmtMl(roundTo10(-diff)))
+                                    diff >= PACE_TOLERANCE_ML -> stringResource(R.string.pace_behind, fmtMl(roundTo10(diff)))
+                                    diff <= -PACE_TOLERANCE_ML -> stringResource(R.string.pace_ahead, fmtMl(roundTo10(-diff)))
                                     else -> stringResource(R.string.pace_on)
                                 },
                                 style = MaterialTheme.typography.headlineMedium,
