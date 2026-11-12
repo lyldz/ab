@@ -186,6 +186,7 @@ fun WaterOrb(
     val card = Ab.card
     val lineC = Ab.line
     val paceC = Ab.strong
+    val dark = Ab.isDark
     Canvas(modifier.semantics { contentDescription = description }) {
         val c = Offset(size.width / 2f, size.height / 2f)
         val outer = size.minDimension / 2f
@@ -222,8 +223,9 @@ fun WaterOrb(
                     lineTo(c.x + inner, bottom)
                     close()
                 }
-                drawPath(wave(phaseB, 5.dp.toPx(), 1.1f, 5.dp.toPx()), AbColors.Aqua2.copy(alpha = 0.65f))
-                drawPath(wave(phaseA, 4.dp.toPx(), 1.7f, 0f), AbColors.Aqua1.copy(alpha = 0.85f))
+                // koyuda su biraz daha sönük: üstündeki beyaz yazı okunaklı kalsın
+                drawPath(wave(phaseB, 5.dp.toPx(), 1.1f, 5.dp.toPx()), AbColors.Aqua2.copy(alpha = if (dark) 0.35f else 0.65f))
+                drawPath(wave(phaseA, 4.dp.toPx(), 1.7f, 0f), AbColors.Aqua1.copy(alpha = if (dark) 0.55f else 0.85f))
             }
             paceFraction?.let {
                 val y = yOf(it)
