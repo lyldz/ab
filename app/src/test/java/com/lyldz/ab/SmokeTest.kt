@@ -7,6 +7,7 @@ import androidx.compose.ui.test.printToString
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
@@ -19,7 +20,7 @@ import org.robolectric.annotation.Config
  * hatası) CI'da yakalamak. Metinler İngilizce varsayılan dilden okunur.
  */
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [34])
+@Config(sdk = [34], qualifiers = "w411dp-h891dp-normal-xxhdpi") // gerçek telefon boyutu
 class SmokeTest {
     @get:Rule
     val compose = createAndroidComposeRule<MainActivity>()
@@ -35,7 +36,9 @@ class SmokeTest {
 
     private fun tap(text: String) {
         waitFor(text)
-        compose.onNodeWithText(text).performClick()
+        val node = compose.onNodeWithText(text)
+        runCatching { node.performScrollTo() } // kaydırılabilir bir alanda değilse atla
+        node.performClick()
     }
 
     @Test
