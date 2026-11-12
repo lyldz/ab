@@ -3,6 +3,8 @@
 [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimi, [SemVer](https://semver.org/lang/tr/) sürümleme.
 
 ## [Unreleased]
+
+## [0.3.0] - 2026-11-12
 ### Added
 - Uygulama içi güncelleyici: Ayarlar > Güncelleme. Yalnızca dokununca GitHub sürümlerine bakar, yeni sürüm notlarını gösterir, APK'yı indirip sistem yükleyicisini açar. "Bilinmeyen kaynaklardan yükleme" izni ayrı ekranda istenir.
 
