@@ -1,4 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ab</string>
+    <string name="onb_title">Hoş geldin</string>
+    <string name="onb_weight">Kilo (kg)</string>
+    <string name="onb_activity">Günlük hareket</string>
+    <string name="activity_none">Hareketsiz</string>
+    <string name="activity_medium">Orta</string>
+    <string name="activity_high">Çok aktif</string>
+    <string name="onb_window">Rutinin</string>
+    <string name="onb_from">Uyanma</string>
+    <string name="onb_to">Uyku</string>
+    <string name="earlier">Daha erken</string>
+    <string name="later">Daha geç</string>
+    <string name="onb_goal">Günlük hedef: %1$s ml</string>
+    <string name="onb_goal_note">Tahmindir, tıbbi tavsiye değildir. Sonra değiştirebilirsin.</string>
+    <string name="onb_notif_why">Hatırlatmalar bildirimle gelir, bu yüzden sıradaki adımda bildirim izni istenir.</string>
+    <string name="onb_start">Başla</string>
+    <string name="home_plan_amount">%1$s ml iç</string>
+    <string name="home_plan_next">Sonraki hatırlatma: %1$s</string>
+    <string name="home_plan_done">Bugünün hedefi tamam. Eline sağlık.</string>
+    <string name="home_plan_none">Bugün başka hatırlatma yok.</string>
+    <string name="home_progress">%1$s / %2$s ml</string>
+    <string name="add_ml">+%1$s ml</string>
+    <string name="add_custom">Özel</string>
+    <string name="custom_title">Özel miktar</string>
+    <string name="ok_add">Ekle</string>
+    <string name="cancel">Vazgeç</string>
+    <string name="added">%1$s ml eklendi</string>
+    <string name="undo">Geri al</string>
 </resources>

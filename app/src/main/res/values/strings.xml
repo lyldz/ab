@@ -1,4 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ab</string>
+    <string name="onb_title">Welcome</string>
+    <string name="onb_weight">Weight (kg)</string>
+    <string name="onb_activity">Daily activity</string>
+    <string name="activity_none">Low</string>
+    <string name="activity_medium">Medium</string>
+    <string name="activity_high">High</string>
+    <string name="onb_window">Your routine</string>
+    <string name="onb_from">Wake up</string>
+    <string name="onb_to">Sleep</string>
+    <string name="earlier">Earlier</string>
+    <string name="later">Later</string>
+    <string name="onb_goal">Daily goal: %1$s ml</string>
+    <string name="onb_goal_note">An estimate, not medical advice. You can change it later.</string>
+    <string name="onb_notif_why">Reminders arrive as notifications, so ab asks for notification permission next.</string>
+    <string name="onb_start">Start</string>
+    <string name="home_plan_amount">Drink %1$s ml</string>
+    <string name="home_plan_next">Next reminder: %1$s</string>
+    <string name="home_plan_done">Goal reached today. Nice work.</string>
+    <string name="home_plan_none">No more reminders today.</string>
+    <string name="home_progress">%1$s / %2$s ml</string>
+    <string name="add_ml">+%1$s ml</string>
+    <string name="add_custom">Custom</string>
+    <string name="custom_title">Custom amount</string>
+    <string name="ok_add">Add</string>
+    <string name="cancel">Cancel</string>
+    <string name="added">Added %1$s ml</string>
+    <string name="undo">Undo</string>
 </resources>

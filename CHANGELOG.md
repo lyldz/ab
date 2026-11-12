@@ -6,6 +6,7 @@
 ### Added
 - Günlük hedef hesabı (25 ml/kg + hareket + sıcaklık) ve dakikaya hesaplanan hatırlatma planı, birim testleriyle.
 - Veri katmanı: Room (içme kayıtları), DataStore (ayarlar) ve ortak AbRepository.
+- Onboarding (kilo, hareket, rutin saatleri, bildirim izni) ve ana ekran (plan kartı, ilerleme çubuğu, hızlı ekleme, özel miktar, geri al).
 
 ## [0.1.0]
 ### Added
