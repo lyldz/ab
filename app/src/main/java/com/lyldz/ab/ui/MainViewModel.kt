@@ -34,6 +34,10 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
     val streak: StateFlow<Int> =
         app.repo.stats(60).map(::streakDays).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
+    /** Geçmiş sekmesi: son 30 günün günlük toplamları. */
+    val history: StateFlow<List<DayStat>> =
+        app.repo.stats(30).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     fun setPeriod(days: Int) {
         period.value = days
     }
@@ -43,6 +47,7 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
             app.repo.saveSettings(s.copy(onboarded = true))
             app.reminders.refreshWeather()
             app.reminders.reschedule()
+            app.reminders.refreshNotification(force = true)
         }
     }
 

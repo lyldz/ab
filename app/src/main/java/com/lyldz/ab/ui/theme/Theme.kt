@@ -1,48 +1,104 @@
 package com.lyldz.ab.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
+import androidx.compose.ui.text.font.FontWeight
+import com.lyldz.ab.R
 
-// Marka paleti: Aqua, Deep Navy, Pearl White (docs/design/brand). Yazılar lacivert, vurgu su yeşili-mavisi.
+/** Tasarım sistemi belirteçleri (docs/design/brand/spec): Aqua, Mint, Deep Navy, Pearl, Slate, Mist. */
+object AbColors {
+    val Aqua1 = Color(0xFF88D9E6)
+    val Aqua2 = Color(0xFFA0E7E5)
+    val Navy = Color(0xFF0F203C)
+    val Pearl = Color(0xFFF8FAFC)
+    val Slate = Color(0xFF64748B)
+    val SlateLight = Color(0xFF94A3B8)
+    val Mist = Color(0xFFE2E8F0)
+    val Teal = Color(0xFF5BC0BE)
+}
+
+// Açık tema (tasarım kılavuzu). Etkileşimli metinler (düğme yazısı, anahtar) okunaklı olsun
+// diye Material "primary" biraz koyu teal; saf aqua/mint görsellerde (gösterge, düğme gradyanı) kullanılır.
 private val Light = lightColorScheme(
-    primary = Color(0xFF2C7C8C),
+    primary = Color(0xFF1F7F92),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFCDEEEB),
-    onPrimaryContainer = Color(0xFF0F2A4A),
-    secondaryContainer = Color(0xFFDCEFEC),
-    onSecondaryContainer = Color(0xFF0F2A4A),
-    background = Color(0xFFF4F1EA),
-    onBackground = Color(0xFF0F2A4A),
-    surface = Color(0xFFFBF9F4),
-    onSurface = Color(0xFF0F2A4A),
-    surfaceVariant = Color(0xFFE3EEEA),
-    onSurfaceVariant = Color(0xFF4B6470),
-    outline = Color(0xFF8FA8AA),
+    primaryContainer = Color(0xFFE3F6F9),
+    onPrimaryContainer = AbColors.Navy,
+    secondary = AbColors.Teal,
+    secondaryContainer = Color(0xFFE3F6F9),
+    onSecondaryContainer = AbColors.Navy,
+    background = AbColors.Pearl,
+    onBackground = AbColors.Navy,
+    surface = Color.White,
+    onSurface = AbColors.Navy,
+    surfaceVariant = Color(0xFFEEF2F6),
+    onSurfaceVariant = AbColors.Slate,
+    outline = AbColors.SlateLight,
+    outlineVariant = AbColors.Mist,
     tertiary = Color(0xFFB08A3E),
 )
 
+// Siyah-beyaz koyu tema (OLED): saf siyah zemin, beyaz yazı, aqua vurgu.
 private val Dark = darkColorScheme(
-    primary = Color(0xFF7CCFCB),
-    onPrimary = Color(0xFF06302F),
-    primaryContainer = Color(0xFF184A56),
-    onPrimaryContainer = Color(0xFFDDF5F2),
-    secondaryContainer = Color(0xFF1B3F55),
-    onSecondaryContainer = Color(0xFFDDF5F2),
-    background = Color(0xFF0B1D33),
-    onBackground = Color(0xFFEAF1F3),
-    surface = Color(0xFF122A45),
-    onSurface = Color(0xFFEAF1F3),
-    surfaceVariant = Color(0xFF1B3A52),
-    onSurfaceVariant = Color(0xFFADC4CC),
-    outline = Color(0xFF5F7E8C),
+    primary = AbColors.Aqua1,
+    onPrimary = AbColors.Navy,
+    primaryContainer = Color(0xFF16282D),
+    onPrimaryContainer = Color.White,
+    secondary = AbColors.Aqua2,
+    secondaryContainer = Color(0xFF16282D),
+    onSecondaryContainer = Color.White,
+    background = Color.Black,
+    onBackground = Color.White,
+    surface = Color(0xFF111316),
+    onSurface = Color.White,
+    surfaceVariant = Color(0xFF1B1E22),
+    onSurfaceVariant = Color(0xFFA9B2BD),
+    outline = Color(0xFF6E7681),
+    outlineVariant = Color(0xFF2A2F36),
     tertiary = Color(0xFFD9B96A),
 )
 
+/** Temaya duyarlı yüzey/metin renkleri (açıkta lacivert/slate/mist, koyuda beyaz/gri). */
+object Ab {
+    val strong @Composable get() = MaterialTheme.colorScheme.onSurface
+    val muted @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+    val faint @Composable get() = MaterialTheme.colorScheme.outline
+    val line @Composable get() = MaterialTheme.colorScheme.outlineVariant
+    val card @Composable get() = MaterialTheme.colorScheme.surface
+    val isDark @Composable get() = MaterialTheme.colorScheme.background.luminance() < 0.5f
+}
+
+@OptIn(ExperimentalTextApi::class)
+private fun jakarta(w: Int) = Font(
+    R.font.plus_jakarta_sans, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w)),
+)
+
+private val Jakarta = FontFamily(jakarta(400), jakarta(500), jakarta(600), jakarta(700), jakarta(800))
+
+private fun Typography.withFamily(f: FontFamily) = Typography(
+    displayLarge = displayLarge.fam(f), displayMedium = displayMedium.fam(f), displaySmall = displaySmall.fam(f),
+    headlineLarge = headlineLarge.fam(f), headlineMedium = headlineMedium.fam(f), headlineSmall = headlineSmall.fam(f),
+    titleLarge = titleLarge.fam(f), titleMedium = titleMedium.fam(f), titleSmall = titleSmall.fam(f),
+    bodyLarge = bodyLarge.fam(f), bodyMedium = bodyMedium.fam(f), bodySmall = bodySmall.fam(f),
+    labelLarge = labelLarge.fam(f), labelMedium = labelMedium.fam(f), labelSmall = labelSmall.fam(f),
+)
+
+private fun TextStyle.fam(f: FontFamily) = copy(fontFamily = f)
+
+/** [mode]: 0 sistem, 1 açık, 2 koyu. */
 @Composable
-fun AbTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (dark) Dark else Light, content = content)
+fun AbTheme(mode: Int = 0, content: @Composable () -> Unit) {
+    val dark = when (mode) { 1 -> false; 2 -> true; else -> isSystemInDarkTheme() }
+    MaterialTheme(colorScheme = if (dark) Dark else Light, typography = Typography().withFamily(Jakarta), content = content)
 }

@@ -3,7 +3,19 @@
 [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimi, [SemVer](https://semver.org/lang/tr/) sürümleme.
 
 ## [Unreleased]
+
+## [0.2.0] - 2026-11-12
 ### Added
+- Yeni tasarım sistemi (Aqua, Mint, Deep Navy, Pearl; Plus Jakarta Sans): dolu dairesel su göstergesi (çift katmanlı dalga), zaman çizelgesi kartı (son düğüm sıradaki hatırlatma), "+ Su Ekle" düğmesi ve Bardak/Kupa/Şişe kartları, 4 sekme (Bugün, Grafikler, Geçmiş, Ayarlar), yeni Geçmiş ekranı.
+- Siyah-beyaz (OLED) koyu tema; Ayarlar'dan Sistem/Açık/Koyu seçilir.
+- Büyük "Āb" logosu (üst çubuk ve karşılama), makronlu yeni uygulama ve bildirim ikonu.
+- Kurulumda konum bulma ve hava: bulunan yer, bugünün sıcaklığı ve hedefe eklenen su gösterilir; konum yoksa şehir aranır.
+- Durum bildirimi uygulama açılınca ve kurulum sonrası hemen görünür (sessiz, yerinde güncellenir).
+- İsteğe bağlı isim (selamlama), seri bilgisi.
+### Fixed
+- Gösterge animasyonları sistem animasyon ölçeği kapalıyken de çalışır.
+
+### Added (0.2.0 öncesi)
 - Tempo bilgisi: "X ml geridesin / ilerdesin" ve sıradaki hatırlatma saatinde olman gereken toplam; bardak yerine sürahi (kapasite = kişinin günlük hedefi, ölçek çizgileri, "şu an olman gereken" kesik çizgisi). Bildirim başlığı da aynı tempo bilgisini söyler ("450 ml geridesin").
 - Günlük hedef hesabı (25 ml/kg + hareket + sıcaklık) ve dakikaya hesaplanan hatırlatma planı, birim testleriyle.
 - Veri katmanı: Room (içme kayıtları), DataStore (ayarlar) ve ortak AbRepository.

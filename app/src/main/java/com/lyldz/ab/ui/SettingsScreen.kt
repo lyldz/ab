@@ -20,6 +20,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -55,6 +56,8 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
+    var name by rememberSaveable { mutableStateOf(s.name) }
+    var themeMode by rememberSaveable { mutableIntStateOf(s.themeMode) }
     var weight by rememberSaveable { mutableStateOf(s.weightKg.toString()) }
     var activityIdx by rememberSaveable { mutableIntStateOf(s.activity.ordinal) }
     var start by rememberSaveable { mutableIntStateOf(s.windowStartMin) }
@@ -93,6 +96,8 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     val manualMl = manualText.toIntOrNull()?.takeIf { it in 500..8000 }
     val placeChanged = lat != s.lat || lon != s.lon
     val draft = s.copy(
+        name = name.trim(),
+        themeMode = themeMode,
         weightKg = kg ?: s.weightKg,
         activity = Activity.entries[activityIdx],
         windowStartMin = start,
@@ -119,6 +124,21 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineLarge)
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it.take(30) },
+            label = { Text(stringResource(R.string.set_name)) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Text(stringResource(R.string.set_theme), style = MaterialTheme.typography.titleMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(R.string.theme_system, R.string.theme_light, R.string.theme_dark).forEachIndexed { i, label ->
+                FilterChip(selected = themeMode == i, onClick = { themeMode = i }, label = { Text(stringResource(label)) })
+            }
+        }
 
         OutlinedTextField(
             value = weight,
@@ -223,7 +243,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
 
 /** Şehir adı yazılır; yalnızca bu metin Open-Meteo arama servisine gider. */
 @Composable
-private fun CityDialog(onDismiss: () -> Unit, onPick: (WeatherApi.City) -> Unit) {
+internal fun CityDialog(onDismiss: () -> Unit, onPick: (WeatherApi.City) -> Unit) {
     var query by remember { mutableStateOf("") }
     var results by remember { mutableStateOf<List<WeatherApi.City>?>(null) }
     var busy by remember { mutableStateOf(false) }

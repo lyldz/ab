@@ -1,0 +1,5 @@
+Yeni tasarım: dolu dairesel su göstergesi, zaman çizelgesi, 4 sekme ve Geçmiş ekranı.
+Siyah-beyaz koyu tema (Sistem/Açık/Koyu).
+Büyük Āb logosu ve yeni ikonlar.
+Kurulumda konum ve hava: sıcaklığa göre ekstra su.
+Durum bildirimi hemen görünür.

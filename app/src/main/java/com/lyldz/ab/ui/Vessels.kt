@@ -12,6 +12,16 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.InfiniteAnimationPolicy
+import androidx.compose.runtime.withFrameNanos
+import kotlin.coroutines.coroutineContext
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -25,11 +35,16 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.rotate
+import com.lyldz.ab.ui.theme.Ab
+import com.lyldz.ab.ui.theme.AbColors
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.exp
 import kotlin.math.sin
 
 /** Hafif eğimli, alt köşeleri yuvarlak bir bardak silueti (bardak seçici simgeleri için). */
@@ -150,8 +165,10 @@ fun WaterPitcher(
 }
 
 /**
- * Daire biçimli su göstergesi (marka görseli): kapasite günlük hedeftir, dalgalı su yükselir,
- * dış çift halka altın tonudur, kesik çizgi şu an olman gereken seviyedir.
+ * Günlük ilerleme göstergesi (tasarım sistemi): yumuşak aqua ışıltı halkası, inci iç yüzey ve iki
+ * katmanlı su (arka #A0E7E5 %65, ön #88D9E6 %85) farklı faz ve hızda dalgalanır. Kapasite günlük
+ * hedeftir; [paceFraction] varsa şu an olman gereken seviye ince kesik çizgiyle gösterilir.
+ * Ortadaki yazıyı çağıran koyar.
  */
 @Composable
 fun WaterOrb(
@@ -160,71 +177,114 @@ fun WaterOrb(
     description: String,
     modifier: Modifier = Modifier,
 ) {
-    val level by animateFloatAsState(
-        fraction.coerceIn(0f, 1f),
-        spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessLow),
-        label = "orbLevel",
-    )
-    val phase by rememberInfiniteTransition(label = "orbWave").animateFloat(
-        0f, (2 * PI).toFloat(),
-        infiniteRepeatable(tween(3200, easing = LinearEasing)),
-        label = "orbPhase",
-    )
-    val water = MaterialTheme.colorScheme.primary
-    val deep = MaterialTheme.colorScheme.onPrimaryContainer
-    val track = MaterialTheme.colorScheme.surfaceVariant
-    val ring = MaterialTheme.colorScheme.tertiary
-    val mark = MaterialTheme.colorScheme.tertiary
+    // Sistem "animasyon ölçeği" kapalıyken (pil tasarrufu, geliştirici seçeneği) Compose'un animate*
+    // API'leri durur; gösterge canlı kalsın diye kare saatine bağlı kendi animasyonumuzu kullanıyoruz.
+    val level by rememberSmoothed(fraction.coerceIn(0f, 1f))
+    val phaseA by rememberPhase(3600)
+    val phaseB by rememberPhase(5200, reverse = true)
 
+    val card = Ab.card
+    val lineC = Ab.line
+    val paceC = Ab.strong
+    val dark = Ab.isDark
     Canvas(modifier.semantics { contentDescription = description }) {
-        val d = size.minDimension
         val c = Offset(size.width / 2f, size.height / 2f)
-        val outer = d / 2f - 2.dp.toPx()
-        val inner = outer - 9.dp.toPx()
+        val outer = size.minDimension / 2f
+        val ring = outer * 0.80f
+        val inner = ring - 7.dp.toPx()
+
+        // ışıltı + halka
+        drawCircle(
+            Brush.radialGradient(listOf(AbColors.Aqua1.copy(alpha = 0.40f), Color.Transparent), c, outer),
+            outer, c,
+        )
+        drawCircle(card, ring, c)
+        drawCircle(lineC, ring, c, style = Stroke(1.5.dp.toPx()))
+        drawCircle(
+            Brush.verticalGradient(listOf(card, lineC), c.y - ring, c.y + ring),
+            ring - 2.dp.toPx(), c, style = Stroke(6.dp.toPx()),
+        )
+
         val disc = Path().apply { addOval(androidx.compose.ui.geometry.Rect(c, inner)) }
         val top = c.y - inner
         val bottom = c.y + inner
         fun yOf(f: Float) = bottom - (bottom - top) * f.coerceIn(0f, 1f)
-
-        drawCircle(ring.copy(alpha = 0.85f), outer, c, style = Stroke(1.5.dp.toPx()))
-        drawCircle(ring.copy(alpha = 0.45f), outer - 4.dp.toPx(), c, style = Stroke(1.dp.toPx()))
-        drawCircle(track, inner, c)
         clipPath(disc) {
             if (level > 0.001f) {
                 val sy = yOf(level)
-                val amp = 3.dp.toPx()
-                fun wave(shift: Float, off: Float) = Path().apply {
+                fun wave(phase: Float, amp: Float, freq: Float, off: Float) = Path().apply {
                     moveTo(c.x - inner, bottom)
                     lineTo(c.x - inner, sy + off)
                     var x = c.x - inner
                     while (x <= c.x + inner) {
-                        lineTo(x, sy + off + amp * sin((x - c.x + inner) / d * 2f * PI.toFloat() * 1.4f + phase + shift))
+                        lineTo(x, sy + off + amp * sin((x - c.x + inner) / (inner * 2f) * 2f * PI.toFloat() * freq + phase))
                         x += 4f
                     }
                     lineTo(c.x + inner, bottom)
                     close()
                 }
-                drawPath(wave(1.6f, 3.dp.toPx()), water.copy(alpha = 0.45f))
-                drawPath(wave(0f, 0f), Brush.verticalGradient(listOf(water, deep.copy(alpha = 0.9f)), startY = sy, endY = bottom))
+                // koyuda su biraz daha sönük: üstündeki beyaz yazı okunaklı kalsın
+                drawPath(wave(phaseB, 5.dp.toPx(), 1.1f, 5.dp.toPx()), AbColors.Aqua2.copy(alpha = if (dark) 0.35f else 0.65f))
+                drawPath(wave(phaseA, 4.dp.toPx(), 1.7f, 0f), AbColors.Aqua1.copy(alpha = if (dark) 0.55f else 0.85f))
             }
-        }
-        drawCircle(ring.copy(alpha = 0.6f), inner, c, style = Stroke(1.dp.toPx()))
-        // şu an olman gereken seviye: halkaya kadar uzanan altın kesik çizgi + iki yanda ok
-        paceFraction?.let {
-            val y = yOf(it)
-            val dy = y - c.y
-            val hw = kotlin.math.sqrt((outer * outer - dy * dy).coerceAtLeast(0f))
-            drawLine(
-                mark, Offset(c.x - hw, y), Offset(c.x + hw, y), 2.5.dp.toPx(),
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 9f)),
-            )
-            val t = 6.dp.toPx()
-            for (side in listOf(-1f, 1f)) {
-                val x = c.x + side * (hw + 1.dp.toPx())
-                drawPath(Path().apply { moveTo(x, y); lineTo(x + side * t, y - t * 0.7f); lineTo(x + side * t, y + t * 0.7f); close() }, mark)
+            paceFraction?.let {
+                val y = yOf(it)
+                drawLine(
+                    paceC.copy(alpha = 0.55f), Offset(c.x - inner, y), Offset(c.x + inner, y), 1.5.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f)),
+                )
             }
         }
     }
+}
+
+/** Sonsuz kare döngüsü: testlerde InfiniteAnimationPolicy döngüyü sonlandırır, uygulama boşta kalabilir. */
+private suspend fun <R> infiniteFrame(onFrame: (Long) -> R): R {
+    val policy = coroutineContext[InfiniteAnimationPolicy]
+    return if (policy != null) policy.onInfiniteOperation { withFrameNanos(onFrame) } else withFrameNanos(onFrame)
+}
+
+/** [target]'a her karede üstel yaklaşan değer (yaklaşık 0,3 sn); sistem animasyon ölçeğinden bağımsız. */
+@Composable
+private fun rememberSmoothed(target: Float): State<Float> {
+    val shown = remember { mutableFloatStateOf(target) }
+    val running = remember { mutableStateOf(false) }
+    val goal = rememberUpdatedState(target)
+    LaunchedEffect(Unit) {
+        var last = 0L
+        while (true) {
+            infiniteFrame { now ->
+                running.value = true
+                val dt = if (last == 0L) 0f else (now - last) / 1e9f
+                last = now
+                val k = 1f - exp(-dt / 0.3f)
+                val cur = shown.floatValue
+                shown.floatValue = if (abs(goal.value - cur) < 0.0005f) goal.value else cur + (goal.value - cur) * k
+            }
+        }
+    }
+    // Döngü hiç çalışmazsa (ör. testlerde sonsuz animasyonlar kapalıyken) hedef değeri doğrudan göster
+    return remember { derivedStateOf { if (running.value) shown.floatValue else goal.value } }
+}
+
+/** 0..2π arasında dönen faz; [periodMs] bir tur süresi. */
+@Composable
+private fun rememberPhase(periodMs: Int, reverse: Boolean = false): State<Float> {
+    val phase = remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(Unit) {
+        var last = 0L
+        val twoPi = (2 * PI).toFloat()
+        while (true) {
+            infiniteFrame { now ->
+                if (last != 0L) {
+                    val step = (now - last) / 1e6f / periodMs * twoPi
+                    phase.floatValue = ((phase.floatValue + if (reverse) -step else step) % twoPi + twoPi) % twoPi
+                }
+                last = now
+            }
+        }
+    }
+    return phase
 }
 
 /** Bardak boyutunu gösteren küçük simge; büyük hacim daha büyük çizilir. */
