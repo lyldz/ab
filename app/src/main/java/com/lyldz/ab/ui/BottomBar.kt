@@ -3,6 +3,7 @@ package com.lyldz.ab.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -19,19 +20,20 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
+import com.lyldz.ab.ui.theme.Ab
 import com.lyldz.ab.ui.theme.AbColors
 
 /** Bugün, Grafikler, Geçmiş, Ayarlar. Simgeler bağımlılıksız, Canvas ile çizilir. */
 @Composable
 fun BottomBar(tab: Int, onTab: (Int) -> Unit) {
     val colors = NavigationBarItemDefaults.colors(
-        selectedIconColor = AbColors.Navy,
-        selectedTextColor = Color(0xFF1F7F92),
-        indicatorColor = AbColors.Aqua1.copy(alpha = 0.35f),
-        unselectedIconColor = AbColors.SlateLight,
-        unselectedTextColor = AbColors.SlateLight,
+        selectedIconColor = Ab.strong,
+        selectedTextColor = MaterialTheme.colorScheme.primary,
+        indicatorColor = AbColors.Aqua1.copy(alpha = 0.30f),
+        unselectedIconColor = Ab.faint,
+        unselectedTextColor = Ab.faint,
     )
-    NavigationBar(containerColor = Color.White.copy(alpha = 0.94f), tonalElevation = 0.dp) {
+    NavigationBar(containerColor = Ab.card.copy(alpha = 0.94f), tonalElevation = 0.dp) {
         NavigationBarItem(tab == 0, { onTab(0) }, { DropIcon() }, label = { Text(stringResource(R.string.nav_home)) }, colors = colors)
         NavigationBarItem(tab == 1, { onTab(1) }, { ChartIcon() }, label = { Text(stringResource(R.string.nav_stats)) }, colors = colors)
         NavigationBarItem(tab == 2, { onTab(2) }, { ClockIcon() }, label = { Text(stringResource(R.string.nav_history)) }, colors = colors)

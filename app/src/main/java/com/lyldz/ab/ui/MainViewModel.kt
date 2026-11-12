@@ -47,6 +47,7 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
             app.repo.saveSettings(s.copy(onboarded = true))
             app.reminders.refreshWeather()
             app.reminders.reschedule()
+            app.reminders.refreshNotification(force = true)
         }
     }
 

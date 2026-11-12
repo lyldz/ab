@@ -140,4 +140,17 @@
         <item quantity="one">%1$d record</item>
         <item quantity="other">%1$d records</item>
     </plurals>
+    <string name="set_theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="notif_title_idle">Today\'s water</string>
+    <string name="onb_loc_searching">Finding your location…</string>
+    <string name="onb_place_loc">Your location (approx.)</string>
+    <string name="onb_wx_found">Today is %1$s°C</string>
+    <string name="onb_wx_extra">The heat adds %1$s ml to your goal</string>
+    <string name="onb_wx_none">No extra water needed today</string>
+    <string name="onb_wx_goal">Today\'s goal: %1$s ml</string>
+    <string name="onb_wx_fail">Could not get the weather. Check your connection or search for a city.</string>
+    <string name="onb_finish">Finish setup</string>
 </resources>

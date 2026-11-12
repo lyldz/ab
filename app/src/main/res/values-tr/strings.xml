@@ -140,4 +140,17 @@
         <item quantity="one">%1$d kayıt</item>
         <item quantity="other">%1$d kayıt</item>
     </plurals>
+    <string name="set_theme">Tema</string>
+    <string name="theme_system">Sistem</string>
+    <string name="theme_light">Açık</string>
+    <string name="theme_dark">Koyu</string>
+    <string name="notif_title_idle">Bugünkü su</string>
+    <string name="onb_loc_searching">Konumun bulunuyor…</string>
+    <string name="onb_place_loc">Konumun (yaklaşık)</string>
+    <string name="onb_wx_found">Bugün hava %1$s°C</string>
+    <string name="onb_wx_extra">Sıcaklık hedefine +%1$s ml ekliyor</string>
+    <string name="onb_wx_none">Bugün ekstra su gerekmiyor</string>
+    <string name="onb_wx_goal">Bugünkü hedefin: %1$s ml</string>
+    <string name="onb_wx_fail">Hava alınamadı. Bağlantını kontrol et ya da şehir ara.</string>
+    <string name="onb_finish">Kurulumu bitir</string>
 </resources>

@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import com.lyldz.ab.ui.theme.Ab
 import com.lyldz.ab.ui.theme.AbColors
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -144,31 +145,32 @@ fun HomeScreen(
             Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            // üst çubuk: wordmark | selamlama | bildirim çanı
+            // üst çubuk: büyük wordmark + bildirim çanı, altında selamlama
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Image(painterResource(R.drawable.ic_wordmark), contentDescription = stringResource(R.string.app_name), modifier = Modifier.height(34.dp))
-                Spacer(Modifier.width(10.dp))
-                Box(Modifier.width(1.dp).height(22.dp).background(AbColors.Mist))
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    if (s.name.isBlank()) stringResource(R.string.greet_great) else stringResource(R.string.greet_hello, s.name),
-                    color = AbColors.Slate, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f),
+                Image(
+                    painterResource(if (Ab.isDark) R.drawable.ic_wordmark_light else R.drawable.ic_wordmark),
+                    contentDescription = stringResource(R.string.app_name), modifier = Modifier.height(60.dp),
                 )
+                Spacer(Modifier.weight(1f))
                 val bellDesc = stringResource(R.string.bell_desc)
                 Box(
-                    Modifier.size(44.dp).clip(CircleShape).background(Color.White).border(1.dp, AbColors.Mist, CircleShape)
+                    Modifier.size(44.dp).clip(CircleShape).background(Ab.card).border(1.dp, Ab.line, CircleShape)
                         .clickable(role = Role.Button, onClick = onOpenSettings).semantics { contentDescription = bellDesc },
                     contentAlignment = Alignment.Center,
                 ) {
-                    BellIcon(AbColors.Navy)
+                    BellIcon(Ab.strong)
                     Box(Modifier.align(Alignment.TopEnd).padding(10.dp).size(9.dp).clip(CircleShape).background(AbColors.Aqua1))
                 }
             }
+            Text(
+                if (s.name.isBlank()) stringResource(R.string.greet_great) else stringResource(R.string.greet_hello, s.name),
+                color = Ab.muted, style = MaterialTheme.typography.bodyLarge,
+            )
 
             val fraction = (today.drankMl.toFloat() / today.goalMl).coerceIn(0f, 1f)
             Column(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    stringResource(R.string.gauge_title), color = AbColors.SlateLight,
+                    stringResource(R.string.gauge_title), color = Ab.faint,
                     style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
                 )
                 Text(
@@ -192,20 +194,20 @@ fun HomeScreen(
                 )
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Row(
-                        Modifier.clip(RoundedCornerShape(999.dp)).background(Color.White).padding(horizontal = 12.dp, vertical = 4.dp),
+                        Modifier.clip(RoundedCornerShape(999.dp)).background(Ab.card).padding(horizontal = 12.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Canvas(Modifier.size(width = 10.dp, height = 13.dp)) { drawPath(dropPath(size.width, size.height), AbColors.Teal) }
                         Text("${(fraction * 100).roundToInt()}%", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                     }
                     Row(verticalAlignment = Alignment.Bottom) {
-                        Text(fmtMl(today.drankMl), fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, color = AbColors.Navy)
-                        Text(" ml", color = AbColors.Slate, modifier = Modifier.padding(bottom = 7.dp))
+                        Text(fmtMl(today.drankMl), fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, color = Ab.strong)
+                        Text(" ml", color = Ab.muted, modifier = Modifier.padding(bottom = 7.dp))
                     }
                     Text(stringResource(R.string.goal_label, fmtMl(today.goalMl)), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                     Text(
                         stringResource(R.string.left_label, fmtMl(remaining.coerceAtLeast(0))),
-                        style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = AbColors.Slate,
+                        style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = Ab.muted,
                     )
                 }
             }
@@ -238,13 +240,13 @@ fun HomeScreen(
                 TextButton(
                     onClick = onUndo,
                     enabled = today.entries.isNotEmpty(), modifier = Modifier.heightIn(min = 48.dp),
-                    colors = ButtonDefaults.textButtonColors(contentColor = AbColors.Slate),
+                    colors = ButtonDefaults.textButtonColors(contentColor = Ab.muted),
                 ) { Text(stringResource(R.string.undo)) }
                 Row {
-                    TextButton(onClick = { custom = true }, modifier = Modifier.heightIn(min = 48.dp), colors = ButtonDefaults.textButtonColors(contentColor = AbColors.Slate)) {
+                    TextButton(onClick = { custom = true }, modifier = Modifier.heightIn(min = 48.dp), colors = ButtonDefaults.textButtonColors(contentColor = Ab.muted)) {
                         Text(stringResource(R.string.add_custom))
                     }
-                    TextButton(onClick = { cupDialog = true }, modifier = Modifier.heightIn(min = 48.dp), colors = ButtonDefaults.textButtonColors(contentColor = AbColors.Slate)) {
+                    TextButton(onClick = { cupDialog = true }, modifier = Modifier.heightIn(min = 48.dp), colors = ButtonDefaults.textButtonColors(contentColor = Ab.muted)) {
                         Text(stringResource(R.string.cup_button, fmtMl(s.cupMl)))
                     }
                 }
@@ -257,7 +259,7 @@ fun HomeScreen(
                 Text(
                     if (extra > 0 && s.goalOverrideMl == null) stringResource(R.string.home_weather, degrees, fmtMl(extra))
                     else stringResource(R.string.home_weather_none, degrees),
-                    color = AbColors.Slate,
+                    color = Ab.muted,
                 )
             }
 
@@ -387,12 +389,12 @@ private fun QuickCard(label: String, ml: Int, modifier: Modifier = Modifier, onC
     val shape = RoundedCornerShape(20.dp)
     Column(
         modifier.shadow(6.dp, shape, ambientColor = AbColors.Navy.copy(alpha = 0.12f), spotColor = AbColors.Navy.copy(alpha = 0.12f))
-            .clip(shape).background(Color.White).border(1.dp, AbColors.Mist, shape)
+            .clip(shape).background(Ab.card).border(1.dp, Ab.line, shape)
             .clickable(role = Role.Button, onClick = onClick).padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(label, style = MaterialTheme.typography.labelMedium, color = AbColors.Slate)
-        Text("+${fmtMl(ml)} ml", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = AbColors.Navy)
+        Text(label, style = MaterialTheme.typography.labelMedium, color = Ab.muted)
+        Text("+${fmtMl(ml)} ml", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Ab.strong)
     }
 }
 
@@ -403,31 +405,32 @@ private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int
     val context = LocalContext.current
     val sorted = entries.sortedBy { it.atMs }
     val scroll = rememberScrollState()
+    val lineC = Ab.line
     LaunchedEffect(sorted.size) { scroll.animateScrollTo(scroll.maxValue) }
     Column(
         Modifier.fillMaxWidth().shadow(6.dp, shape, ambientColor = AbColors.Navy.copy(alpha = 0.08f), spotColor = AbColors.Navy.copy(alpha = 0.08f))
-            .clip(shape).background(Color.White).border(1.dp, AbColors.Mist, shape).padding(16.dp),
+            .clip(shape).background(Ab.card).border(1.dp, Ab.line, shape).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(
-                stringResource(R.string.tl_title), color = AbColors.Slate,
+                stringResource(R.string.tl_title), color = Ab.muted,
                 style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
             )
             Text(
                 context.resources.getQuantityString(R.plurals.tl_count, sorted.size, sorted.size) +
                     if (streak > 0) "  ·  " + context.resources.getQuantityString(R.plurals.streak_days, streak, streak) else "",
-                color = AbColors.SlateLight, style = MaterialTheme.typography.labelMedium,
+                color = Ab.faint, style = MaterialTheme.typography.labelMedium,
             )
         }
         if (sorted.isEmpty() && nextAtMin == null) {
-            Text(stringResource(R.string.history_empty), color = AbColors.SlateLight)
+            Text(stringResource(R.string.history_empty), color = Ab.faint)
         } else {
             BoxWithConstraints(Modifier.fillMaxWidth()) {
                 Row(
                     Modifier.horizontalScroll(scroll).widthIn(min = maxWidth).drawBehind {
                         val y = 16.dp.toPx()
-                        drawLine(AbColors.Mist, Offset(38.dp.toPx(), y), Offset(size.width - 38.dp.toPx(), y), 2.dp.toPx(), StrokeCap.Round)
+                        drawLine(lineC, Offset(38.dp.toPx(), y), Offset(size.width - 38.dp.toPx(), y), 2.dp.toPx(), StrokeCap.Round)
                     },
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
@@ -448,6 +451,8 @@ private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int
 
 @Composable
 private fun TimelineNode(done: Boolean, time: String, detail: String) {
+    val faint = Ab.faint
+    val cardC = Ab.card
     Column(Modifier.width(76.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Canvas(Modifier.size(32.dp)) {
             val r = size.minDimension / 2f
@@ -460,15 +465,15 @@ private fun TimelineNode(done: Boolean, time: String, detail: String) {
                 }
                 drawPath(check, Color.White, style = Stroke(2.4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
             } else {
-                drawCircle(Color.White, r)
+                drawCircle(cardC, r)
                 drawCircle(
-                    AbColors.SlateLight, r - 1.dp.toPx(), style = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 5f))),
+                    faint, r - 1.dp.toPx(), style = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 5f))),
                 )
-                drawCircle(AbColors.SlateLight, 2.5.dp.toPx())
+                drawCircle(faint, 2.5.dp.toPx())
             }
         }
-        Text(time, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = if (done) AbColors.Navy else AbColors.Slate)
-        Text(detail, style = MaterialTheme.typography.labelSmall, color = AbColors.SlateLight, textAlign = TextAlign.Center)
+        Text(time, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = if (done) Ab.strong else Ab.muted)
+        Text(detail, style = MaterialTheme.typography.labelSmall, color = Ab.faint, textAlign = TextAlign.Center)
     }
 }
 

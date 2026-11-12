@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -40,18 +42,7 @@ const val EXTRA_CUSTOM = "open_custom"
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Tasarım yalnızca açık tema: sistem koyu olsa da durum/gezinme çubuğu simgeleri koyu kalsın
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
-        )
-        setContent {
-            AbTheme {
-                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    AbRoot(openCustom = intent.getBooleanExtra(EXTRA_CUSTOM, false))
-                }
-            }
-        }
+        setContent { AbRoot(openCustom = intent.getBooleanExtra(EXTRA_CUSTOM, false)) }
     }
 }
 
@@ -62,12 +53,33 @@ private fun AbRoot(openCustom: Boolean) {
     val app = LocalContext.current.applicationContext as AbApp
     val vm: MainViewModel = viewModel(factory = viewModelFactory { initializer { MainViewModel(app) } })
     val today by vm.today.collectAsStateWithLifecycle()
+    val mode = today?.settings?.themeMode ?: 0
+    val dark = when (mode) { 1 -> false; 2 -> true; else -> isSystemInDarkTheme() }
+    val activity = LocalContext.current as ComponentActivity
+    // Durum ve gezinme çubuğu simgeleri seçilen temaya göre (sistemden bağımsız) açık ya da koyu olsun
+    DisposableEffect(dark) {
+        val bar = if (dark) {
+            SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+        } else {
+            SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+        }
+        activity.enableEdgeToEdge(statusBarStyle = bar, navigationBarStyle = bar)
+        onDispose {}
+    }
     LaunchedEffect(Unit) {
         app.reminders.refreshWeather() // günde bir kez; bugün alındıysa hiçbir şey yapmaz
         app.reminders.reschedule() // uygulama açılışında alarmı tazele
+        app.reminders.refreshNotification(force = true) // durum bildirimi hep görünsün (sessiz)
     }
-    val t = today ?: return
+    AbTheme(mode) {
+        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            today?.let { AbContent(it, vm, openCustom) }
+        }
+    }
+}
 
+@Composable
+private fun AbContent(t: com.lyldz.ab.data.AbRepository.Today, vm: MainViewModel, openCustom: Boolean) {
     if (!t.settings.onboarded) {
         OnboardingScreen(vm::finishOnboarding)
     } else {

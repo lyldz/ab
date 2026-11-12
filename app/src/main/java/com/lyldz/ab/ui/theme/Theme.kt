@@ -1,7 +1,10 @@
 package com.lyldz.ab.ui.theme
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.Typography
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -25,7 +28,7 @@ object AbColors {
     val Teal = Color(0xFF5BC0BE)
 }
 
-// Yalnızca açık tema (tasarım kılavuzu). Etkileşimli metinler (düğme yazısı, anahtar) okunaklı olsun
+// Açık tema (tasarım kılavuzu). Etkileşimli metinler (düğme yazısı, anahtar) okunaklı olsun
 // diye Material "primary" biraz koyu teal; saf aqua/mint görsellerde (gösterge, düğme gradyanı) kullanılır.
 private val Light = lightColorScheme(
     primary = Color(0xFF1F7F92),
@@ -46,6 +49,36 @@ private val Light = lightColorScheme(
     tertiary = Color(0xFFB08A3E),
 )
 
+// Siyah-beyaz koyu tema (OLED): saf siyah zemin, beyaz yazı, aqua vurgu.
+private val Dark = darkColorScheme(
+    primary = AbColors.Aqua1,
+    onPrimary = AbColors.Navy,
+    primaryContainer = Color(0xFF16282D),
+    onPrimaryContainer = Color.White,
+    secondary = AbColors.Aqua2,
+    secondaryContainer = Color(0xFF16282D),
+    onSecondaryContainer = Color.White,
+    background = Color.Black,
+    onBackground = Color.White,
+    surface = Color(0xFF111316),
+    onSurface = Color.White,
+    surfaceVariant = Color(0xFF1B1E22),
+    onSurfaceVariant = Color(0xFFA9B2BD),
+    outline = Color(0xFF6E7681),
+    outlineVariant = Color(0xFF2A2F36),
+    tertiary = Color(0xFFD9B96A),
+)
+
+/** Temaya duyarlı yüzey/metin renkleri (açıkta lacivert/slate/mist, koyuda beyaz/gri). */
+object Ab {
+    val strong @Composable get() = MaterialTheme.colorScheme.onSurface
+    val muted @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+    val faint @Composable get() = MaterialTheme.colorScheme.outline
+    val line @Composable get() = MaterialTheme.colorScheme.outlineVariant
+    val card @Composable get() = MaterialTheme.colorScheme.surface
+    val isDark @Composable get() = MaterialTheme.colorScheme.background.luminance() < 0.5f
+}
+
 @OptIn(ExperimentalTextApi::class)
 private fun jakarta(w: Int) = Font(
     R.font.plus_jakarta_sans, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w)),
@@ -63,7 +96,9 @@ private fun Typography.withFamily(f: FontFamily) = Typography(
 
 private fun TextStyle.fam(f: FontFamily) = copy(fontFamily = f)
 
+/** [mode]: 0 sistem, 1 açık, 2 koyu. */
 @Composable
-fun AbTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = Light, typography = Typography().withFamily(Jakarta), content = content)
+fun AbTheme(mode: Int = 0, content: @Composable () -> Unit) {
+    val dark = when (mode) { 1 -> false; 2 -> true; else -> isSystemInDarkTheme() }
+    MaterialTheme(colorScheme = if (dark) Dark else Light, typography = Typography().withFamily(Jakarta), content = content)
 }

@@ -115,14 +115,21 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
      * Bildirimden, uygulamadan ya da widget'tan kayıt sonrası: bildirim hâlâ duruyorsa yerinde
      * kalır, ilerlemesi ve sıradaki hatırlatma saati güncellenir (yeniden ses çalmaz).
      */
-    suspend fun refreshNotification(zone: ZoneId = ZoneId.systemDefault()) {
-        if (!Notifier.isShowing(context)) return
+    suspend fun refreshNotification(zone: ZoneId = ZoneId.systemDefault(), force: Boolean = false) {
+        if (!force && !Notifier.isShowing(context)) return
         val now = ZonedDateTime.now(zone)
         val (t, plan) = planNow(now)
+        if (!t.settings.onboarded) return
+        val nowMin = now.hour * 60 + now.minute
+        val inWindow = nowMin in t.settings.windowStartMin..t.settings.windowEndMin
         val drank = fmtMl(t.drankMl)
         val goal = fmtMl(t.goalMl)
         val done = t.drankMl >= t.goalMl
-        val title = if (done) context.getString(R.string.notif_title_done) else paceTitle(t, now.hour * 60 + now.minute)
+        val title = when {
+            done -> context.getString(R.string.notif_title_done)
+            !inWindow -> context.getString(R.string.notif_title_idle)
+            else -> paceTitle(t, nowMin)
+        }
         val text = when {
             done -> context.getString(R.string.home_progress, drank, goal)
             plan != null -> context.getString(R.string.notif_text_after, drank, goal, fmtTime(plan.nextAtMin))

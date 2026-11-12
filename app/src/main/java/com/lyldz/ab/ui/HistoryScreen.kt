@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
 import com.lyldz.ab.core.DayStat
+import com.lyldz.ab.ui.theme.Ab
 import com.lyldz.ab.ui.theme.AbColors
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -47,14 +48,14 @@ fun HistoryScreen(stats: List<DayStat>, onBack: () -> Unit) {
                         Text(d.day.format(fmt), fontWeight = FontWeight.SemiBold)
                         Text(
                             "${fmtMl(d.ml)} / ${fmtMl(d.goalMl)} ml" + if (d.reached) "  \u2713" else "",
-                            color = if (d.ml > 0) AbColors.Navy else AbColors.SlateLight,
+                            color = if (d.ml > 0) Ab.strong else Ab.faint,
                         )
                     }
                     LinearProgressIndicator(
                         progress = { (d.ml.toFloat() / d.goalMl).coerceIn(0f, 1f) },
                         modifier = Modifier.fillMaxWidth(),
                         color = AbColors.Aqua1,
-                        trackColor = AbColors.Mist,
+                        trackColor = Ab.line,
                     )
                 }
             }

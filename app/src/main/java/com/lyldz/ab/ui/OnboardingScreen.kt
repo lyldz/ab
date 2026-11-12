@@ -17,6 +17,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -37,6 +40,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -51,6 +55,10 @@ import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
 import com.lyldz.ab.core.Activity
 import com.lyldz.ab.core.dailyGoalMl
+import com.lyldz.ab.core.tempExtraMl
+import com.lyldz.ab.data.WeatherApi
+import java.time.LocalDate
+import kotlin.math.roundToInt
 import com.lyldz.ab.data.Settings
 import com.lyldz.ab.data.currentCoarse
 import kotlinx.coroutines.launch
@@ -75,11 +83,46 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
     }
     val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
-    val locLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+    // konum + hava (adım 3): bulunan yer, bugünün en yüksek sıcaklığı ve hedefe eki gösterilir
+    var lat by rememberSaveable { mutableStateOf<Double?>(null) }
+    var lon by rememberSaveable { mutableStateOf<Double?>(null) }
+    var city by rememberSaveable { mutableStateOf<String?>(null) }
+    var temp by rememberSaveable { mutableStateOf<Double?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    var failed by remember { mutableStateOf(false) }
+    var cityDialog by remember { mutableStateOf(false) }
+
+    fun loadTemp(la: Double, lo: Double, name: String?) {
         scope.launch {
-            val pos = if (granted) currentCoarse(ctx) else null
-            onDone(build().copy(lat = pos?.first, lon = pos?.second))
+            busy = true
+            failed = false
+            lat = la; lon = lo; city = name
+            temp = WeatherApi.fetchMaxTemp(la, lo)
+            failed = temp == null
+            busy = false
         }
+    }
+    fun findMe() {
+        scope.launch {
+            busy = true
+            failed = false
+            val pos = currentCoarse(ctx)
+            if (pos == null) {
+                failed = true
+                busy = false
+            } else {
+                loadTemp(pos.first, pos.second, null)
+            }
+        }
+    }
+    fun finish() = onDone(
+        build().copy(
+            lat = lat, lon = lon, city = city,
+            tempC = temp, tempDay = if (temp != null) LocalDate.now().toString() else null,
+        ),
+    )
+    val locLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) findMe() else failed = true
     }
     BackHandler(enabled = step >= 1) { step = if (step == 3 && !needsNotifPermission) 1 else step - 1 }
 
@@ -141,15 +184,57 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
         } else {
             Text(stringResource(R.string.perm_loc_title), style = MaterialTheme.typography.headlineLarge)
             Text(stringResource(R.string.onb_loc_why), style = MaterialTheme.typography.bodyLarge)
-            Button(
-                onClick = { locLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-            ) { Text(stringResource(R.string.perm_allow)) }
-            OutlinedButton(
-                onClick = { onDone(build()) },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-            ) { Text(stringResource(R.string.perm_skip)) }
+            val t = temp
+            if (t != null) {
+                val extra = tempExtraMl(t)
+                Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(city ?: stringResource(R.string.onb_place_loc), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.onb_wx_found, t.roundToInt().toString()), style = MaterialTheme.typography.headlineMedium)
+                        Text(
+                            if (extra > 0) stringResource(R.string.onb_wx_extra, fmtMl(extra)) else stringResource(R.string.onb_wx_none),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(
+                            stringResource(R.string.onb_wx_goal, fmtMl(dailyGoalMl(kg ?: 70, activity, t))),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                Button(onClick = { finish() }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
+                    Text(stringResource(R.string.onb_finish))
+                }
+                OutlinedButton(onClick = { cityDialog = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
+                    Text(stringResource(R.string.weather_search))
+                }
+            } else {
+                if (busy) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp)
+                        Text(stringResource(R.string.onb_loc_searching))
+                    }
+                } else if (failed) {
+                    Text(stringResource(R.string.onb_wx_fail), color = MaterialTheme.colorScheme.tertiary)
+                }
+                Button(
+                    onClick = { locLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) },
+                    enabled = !busy,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                ) { Text(stringResource(R.string.weather_use_location)) }
+                OutlinedButton(
+                    onClick = { cityDialog = true }, enabled = !busy,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                ) { Text(stringResource(R.string.weather_search)) }
+                OutlinedButton(
+                    onClick = { finish() },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                ) { Text(stringResource(R.string.perm_skip)) }
+            }
         }
+    }
+
+    if (cityDialog) {
+        CityDialog(onDismiss = { cityDialog = false }, onPick = { c -> cityDialog = false; loadTemp(c.lat, c.lon, c.label) })
     }
 }
 

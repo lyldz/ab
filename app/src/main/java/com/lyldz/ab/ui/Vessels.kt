@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
+import com.lyldz.ab.ui.theme.Ab
 import com.lyldz.ab.ui.theme.AbColors
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.semantics.contentDescription
@@ -182,6 +183,9 @@ fun WaterOrb(
     val phaseA by rememberPhase(3600)
     val phaseB by rememberPhase(5200, reverse = true)
 
+    val card = Ab.card
+    val lineC = Ab.line
+    val paceC = Ab.strong
     Canvas(modifier.semantics { contentDescription = description }) {
         val c = Offset(size.width / 2f, size.height / 2f)
         val outer = size.minDimension / 2f
@@ -193,10 +197,10 @@ fun WaterOrb(
             Brush.radialGradient(listOf(AbColors.Aqua1.copy(alpha = 0.40f), Color.Transparent), c, outer),
             outer, c,
         )
-        drawCircle(Color.White, ring, c)
-        drawCircle(AbColors.Mist, ring, c, style = Stroke(1.5.dp.toPx()))
+        drawCircle(card, ring, c)
+        drawCircle(lineC, ring, c, style = Stroke(1.5.dp.toPx()))
         drawCircle(
-            Brush.verticalGradient(listOf(Color.White, AbColors.Mist), c.y - ring, c.y + ring),
+            Brush.verticalGradient(listOf(card, lineC), c.y - ring, c.y + ring),
             ring - 2.dp.toPx(), c, style = Stroke(6.dp.toPx()),
         )
 
@@ -224,7 +228,7 @@ fun WaterOrb(
             paceFraction?.let {
                 val y = yOf(it)
                 drawLine(
-                    AbColors.Navy.copy(alpha = 0.45f), Offset(c.x - inner, y), Offset(c.x + inner, y), 1.5.dp.toPx(),
+                    paceC.copy(alpha = 0.55f), Offset(c.x - inner, y), Offset(c.x + inner, y), 1.5.dp.toPx(),
                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f)),
                 )
             }

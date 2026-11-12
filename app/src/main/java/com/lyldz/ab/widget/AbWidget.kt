@@ -43,8 +43,8 @@ import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.SOURCE_WIDGET
 import com.lyldz.ab.ui.fmtMl
 
-private val BG = ColorProvider(Color(0xFFF8FAFC), Color(0xFFF8FAFC))
-private val TEXT = ColorProvider(Color(0xFF0F203C), Color(0xFF0F203C))
+private val BG = ColorProvider(Color(0xFFF8FAFC), Color(0xFF0B0D10))
+private val TEXT = ColorProvider(Color(0xFF0F203C), Color(0xFFFFFFFF))
 private val PRIMARY = ColorProvider(Color(0xFF88D9E6), Color(0xFF88D9E6))
 private val ON_PRIMARY = ColorProvider(Color(0xFF0F203C), Color(0xFF0F203C))
 private val TRACK = ColorProvider(Color(0x4488D9E6), Color(0x4488D9E6))
