@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.lyldz.ab.data.AbDb
 import com.lyldz.ab.data.Intake
 import com.lyldz.ab.data.MIGRATION_1_2
+import com.lyldz.ab.data.MIGRATION_2_3
 import com.lyldz.ab.data.SOURCE_APP
 import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.SettingsStore
@@ -13,7 +14,7 @@ import com.lyldz.ab.notify.Reminders
 
 class AbApp : Application() {
     val repo: AbRepository by lazy {
-        val db = Room.databaseBuilder(this, AbDb::class.java, "ab.db").addMigrations(MIGRATION_1_2).build()
+        val db = Room.databaseBuilder(this, AbDb::class.java, "ab.db").addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
         AbRepository(db.intake(), SettingsStore(this))
     }
     val reminders: Reminders by lazy { Reminders(this, repo) }

@@ -1,5 +1,7 @@
 package com.lyldz.ab.data
 
+import com.lyldz.ab.core.DayStat
+import com.lyldz.ab.core.buildDayStats
 import com.lyldz.ab.core.dayBoundsMs
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -59,6 +61,19 @@ class AbRepository(
     suspend fun restoreIntake(e: Intake) = dao.insert(e)
 
     suspend fun updateIntake(id: Long, ml: Int, atMs: Long) = dao.update(id, ml, atMs)
+
+    suspend fun recordGoal(day: LocalDate, goalMl: Int) = dao.upsertGoal(DayGoal(day.toString(), goalMl))
+
+    /** Son [days] günün günlük toplamları, eskiden yeniye. Gün sınırı abone olunduğu andaki güne sabittir. */
+    fun stats(days: Int): Flow<List<DayStat>> {
+        val end = LocalDate.now(zone)
+        val start = end.minusDays(days - 1L)
+        val from = dayBoundsMs(start, zone).first
+        val to = dayBoundsMs(end, zone).second
+        return combine(store.flow, dao.observeRange(from, to), dao.observeGoals(start.toString())) { s, list, goals ->
+            buildDayStats(list.map { it.atMs to it.ml }, goals.associate { it.day to it.goalMl }, start, days, zone) { s.goalMl(it) }
+        }
+    }
 
     suspend fun markNotified(ms: Long) = store.setLastNotified(ms)
 

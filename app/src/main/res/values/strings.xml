@@ -91,4 +91,16 @@
     <string name="cup_dialog_title">Choose glass</string>
     <string name="cup_custom_hint">Custom (50–1000)</string>
     <string name="cup_set">Set</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_stats">Statistics</string>
+    <string name="stats_title">Statistics</string>
+    <string name="stats_week">7 days</string>
+    <string name="stats_month">30 days</string>
+    <string name="stats_avg">Average</string>
+    <string name="stats_reached">Goal reached</string>
+    <string name="stats_days_fmt">%1$s / %2$s days</string>
+    <string name="stats_best">Best day</string>
+    <string name="stats_none">No records in this period yet.</string>
+    <string name="stats_chart_desc">Daily water intake chart</string>
+    <string name="stats_legend">Lines show each day\'s goal; solid bars reached it. Average and goal days count only days with records.</string>
 </resources>

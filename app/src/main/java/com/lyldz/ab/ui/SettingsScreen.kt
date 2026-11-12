@@ -13,7 +13,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -114,7 +115,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     val later = stringResource(R.string.later)
 
     Column(
-        Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(24.dp),
+        Modifier.fillMaxSize().statusBarsPadding().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineLarge)

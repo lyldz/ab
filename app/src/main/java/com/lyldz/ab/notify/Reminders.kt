@@ -97,6 +97,7 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
             return
         }
         scheduleMorning(t.settings.windowStartMin, now)
+        repo.recordGoal(now.toLocalDate(), t.goalMl)
         val day = now.toLocalDate().atStartOfDay(zone)
         val (at, notify) = if (plan != null) {
             day.plusMinutes(plan.nextAtMin.toLong()) to true

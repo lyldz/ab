@@ -91,4 +91,16 @@
     <string name="cup_dialog_title">Bardak seç</string>
     <string name="cup_custom_hint">Özel (50–1000)</string>
     <string name="cup_set">Ayarla</string>
+    <string name="nav_home">Ana sayfa</string>
+    <string name="nav_stats">İstatistik</string>
+    <string name="stats_title">İstatistik</string>
+    <string name="stats_week">7 gün</string>
+    <string name="stats_month">30 gün</string>
+    <string name="stats_avg">Ortalama</string>
+    <string name="stats_reached">Hedefe ulaşılan</string>
+    <string name="stats_days_fmt">%1$s / %2$s gün</string>
+    <string name="stats_best">En iyi gün</string>
+    <string name="stats_none">Bu dönemde henüz kayıt yok.</string>
+    <string name="stats_chart_desc">Günlük su içme grafiği</string>
+    <string name="stats_legend">Çizgiler her günün hedefini gösterir; koyu çubuklar hedefe ulaşılan günlerdir. Ortalama ve hedef günleri yalnızca kayıtlı günleri sayar.</string>
 </resources>

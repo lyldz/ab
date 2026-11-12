@@ -3,12 +3,16 @@ package com.lyldz.ab.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lyldz.ab.AbApp
+import com.lyldz.ab.core.DayStat
 import com.lyldz.ab.core.withMinuteOfDay
 import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.Intake
 import com.lyldz.ab.data.Settings
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.ZoneId
@@ -17,6 +21,17 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
     /** null: veri henüz okunmadı. */
     val today: StateFlow<AbRepository.Today?> =
         app.repo.today().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    private val period = MutableStateFlow(7)
+    val periodDays: StateFlow<Int> = period
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val stats: StateFlow<List<DayStat>> =
+        period.flatMapLatest { app.repo.stats(it) }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun setPeriod(days: Int) {
+        period.value = days
+    }
 
     fun finishOnboarding(s: Settings) {
         viewModelScope.launch {

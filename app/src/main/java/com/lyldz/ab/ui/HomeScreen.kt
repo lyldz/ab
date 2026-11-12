@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -74,7 +76,6 @@ fun HomeScreen(
     onDelete: (Intake) -> Unit,
     onRestore: (Intake) -> Unit,
     onEdit: (Intake, Int, Int) -> Unit,
-    onOpenSettings: () -> Unit,
     onSetCup: (Int) -> Unit,
     openCustom: Boolean = false,
 ) {
@@ -102,17 +103,11 @@ fun HomeScreen(
     val remaining = today.goalMl - today.drankMl
     val plan = nextPlan(nowMin, s.windowStartMin, s.windowEndMin, today.goalMl, today.drankMl, s.cupMl, today.anchorMin)
 
-    Scaffold(snackbarHost = { SnackbarHost(snack) }) { padding ->
+    Scaffold(snackbarHost = { SnackbarHost(snack) }, contentWindowInsets = WindowInsets.statusBars) { padding ->
         Column(
             Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onOpenSettings, modifier = Modifier.heightIn(min = 48.dp)) {
-                    Text(stringResource(R.string.settings))
-                }
-            }
-
             Card(
                 Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
