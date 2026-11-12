@@ -37,4 +37,5 @@
     <string name="perm_notif_title">Bildirimler</string>
     <string name="perm_allow">İzin ver</string>
     <string name="perm_skip">Şimdi değil</string>
+    <string name="widget_desc">Su ilerlemesi ve hızlı ekleme</string>
 </resources>

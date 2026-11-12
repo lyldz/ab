@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -43,12 +44,18 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun HomeScreen(today: AbRepository.Today, nowMin: Int, onAdd: (Int) -> Unit, onUndo: () -> Unit) {
+fun HomeScreen(
+    today: AbRepository.Today,
+    nowMin: Int,
+    onAdd: (Int) -> Unit,
+    onUndo: () -> Unit,
+    openCustom: Boolean = false,
+) {
     val s = today.settings
     val snack = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    var custom by remember { mutableStateOf(false) }
+    var custom by rememberSaveable { mutableStateOf(openCustom) }
 
     fun add(ml: Int) {
         onAdd(ml)

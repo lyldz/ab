@@ -37,4 +37,5 @@
     <string name="perm_notif_title">Notifications</string>
     <string name="perm_allow">Allow</string>
     <string name="perm_skip">Not now</string>
+    <string name="widget_desc">Water progress and quick add</string>
 </resources>

@@ -26,13 +26,18 @@ import com.lyldz.ab.ui.theme.AbTheme
 import kotlinx.coroutines.delay
 import java.time.LocalTime
 
+/** Widget "Özel" düğmesi: ana ekranı özel miktar penceresi açık başlatır. */
+const val EXTRA_CUSTOM = "open_custom"
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             AbTheme {
-                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) { AbRoot() }
+                Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                    AbRoot(openCustom = intent.getBooleanExtra(EXTRA_CUSTOM, false))
+                }
             }
         }
     }
@@ -41,9 +46,9 @@ class MainActivity : ComponentActivity() {
 private fun currentMin(): Int = LocalTime.now().let { it.hour * 60 + it.minute }
 
 @Composable
-private fun AbRoot() {
+private fun AbRoot(openCustom: Boolean) {
     val app = LocalContext.current.applicationContext as AbApp
-    val vm: MainViewModel = viewModel(factory = viewModelFactory { initializer { MainViewModel(app.repo, app.reminders) } })
+    val vm: MainViewModel = viewModel(factory = viewModelFactory { initializer { MainViewModel(app) } })
     val today by vm.today.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { app.reminders.reschedule() } // uygulama açılışında alarmı tazele
     val t = today ?: return
@@ -58,6 +63,6 @@ private fun AbRoot() {
                 nowMin = currentMin()
             }
         }
-        HomeScreen(t, nowMin, vm::add, vm::undo)
+        HomeScreen(t, nowMin, vm::add, vm::undo, openCustom)
     }
 }

@@ -6,7 +6,9 @@ import android.content.Context
 import android.content.Intent
 import com.lyldz.ab.core.Plan
 import com.lyldz.ab.core.nextPlan
+import androidx.glance.appwidget.updateAll
 import com.lyldz.ab.data.AbRepository
+import com.lyldz.ab.widget.AbWidget
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -34,7 +36,13 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         return t to plan
     }
 
+    /** Alarmı kurar ve widget'ı tazeler; her veri değişiminden sonra bu çağrılır. */
     suspend fun reschedule(zone: ZoneId = ZoneId.systemDefault()) {
+        scheduleAlarm(zone)
+        AbWidget().updateAll(context)
+    }
+
+    private suspend fun scheduleAlarm(zone: ZoneId) {
         val now = ZonedDateTime.now(zone)
         val (t, plan) = planNow(now)
         if (!t.settings.onboarded) {

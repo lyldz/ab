@@ -38,9 +38,12 @@ class ReminderReceiver : BroadcastReceiver() {
                     ?: RemoteInput.getResultsFromIntent(intent)?.getCharSequence(KEY_TEXT)
                         ?.filter(Char::isDigit)?.toString()?.toIntOrNull()
                 async(context) { app ->
-                    if (ml != null && ml in 1..5000) app.repo.addIntake(ml)
-                    NotificationManagerCompat.from(context).cancel(NOTIF_ID)
-                    app.reminders.reschedule()
+                    if (ml != null && ml in 1..5000) {
+                        app.addWater(ml)
+                    } else {
+                        NotificationManagerCompat.from(context).cancel(NOTIF_ID)
+                        app.reminders.reschedule()
+                    }
                 }
             }
         }
