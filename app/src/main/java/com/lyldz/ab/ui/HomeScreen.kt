@@ -162,12 +162,11 @@ fun HomeScreen(
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text("${fmtMl(today.goalMl)} ml", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    WaterPitcher(
+                    WaterOrb(
                         fraction,
                         if (showPace) pace.toFloat() / today.goalMl else null,
-                        today.goalMl,
                         stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
-                        Modifier.size(width = 150.dp, height = 210.dp),
+                        Modifier.size(170.dp),
                     )
                     Text("${(fraction * 100).roundToInt()}%", style = MaterialTheme.typography.titleLarge)
                     if (showPace) {

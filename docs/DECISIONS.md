@@ -21,3 +21,4 @@
 | 2026-11-12 | Bildirim başlığı tempo durumudur (geride/ilerde/tempoda), gövde "bardak kadar iç · içilen / hedef" | Kullanıcı: bildirim de "geridesin" desin; bildirim sıklığı ve miktarı değişmedi |
 | 2026-11-12 | Alarm inexact (setAndAllowWhileIdle); tek alarm tutulur | SPEC T-03: izin gerektirmez; Doze'da dakikalar kayabilir, tam zamanında seçeneği sonra |
 | 2026-11-12 | Görmezden gelinen hatırlatmadan sonra bir sonraki aralık sonra yine gelir | Plan çıpası son içiş veya son gösterilen hatırlatma; bıkma durumunda sıklık azaltma henüz kararlaştırılmadı, kullanıcıya soruldu |
+| Marka | Ãb yazı logosu (Cormorant Garamond SemiBold, OFL, yoldan vektöre çevrildi) + damla; palet Aqua/Deep Navy/Pearl; ana ekran dairesel su göstergesi (WaterOrb, sürahi kodu durur). Referans: docs/design/brand/branding-reference.jpg |
