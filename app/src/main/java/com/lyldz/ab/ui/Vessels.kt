@@ -12,6 +12,12 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -32,6 +38,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.exp
 import kotlin.math.sin
 
 /** Hafif eğimli, alt köşeleri yuvarlak bir bardak silueti (bardak seçici simgeleri için). */
@@ -163,12 +171,12 @@ fun WaterOrb(
     description: String,
     modifier: Modifier = Modifier,
 ) {
-    val spec = spring<Float>(dampingRatio = 0.7f, stiffness = Spring.StiffnessLow)
-    val level by animateFloatAsState(fraction.coerceIn(0f, 1f), spec, label = "orbLevel")
-    val sweep by animateFloatAsState(fraction.coerceIn(0f, 1f), spec, label = "orbRing")
-    val t = rememberInfiniteTransition(label = "orbWave")
-    val phaseA by t.animateFloat(0f, (2 * PI).toFloat(), infiniteRepeatable(tween(3600, easing = LinearEasing)), label = "a")
-    val phaseB by t.animateFloat((2 * PI).toFloat(), 0f, infiniteRepeatable(tween(5200, easing = LinearEasing)), label = "b")
+    // Sistem "animasyon ölçeği" kapalıyken (pil tasarrufu, geliştirici seçeneği) Compose'un animate*
+    // API'leri durur; gösterge canlı kalsın diye kare saatine bağlı kendi animasyonumuzu kullanıyoruz.
+    val level by rememberSmoothed(fraction.coerceIn(0f, 1f))
+    val sweep = level
+    val phaseA by rememberPhase(3600)
+    val phaseB by rememberPhase(5200, reverse = true)
     val navy = AbColors.Navy
 
     Canvas(modifier.semantics { contentDescription = description }) {
@@ -224,6 +232,46 @@ fun WaterOrb(
             }
         }
     }
+}
+
+/** [target]'a her karede üstel yaklaşan değer (yaklaşık 0,3 sn); sistem animasyon ölçeğinden bağımsız. */
+@Composable
+private fun rememberSmoothed(target: Float): State<Float> {
+    val shown = remember { mutableFloatStateOf(0f) }
+    val goal = rememberUpdatedState(target)
+    LaunchedEffect(Unit) {
+        var last = 0L
+        while (true) {
+            withFrameNanos { now ->
+                val dt = if (last == 0L) 0f else (now - last) / 1e9f
+                last = now
+                val k = 1f - exp(-dt / 0.3f)
+                val cur = shown.floatValue
+                shown.floatValue = if (abs(goal.value - cur) < 0.0005f) goal.value else cur + (goal.value - cur) * k
+            }
+        }
+    }
+    return shown
+}
+
+/** 0..2π arasında dönen faz; [periodMs] bir tur süresi. */
+@Composable
+private fun rememberPhase(periodMs: Int, reverse: Boolean = false): State<Float> {
+    val phase = remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(Unit) {
+        var last = 0L
+        val twoPi = (2 * PI).toFloat()
+        while (true) {
+            withFrameNanos { now ->
+                if (last != 0L) {
+                    val step = (now - last) / 1e6f / periodMs * twoPi
+                    phase.floatValue = ((phase.floatValue + if (reverse) -step else step) % twoPi + twoPi) % twoPi
+                }
+                last = now
+            }
+        }
+    }
+    return phase
 }
 
 /** Bardak boyutunu gösteren küçük simge; büyük hacim daha büyük çizilir. */
