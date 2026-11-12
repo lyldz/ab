@@ -134,7 +134,7 @@ fun HomeScreen(
     Scaffold(snackbarHost = { SnackbarHost(snack) }, contentWindowInsets = WindowInsets.statusBars) { padding ->
         Column(
             Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             // üst çubuk: wordmark + bildirim çanı
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -176,7 +176,7 @@ fun HomeScreen(
                         fraction,
                         if (showPace) pace.toFloat() / today.goalMl else null,
                         stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
-                        Modifier.size(280.dp),
+                        Modifier.size(236.dp),
                     )
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("${fmtMl(today.drankMl)} ml", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.ExtraBold, color = AbColors.Navy)
@@ -198,7 +198,7 @@ fun HomeScreen(
                 Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             ) {
-                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     when {
                         remaining <= 0 -> Text(stringResource(R.string.home_plan_done), style = MaterialTheme.typography.titleLarge)
                         plan == null -> Text(stringResource(R.string.home_plan_none), style = MaterialTheme.typography.titleLarge)
@@ -210,7 +210,8 @@ fun HomeScreen(
                                     diff <= -PACE_TOLERANCE_ML -> stringResource(R.string.pace_ahead, fmtMl(roundTo10(-diff)))
                                     else -> stringResource(R.string.pace_on)
                                 },
-                                style = MaterialTheme.typography.headlineMedium,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold,
                             )
                             // sıradaki hatırlatma saatine kadar tempoda olmak için gereken toplam
                             val cum = paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, plan.nextAtMin)

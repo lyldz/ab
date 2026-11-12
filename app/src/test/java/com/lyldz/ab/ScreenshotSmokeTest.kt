@@ -58,5 +58,8 @@ class ScreenshotSmokeTest {
         shot("home-records")
         compose.onNodeWithContentDescription("+200 ml").performScrollTo()
         shot("home-actions")
+        repeat(6) { compose.onNodeWithContentDescription("+200 ml").performScrollTo().performClick() }
+        compose.onNodeWithText("Today's Progress").performScrollTo()
+        shot("home-top-filled")
     }
 }
