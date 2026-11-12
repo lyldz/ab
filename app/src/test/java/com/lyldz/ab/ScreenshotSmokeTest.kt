@@ -37,11 +37,14 @@ class ScreenshotSmokeTest {
         n.performClick()
     }
 
-    private fun shot(name: String) = runCatching {
-        compose.waitForIdle()
+    private fun shot(name: String) {
         val dir = File("build/screenshots").apply { mkdirs() }
-        File(dir, "$name.png").outputStream().use {
-            compose.onRoot().captureToImage().asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+        try {
+            compose.waitForIdle()
+            val bmp = compose.onRoot().captureToImage().asAndroidBitmap()
+            File(dir, "$name.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+        } catch (t: Throwable) {
+            File(dir, "$name.error.txt").writeText(t.stackTraceToString())
         }
     }
 
