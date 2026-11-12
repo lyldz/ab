@@ -11,3 +11,4 @@
 | 2026-11-12 | Hava servisi Open-Meteo (öneri) | Hesapsız, anahtarsız. Kullanıcı yalnızca "sadece sıcaklık çekilsin" dedi |
 | 2026-11-12 | Hilt kullanılmıyor; bağımlılıklar Application üzerinden elle | Uygulama küçük; KSP/Hilt derleme maliyeti ve karmaşıklık. Room için KSP yine gerekir |
 | 2026-11-12 | Hatırlatmada her blokta içilecek miktar bardak boyutudur (varsayılan 200 ml), aralık buna göre hesaplanır | "Bir sonraki bildirime kadar olan miktar" + "aralığı dakikaya böl" birlikte bunu verir; SPEC'teki "10:45'e kadar 600 ml" örneği daha büyük blok ima eder, kullanıcıya soruldu |
+| 2026-11-12 | Sürümler 0.1.x serisiyle ilerler (şimdiki 0.1.0, versionCode 100) | Kullanıcı önce 0.0.x dedi, sonra 0.1.x olsun dedi. fastlane changelog dosyası 100.txt |
