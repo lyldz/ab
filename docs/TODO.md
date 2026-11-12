@@ -20,7 +20,6 @@ Son güncelleme: 2026-11-12. Durum: uygulama telefonda yalnızca kısmen denendi
 - [ ] Kayıt kaynağı için ikon (şimdi yazı: Uygulama/Bildirim/Widget)
 - [ ] Ayrı "Hatırlatıcı" sekmesi (şimdi Ayarlar'da)
 - [ ] "Geridesin" dilinin yumuşatılması
-- [ ] PR #10'un main'e birleştirilmesi (duman testi, tempo, sürahi, bildirim başlığı)
 
 ## 3. İlk spec'te olup yapılmayanlar
 - [ ] Geçmiş güne kayıt ekleme (U-04)

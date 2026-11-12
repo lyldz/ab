@@ -125,7 +125,7 @@ Kütüphanelerden birleşen normal izinler: `WAKE_LOCK`, `ACCESS_NETWORK_STATE`,
 
 **Telefonda HENÜZ doğrulanmadı:** hatırlatmanın hesaplanan dakikada gelmesi (pil/otomatik başlatma kısıtları!), widget, hava, sürahi/tempo görünümü, istatistik, Room v1→v2→v3 geçişi, açık/koyu tema, TalkBack.
 
-**Git:** `main` = Faz 0 + Faz 1 dilim 1–6 + hava + bardak seçici + alt gezinme/istatistik. [PR #11](https://github.com/lyldz/ab/pull/11) (marka + yeni ana ekran, #10'un üstünde) ve dal `smoke-test` = [PR #10](https://github.com/lyldz/ab/pull/10): duman testi + tempo + sürahi + bildirim başlığı + `docs/TODO.md` + bu dosya (CI yeşil, `main`'e birleştirme bekliyor). Büyük Dependabot sürüm atlamaları (AGP 9, Kotlin 2.4, Gradle 9, BOM 2026) kapatıldı; targetSdk 36 geçişinde birlikte ele alınacak.
+**Git:** tek dal `main`; Faz 0 + Faz 1 + hava + bardak seçici + alt gezinme/istatistik + duman testi + tempo/gösterge + marka görseli ve yeni ana ekran hepsi birleşti (PR #10 ve #13, CI yeşil; `smoke-test`, `marka`, `marka2` dalları silindi). Büyük Dependabot sürüm atlamaları (AGP 9, Kotlin 2.4, Gradle 9, BOM 2026) kapatıldı; targetSdk 36 geçişinde birlikte ele alınacak.
 
 ---
 
