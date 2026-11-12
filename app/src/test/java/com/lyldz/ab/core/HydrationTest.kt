@@ -67,6 +67,25 @@ class HydrationTest {
         assertEquals(1070, p.nextAtMin)
     }
 
+    @Test fun paceIsLinearInsideWindow() {
+        assertEquals(0, paceMl(2400, 360, 1080, 300)) // pencere öncesi
+        assertEquals(0, paceMl(2400, 360, 1080, 360))
+        assertEquals(1200, paceMl(2400, 360, 1080, 720)) // tam orta
+        assertEquals(2400, paceMl(2400, 360, 1080, 1080))
+        assertEquals(2400, paceMl(2400, 360, 1080, 1200)) // pencere sonrası
+    }
+
+    @Test fun paceWithBrokenWindowIsGoal() {
+        assertEquals(2000, paceMl(2000, 600, 600, 700))
+    }
+
+    @Test fun roundsToTens() {
+        assertEquals(450, roundTo10(447))
+        assertEquals(450, roundTo10(450))
+        assertEquals(460, roundTo10(455))
+        assertEquals(0, roundTo10(4))
+    }
+
     @Test fun ignoredReminderSpacesNextOne() {
         // 08:00'de hatırlatma gösterildi, içilmedi: sıradaki çıpa + aralık, hemen tekrar değil
         val p = nextPlan(480, 360, 1080, 2400, 0, 200, 480)!!

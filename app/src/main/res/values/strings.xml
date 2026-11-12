@@ -103,4 +103,10 @@
     <string name="stats_none">No records in this period yet.</string>
     <string name="stats_chart_desc">Daily water intake chart</string>
     <string name="stats_legend">Lines show each day\'s goal; solid bars reached it. Average and goal days count only days with records.</string>
+    <string name="pace_behind">%1$s ml behind</string>
+    <string name="pace_ahead">%1$s ml ahead</string>
+    <string name="pace_on">Right on pace</string>
+    <string name="pace_checkpoint">Target at %1$s: %2$s ml total (%3$s ml more)</string>
+    <string name="pace_checkpoint_done">Target at %1$s: %2$s ml total, you are already there</string>
+    <string name="pitcher_legend">Dashed line: where you should be by now</string>
 </resources>

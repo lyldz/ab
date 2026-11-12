@@ -103,4 +103,10 @@
     <string name="stats_none">Bu dönemde henüz kayıt yok.</string>
     <string name="stats_chart_desc">Günlük su içme grafiği</string>
     <string name="stats_legend">Çizgiler her günün hedefini gösterir; koyu çubuklar hedefe ulaşılan günlerdir. Ortalama ve hedef günleri yalnızca kayıtlı günleri sayar.</string>
+    <string name="pace_behind">%1$s ml geridesin</string>
+    <string name="pace_ahead">%1$s ml ilerdesin</string>
+    <string name="pace_on">Tam tempodasın</string>
+    <string name="pace_checkpoint">Saat %1$s hedefi: toplam %2$s ml (%3$s ml daha)</string>
+    <string name="pace_checkpoint_done">Saat %1$s hedefi: toplam %2$s ml, şimdiden tamam</string>
+    <string name="pitcher_legend">Kesik çizgi: şu an olman gereken seviye</string>
 </resources>

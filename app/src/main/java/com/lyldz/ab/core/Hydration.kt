@@ -59,3 +59,16 @@ fun nextPlan(
     if (next >= windowEndMin) return null
     return Plan(next, interval, amount)
 }
+
+/**
+ * Rutin penceresinde düz çizgi tempo: [atMin] anında toplamda içilmiş olması gereken miktar.
+ * Pencere başında 0, sonunda hedefin tamamı; dışarıda uçlara sabitlenir.
+ */
+fun paceMl(goalMl: Int, startMin: Int, endMin: Int, atMin: Int): Int {
+    if (endMin <= startMin) return goalMl
+    val f = ((atMin - startMin).toDouble() / (endMin - startMin)).coerceIn(0.0, 1.0)
+    return (goalMl * f).roundToInt()
+}
+
+/** Ekranda 10 ml'ye yuvarlanmış fark (küçük sapmalar rahatsız etmesin). */
+fun roundTo10(ml: Int): Int = ((ml + 5) / 10) * 10
