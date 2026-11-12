@@ -19,9 +19,7 @@ import java.io.File
  * telefon olmadan görünüm denetlenebilir. Hata verirse testi düşürmez: yalnızca bir yardımcıdır.
  */
 @RunWith(AndroidJUnit4::class)
-@GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34], qualifiers = "w411dp-h891dp-normal-xxhdpi")
-class ScreenshotSmokeTest {
+abstract class ScreenshotBase(private val prefix: String) {
     @get:Rule
     val compose = createAndroidComposeRule<MainActivity>()
 
@@ -42,15 +40,24 @@ class ScreenshotSmokeTest {
             val view = compose.activity.window.decorView
             val bmp = android.graphics.Bitmap.createBitmap(view.width, view.height, android.graphics.Bitmap.Config.ARGB_8888)
             view.draw(android.graphics.Canvas(bmp))
-            File(dir, "$name.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+            File(dir, "$prefix-$name.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
         } catch (t: Throwable) {
-            File(dir, "$name.error.txt").writeText(t.stackTraceToString())
+            File(dir, "$prefix-$name.error.txt").writeText(t.stackTraceToString())
         }
     }
 
     @Test
     fun homeScreenshots() {
-        tap("Start"); tap("Continue"); tap("Not now"); tap("Not now")
+        wait("Start")
+        shot("onb0-welcome")
+        tap("Start")
+        wait("Continue")
+        shot("onb1-profile")
+        tap("Continue")
+        tap("Not now")
+        wait("Use my location")
+        shot("onb3-location")
+        tap("Not now")
         wait("Today's records")
         shot("home-empty")
         repeat(3) { compose.onNodeWithContentDescription("+200 ml").performScrollTo().performClick() }
@@ -63,3 +70,11 @@ class ScreenshotSmokeTest {
         shot("home-top-filled")
     }
 }
+
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [34], qualifiers = "w411dp-h891dp-normal-xxhdpi")
+class ScreenshotSmokeTest : ScreenshotBase("light")
+
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [34], qualifiers = "w411dp-h891dp-normal-xxhdpi-night")
+class ScreenshotNightSmokeTest : ScreenshotBase("dark")
