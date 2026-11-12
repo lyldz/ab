@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import com.lyldz.ab.ui.theme.AbColors
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -103,7 +104,6 @@ fun HomeScreen(
     onSetCup: (Int) -> Unit,
     openCustom: Boolean = false,
     streak: Int = 0,
-    onOpenSettings: () -> Unit = {},
 ) {
     val s = today.settings
     val snack = remember { SnackbarHostState() }
@@ -136,22 +136,6 @@ fun HomeScreen(
             Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            // üst çubuk: wordmark + bildirim çanı
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painterResource(R.drawable.ic_wordmark), contentDescription = stringResource(R.string.app_name),
-                    modifier = Modifier.height(36.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
-                )
-                val bellDesc = stringResource(R.string.bell_desc)
-                Box(
-                    Modifier.size(44.dp).shadow(6.dp, CircleShape, ambientColor = AbColors.Navy.copy(alpha = 0.2f), spotColor = AbColors.Navy.copy(alpha = 0.2f))
-                        .clip(CircleShape).background(AbColors.Pearl)
-                        .clickable(role = Role.Button, onClick = onOpenSettings)
-                        .semantics { contentDescription = bellDesc },
-                    contentAlignment = Alignment.Center,
-                ) { BellIcon(AbColors.Navy) }
-            }
-
             val greeting = stringResource(
                 when {
                     nowMin < 12 * 60 -> R.string.greet_morning
@@ -165,43 +149,30 @@ fun HomeScreen(
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
-                Text(stringResource(R.string.greet_sub), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    stringResource(R.string.greet_sub) +
+                        if (streak > 0) "  ·  " + context.resources.getQuantityString(R.plurals.streak_days, streak, streak) else "",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
 
             val fraction = (today.drankMl.toFloat() / today.goalMl).coerceIn(0f, 1f)
-            Text(stringResource(R.string.progress_title), style = MaterialTheme.typography.titleMedium)
-            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Box(contentAlignment = Alignment.Center) {
-                    WaterOrb(
-                        fraction,
-                        if (showPace) pace.toFloat() / today.goalMl else null,
-                        stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
-                        Modifier.size(236.dp),
-                    )
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("${fmtMl(today.drankMl)} ml", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.ExtraBold, color = AbColors.Navy)
-                        Text(stringResource(R.string.of_goal, fmtMl(today.goalMl)), color = AbColors.Navy.copy(alpha = 0.75f))
-                        Text("${(fraction * 100).roundToInt()}%", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = AbColors.Navy)
-                    }
-                }
-                if (showPace) {
-                    Text(
-                        stringResource(R.string.pitcher_legend),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
-
-            Card(
-                Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-            ) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                WaterPitcher(
+                    fraction,
+                    if (showPace) pace.toFloat() / today.goalMl else null,
+                    today.goalMl,
+                    stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
+                    Modifier.size(width = 150.dp, height = 210.dp),
+                )
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(fmtMl(today.drankMl), style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.of_goal, fmtMl(today.goalMl)), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${(fraction * 100).roundToInt()}%", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.height(10.dp))
                     when {
-                        remaining <= 0 -> Text(stringResource(R.string.home_plan_done), style = MaterialTheme.typography.titleLarge)
-                        plan == null -> Text(stringResource(R.string.home_plan_none), style = MaterialTheme.typography.titleLarge)
+                        remaining <= 0 -> Text(stringResource(R.string.home_plan_done), style = MaterialTheme.typography.titleMedium)
+                        plan == null -> Text(stringResource(R.string.home_plan_none), style = MaterialTheme.typography.titleMedium)
                         else -> {
                             val diff = pace - today.drankMl
                             Text(
@@ -210,7 +181,7 @@ fun HomeScreen(
                                     diff <= -PACE_TOLERANCE_ML -> stringResource(R.string.pace_ahead, fmtMl(roundTo10(-diff)))
                                     else -> stringResource(R.string.pace_on)
                                 },
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                             )
                             // sıradaki hatırlatma saatine kadar tempoda olmak için gereken toplam
@@ -222,20 +193,18 @@ fun HomeScreen(
                                 } else {
                                     stringResource(R.string.pace_checkpoint_done, fmtTime(plan.nextAtMin), fmtMl(cum))
                                 },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
                 }
             }
 
-            Text(stringResource(R.string.history_title), style = MaterialTheme.typography.titleMedium)
-            HistoryTimeline(today.entries)
-
             val pill = RoundedCornerShape(999.dp)
             val addDesc = stringResource(R.string.add_ml, fmtMl(s.cupMl))
             Box(
-                Modifier.fillMaxWidth().height(60.dp)
-                    .shadow(10.dp, pill, ambientColor = AbColors.Aqua1, spotColor = AbColors.Aqua1)
+                Modifier.fillMaxWidth().height(56.dp)
                     .clip(pill).background(Brush.horizontalGradient(listOf(AbColors.Aqua1, AbColors.Aqua2)))
                     .clickable(role = Role.Button) { add(s.cupMl) }
                     .semantics { contentDescription = addDesc },
@@ -243,24 +212,19 @@ fun HomeScreen(
             ) {
                 Text(
                     "${stringResource(R.string.add_water)} · ${fmtMl(s.cupMl)} ml",
-                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = AbColors.Navy,
+                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White,
                 )
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 listOf(250, 350, 500).forEach { ml -> QuickChip(ml, Modifier.weight(1f)) { add(ml) } }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { custom = true }, modifier = Modifier.heightIn(min = 48.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                TextButton(onClick = { custom = true }, modifier = Modifier.heightIn(min = 48.dp)) {
                     Text(stringResource(R.string.add_custom))
                 }
-                OutlinedButton(onClick = { cupDialog = true }, modifier = Modifier.heightIn(min = 48.dp)) {
+                TextButton(onClick = { cupDialog = true }, modifier = Modifier.heightIn(min = 48.dp)) {
                     Text(stringResource(R.string.cup_button, fmtMl(s.cupMl)))
                 }
-            }
-
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                InfoCard(stringResource(R.string.stat_goal), "${fmtMl(today.goalMl)} ml", Modifier.weight(1f))
-                InfoCard(stringResource(R.string.streak_title), context.resources.getQuantityString(R.plurals.streak_days, streak, streak), Modifier.weight(1f))
             }
 
             val temp = s.tempToday(LocalDate.now())
@@ -388,88 +352,11 @@ private fun CustomDialog(onDismiss: () -> Unit, onAdd: (Int) -> Unit) {
 
 @Composable
 private fun QuickChip(ml: Int, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val pill = RoundedCornerShape(999.dp)
     Box(
-        modifier.height(48.dp)
-            .shadow(6.dp, pill, ambientColor = AbColors.Navy.copy(alpha = 0.25f), spotColor = AbColors.Navy.copy(alpha = 0.25f))
-            .clip(pill).background(AbColors.Pearl).clickable(role = Role.Button, onClick = onClick),
+        modifier.height(44.dp).clip(RoundedCornerShape(22.dp))
+            .background(MaterialTheme.colorScheme.primaryContainer).clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text("${fmtMl(ml)} ml", style = MaterialTheme.typography.titleSmall, color = AbColors.Navy) }
-}
-
-/** Bugünün kayıtları: çizgi üzerinde onay işaretli damlalar, altında saat ve miktar; çoksa yatay kayar. */
-@Composable
-private fun HistoryTimeline(entries: List<Intake>) {
-    if (entries.isEmpty()) {
-        Text(stringResource(R.string.history_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        return
-    }
-    val sorted = entries.sortedBy { it.atMs }
-    val scroll = rememberScrollState()
-    val line = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-    LaunchedEffect(sorted.size) { scroll.animateScrollTo(scroll.maxValue) }
-    Row(
-        Modifier.fillMaxWidth().horizontalScroll(scroll).drawBehind {
-            val y = 20.dp.toPx()
-            drawLine(line, Offset(40.dp.toPx(), y), Offset(size.width - 40.dp.toPx(), y), 2.dp.toPx(), StrokeCap.Round)
-        },
-    ) {
-        sorted.forEach { e ->
-            Column(Modifier.width(80.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                DropCheck()
-                Text(fmtTime(minuteOfDay(e.atMs)), style = MaterialTheme.typography.labelMedium)
-                Text("${fmtMl(e.ml)} ml", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-    }
-}
-
-@Composable
-private fun DropCheck() {
-    Canvas(Modifier.size(width = 32.dp, height = 40.dp)) {
-        val w = size.width
-        val h = size.height
-        val drop = Path().apply {
-            moveTo(w * .5f, h * .02f)
-            cubicTo(w * .62f, h * .28f, w * .94f, h * .5f, w * .94f, h * .68f)
-            cubicTo(w * .94f, h * .88f, w * .74f, h * .98f, w * .5f, h * .98f)
-            cubicTo(w * .26f, h * .98f, w * .06f, h * .88f, w * .06f, h * .68f)
-            cubicTo(w * .06f, h * .5f, w * .38f, h * .28f, w * .5f, h * .02f)
-            close()
-        }
-        drawPath(drop, Brush.verticalGradient(listOf(AbColors.Aqua2, AbColors.Aqua1)))
-        val check = Path().apply {
-            moveTo(w * .30f, h * .66f); lineTo(w * .45f, h * .79f); lineTo(w * .70f, h * .54f)
-        }
-        drawPath(check, AbColors.Navy, style = Stroke(2.2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-    }
-}
-
-@Composable
-private fun BellIcon(color: Color) {
-    Canvas(Modifier.size(22.dp)) {
-        val k = size.width / 24f
-        val body = Path().apply {
-            moveTo(12 * k, 3 * k)
-            cubicTo(8 * k, 3 * k, 6 * k, 6 * k, 6 * k, 10 * k)
-            lineTo(6 * k, 14 * k); lineTo(4 * k, 17 * k); lineTo(20 * k, 17 * k); lineTo(18 * k, 14 * k)
-            lineTo(18 * k, 10 * k)
-            cubicTo(18 * k, 6 * k, 16 * k, 3 * k, 12 * k, 3 * k)
-            close()
-        }
-        drawPath(body, color)
-        drawCircle(color, 2.2f * k, Offset(12 * k, 20 * k))
-    }
-}
-
-@Composable
-private fun InfoCard(label: String, value: String, modifier: Modifier = Modifier) {
-    Card(modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-        Column(Modifier.padding(16.dp)) {
-            Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-            Text(value, style = MaterialTheme.typography.titleLarge)
-        }
-    }
+    ) { Text("${fmtMl(ml)} ml", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onPrimaryContainer) }
 }
 
 @OptIn(ExperimentalLayoutApi::class)

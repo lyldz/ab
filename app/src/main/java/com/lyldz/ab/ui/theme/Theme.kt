@@ -9,27 +9,27 @@ import androidx.compose.ui.graphics.Color
 
 /** Marka belirteçleri (tasarım sistemi): Aqua gradyanı, Deep Navy, Pearl White. */
 object AbColors {
-    val Aqua1 = Color(0xFF88D9E6)
-    val Aqua2 = Color(0xFFA0E7E5)
-    val Navy = Color(0xFF0F203C)
-    val Pearl = Color(0xFFF8FAFC)
+    val Aqua1 = Color(0xFF3FB0C4)
+    val Aqua2 = Color(0xFF1B7F95)
+    val Navy = Color(0xFF12284A)
+    val Pearl = Color(0xFFFFFDF9)
 }
 
 // Marka paleti: Aqua, Deep Navy, Pearl White (docs/design/brand). Yazılar lacivert, vurgu su yeşili-mavisi.
 private val Light = lightColorScheme(
-    primary = Color(0xFF2C7C8C),
+    primary = Color(0xFF1B7F95),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFD3F0F4),
-    onPrimaryContainer = Color(0xFF0F203C),
-    secondaryContainer = Color(0xFFDCEFEC),
-    onSecondaryContainer = Color(0xFF0F2A4A),
-    background = Color(0xFFF3F6F9),
-    onBackground = Color(0xFF0F203C),
-    surface = Color(0xFFF8FAFC),
-    onSurface = Color(0xFF0F203C),
-    surfaceVariant = Color(0xFFE3EEEA),
-    onSurfaceVariant = Color(0xFF4B6470),
-    outline = Color(0xFF8FA8AA),
+    primaryContainer = Color(0xFFDDEFF3),
+    onPrimaryContainer = Color(0xFF12284A),
+    secondaryContainer = Color(0xFFE6EFF1),
+    onSecondaryContainer = Color(0xFF12284A),
+    background = Color(0xFFF7F4EE),
+    onBackground = Color(0xFF12284A),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF12284A),
+    surfaceVariant = Color(0xFFE9EEEF),
+    onSurfaceVariant = Color(0xFF55696F),
+    outline = Color(0xFF9AAAAE),
     tertiary = Color(0xFFB08A3E),
 )
 
