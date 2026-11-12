@@ -66,4 +66,10 @@ class HydrationTest {
         assertEquals(480, p.intervalMin)
         assertEquals(1070, p.nextAtMin)
     }
+
+    @Test fun ignoredReminderSpacesNextOne() {
+        // 08:00'de hatırlatma gösterildi, içilmedi: sıradaki çıpa + aralık, hemen tekrar değil
+        val p = nextPlan(480, 360, 1080, 2400, 0, 200, 480)!!
+        assertEquals(480 + p.intervalMin, p.nextAtMin)
+    }
 }

@@ -43,8 +43,9 @@ private fun currentMin(): Int = LocalTime.now().let { it.hour * 60 + it.minute }
 @Composable
 private fun AbRoot() {
     val app = LocalContext.current.applicationContext as AbApp
-    val vm: MainViewModel = viewModel(factory = viewModelFactory { initializer { MainViewModel(app.repo) } })
+    val vm: MainViewModel = viewModel(factory = viewModelFactory { initializer { MainViewModel(app.repo, app.reminders) } })
     val today by vm.today.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { app.reminders.reschedule() } // uygulama açılışında alarmı tazele
     val t = today ?: return
 
     if (!t.settings.onboarded) {

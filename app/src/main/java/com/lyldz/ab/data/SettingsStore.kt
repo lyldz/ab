@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.lyldz.ab.core.Activity
@@ -29,6 +30,7 @@ data class Settings(
     val tempC: Double? = null,
     val tempDay: String? = null,
     val onboarded: Boolean = false,
+    val lastNotifiedMs: Long? = null,
 ) {
     /** Sıcaklık yalnızca bugün alındıysa geçerli; eski gün değeri hedefi etkilemez. */
     fun goalMl(today: LocalDate): Int = goalOverrideMl ?: dailyGoalMl(
@@ -62,6 +64,11 @@ class SettingsStore(private val context: Context) {
         }
     }
 
+    /** Yalnızca bu alanı yazar; ayar kaydıyla yarışmasın. */
+    suspend fun setLastNotified(ms: Long) {
+        context.store.edit { it[LAST_NOTIFIED] = ms }
+    }
+
     private fun <T> androidx.datastore.preferences.core.MutablePreferences.putOrRemove(
         key: Preferences.Key<T>,
         v: T?,
@@ -86,6 +93,7 @@ class SettingsStore(private val context: Context) {
             tempC = this[TEMP],
             tempDay = this[TEMP_DAY],
             onboarded = this[ONBOARDED] ?: d.onboarded,
+            lastNotifiedMs = this[LAST_NOTIFIED],
         )
     }
 
@@ -104,5 +112,6 @@ class SettingsStore(private val context: Context) {
         val TEMP = doublePreferencesKey("temp_c")
         val TEMP_DAY = stringPreferencesKey("temp_day")
         val ONBOARDED = booleanPreferencesKey("onboarded")
+        val LAST_NOTIFIED = longPreferencesKey("last_notified_ms")
     }
 }

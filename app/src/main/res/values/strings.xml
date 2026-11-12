@@ -28,4 +28,9 @@
     <string name="cancel">Cancel</string>
     <string name="added">Added %1$s ml</string>
     <string name="undo">Undo</string>
+    <string name="channel_name">Reminders</string>
+    <string name="notif_title">Time for some water</string>
+    <string name="notif_text">Drink %1$s ml · %2$s / %3$s ml</string>
+    <string name="notif_custom">Custom</string>
+    <string name="notif_custom_hint">ml</string>
 </resources>

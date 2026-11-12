@@ -37,7 +37,7 @@ data class Plan(val nextAtMin: Int, val intervalMin: Int, val amountMl: Int)
 
 /**
  * Aralık = kalan süre ÷ (kalan ml ÷ blok), blok = min(bardak, kalan ml); tam dakikaya yuvarlanır, alt sınır yok.
- * Sayım son içişten (yoksa pencere başından) yapılır. Hedef doluysa veya sıradaki
+ * Sayım çıpadan yapılır: son içiş veya son gösterilen hatırlatmanın en geç olanı (yoksa pencere başı). Hedef doluysa veya sıradaki
  * hatırlatma pencereyi aşıyorsa null: o gün bildirim yok.
  */
 fun nextPlan(
@@ -47,14 +47,14 @@ fun nextPlan(
     goalMl: Int,
     drankMl: Int,
     cupMl: Int,
-    lastIntakeMin: Int?,
+    anchorMin: Int?,
 ): Plan? {
     val remainingMl = goalMl - drankMl
     val remainingMin = windowEndMin - max(nowMin, windowStartMin)
     if (remainingMl <= 0 || remainingMin <= 0 || cupMl <= 0) return null
     val amount = minOf(cupMl, remainingMl)
     val interval = max(1, (remainingMin * amount.toDouble() / remainingMl).roundToInt())
-    val anchor = max(windowStartMin, lastIntakeMin ?: windowStartMin)
+    val anchor = max(windowStartMin, anchorMin ?: windowStartMin)
     val next = max(anchor + interval, nowMin)
     if (next >= windowEndMin) return null
     return Plan(next, interval, amount)

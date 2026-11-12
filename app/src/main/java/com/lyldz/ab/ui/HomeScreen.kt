@@ -64,7 +64,7 @@ fun HomeScreen(today: AbRepository.Today, nowMin: Int, onAdd: (Int) -> Unit, onU
     }
 
     val remaining = today.goalMl - today.drankMl
-    val plan = nextPlan(nowMin, s.windowStartMin, s.windowEndMin, today.goalMl, today.drankMl, s.cupMl, today.lastIntakeMin)
+    val plan = nextPlan(nowMin, s.windowStartMin, s.windowEndMin, today.goalMl, today.drankMl, s.cupMl, today.anchorMin)
 
     Scaffold(snackbarHost = { SnackbarHost(snack) }) { padding ->
         Column(

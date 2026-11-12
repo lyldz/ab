@@ -17,7 +17,8 @@ class AbRepository(
     data class Today(
         val goalMl: Int,
         val drankMl: Int,
-        val lastIntakeMin: Int?,
+        /** Planın çıpası: son içiş veya bugün gösterilen son hatırlatma, hangisi geçse. */
+        val anchorMin: Int?,
         val settings: Settings,
     )
 
@@ -33,10 +34,11 @@ class AbRepository(
             Today(
                 goalMl = s.goalMl(day),
                 drankMl = list.sumOf { it.ml },
-                lastIntakeMin = list.firstOrNull()?.let {
-                    val t = Instant.ofEpochMilli(it.atMs).atZone(zone)
-                    t.hour * 60 + t.minute
-                },
+                anchorMin = listOfNotNull(
+                    list.firstOrNull()?.let { minuteOfDay(it.atMs) },
+                    s.lastNotifiedMs?.takeIf { Instant.ofEpochMilli(it).atZone(zone).toLocalDate() == day }
+                        ?.let { minuteOfDay(it) },
+                ).maxOrNull(),
                 settings = s,
             )
         }
@@ -47,6 +49,11 @@ class AbRepository(
 
     suspend fun addIntake(ml: Int, atMs: Long = System.currentTimeMillis()): Long =
         dao.insert(Intake(atMs = atMs, ml = ml))
+
+    suspend fun markNotified(ms: Long) = store.setLastNotified(ms)
+
+    private fun minuteOfDay(ms: Long): Int =
+        Instant.ofEpochMilli(ms).atZone(zone).let { it.hour * 60 + it.minute }
 
     suspend fun undoLast() {
         dao.lastId()?.let { dao.delete(it) }

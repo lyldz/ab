@@ -28,4 +28,9 @@
     <string name="cancel">Vazgeç</string>
     <string name="added">%1$s ml eklendi</string>
     <string name="undo">Geri al</string>
+    <string name="channel_name">Hatırlatmalar</string>
+    <string name="notif_title">Su zamanı</string>
+    <string name="notif_text">%1$s ml iç · %2$s / %3$s ml</string>
+    <string name="notif_custom">Özel</string>
+    <string name="notif_custom_hint">ml</string>
 </resources>
