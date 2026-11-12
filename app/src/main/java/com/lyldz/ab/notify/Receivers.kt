@@ -6,6 +6,7 @@ import android.content.Intent
 import android.util.Log
 import androidx.core.app.RemoteInput
 import com.lyldz.ab.AbApp
+import com.lyldz.ab.data.SOURCE_NOTIFICATION
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,7 +39,7 @@ class ReminderReceiver : BroadcastReceiver() {
                         ?.filter(Char::isDigit)?.toString()?.toIntOrNull()
                 async(context) { app ->
                     if (ml != null && ml in 1..5000) {
-                        app.addWater(ml)
+                        app.addWater(ml, SOURCE_NOTIFICATION)
                     } else {
                         app.reminders.reschedule()
                         app.reminders.refreshNotification()

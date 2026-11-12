@@ -24,6 +24,13 @@ class DayTest {
         assertEquals(2500, s.copy(tempDay = today.toString()).goalMl(today))
     }
 
+    @Test fun withMinuteOfDayKeepsDate() {
+        val zone = ZoneId.of("UTC")
+        val at = LocalDate.of(2026, 6, 1).atTime(9, 10).atZone(zone).toInstant().toEpochMilli()
+        val want = LocalDate.of(2026, 6, 1).atTime(14, 5).atZone(zone).toInstant().toEpochMilli()
+        assertEquals(want, withMinuteOfDay(at, 14 * 60 + 5, zone))
+    }
+
     @Test fun overrideWins() {
         assertEquals(3000, Settings(goalOverrideMl = 3000).goalMl(LocalDate.of(2026, 7, 1)))
     }

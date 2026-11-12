@@ -52,4 +52,15 @@
     <string name="onb_profile_title">Sana göre ayarlayalım</string>
     <string name="notif_text_after">%1$s / %2$s ml · Sonraki hatırlatma: %3$s</string>
     <string name="notif_text_done">Bugünün hedefi tamam · %1$s / %2$s ml</string>
+    <string name="records_title">Bugünün kayıtları</string>
+    <string name="records_empty">Henüz kayıt yok</string>
+    <string name="src_app">Uygulama</string>
+    <string name="src_notification">Bildirim</string>
+    <string name="src_widget">Widget</string>
+    <string name="menu_edit">Düzenle</string>
+    <string name="menu_delete">Sil</string>
+    <string name="more_options">Daha fazla</string>
+    <string name="deleted">%1$s ml silindi</string>
+    <string name="edit_title">Kaydı düzenle</string>
+    <string name="edit_time">Saat</string>
 </resources>

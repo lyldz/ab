@@ -70,7 +70,11 @@ private fun AbRoot(openCustom: Boolean) {
         if (settingsOpen) {
             SettingsScreen(t.settings, onSave = { vm.saveSettings(it); settingsOpen = false }, onBack = { settingsOpen = false })
         } else {
-            HomeScreen(t, nowMin, vm::add, vm::undo, onOpenSettings = { settingsOpen = true }, openCustom = openCustom)
+            HomeScreen(
+                t, nowMin, vm::add, vm::undo,
+                onDelete = vm::delete, onRestore = vm::restore, onEdit = vm::edit,
+                onOpenSettings = { settingsOpen = true }, openCustom = openCustom,
+            )
         }
     }
 }

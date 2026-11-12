@@ -1,6 +1,7 @@
 package com.lyldz.ab.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -14,6 +15,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -28,20 +32,29 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
 import com.lyldz.ab.core.nextPlan
 import com.lyldz.ab.data.AbRepository
+import com.lyldz.ab.data.Intake
+import com.lyldz.ab.data.SOURCE_NOTIFICATION
+import com.lyldz.ab.data.SOURCE_WIDGET
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -50,6 +63,9 @@ fun HomeScreen(
     nowMin: Int,
     onAdd: (Int) -> Unit,
     onUndo: () -> Unit,
+    onDelete: (Intake) -> Unit,
+    onRestore: (Intake) -> Unit,
+    onEdit: (Intake, Int, Int) -> Unit,
     onOpenSettings: () -> Unit,
     openCustom: Boolean = false,
 ) {
@@ -58,18 +74,19 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var custom by rememberSaveable { mutableStateOf(openCustom) }
+    var editing by remember { mutableStateOf<Intake?>(null) }
+
+    fun showUndo(message: String, undo: () -> Unit) {
+        scope.launch {
+            snack.currentSnackbarData?.dismiss()
+            val r = snack.showSnackbar(message, context.getString(R.string.undo), duration = SnackbarDuration.Short)
+            if (r == SnackbarResult.ActionPerformed) undo()
+        }
+    }
 
     fun add(ml: Int) {
         onAdd(ml)
-        scope.launch {
-            snack.currentSnackbarData?.dismiss()
-            val r = snack.showSnackbar(
-                context.getString(R.string.added, fmtMl(ml)),
-                context.getString(R.string.undo),
-                duration = SnackbarDuration.Short,
-            )
-            if (r == SnackbarResult.ActionPerformed) onUndo()
-        }
+        showUndo(context.getString(R.string.added, fmtMl(ml)), onUndo)
     }
 
     val remaining = today.goalMl - today.drankMl
@@ -86,17 +103,17 @@ fun HomeScreen(
                 }
             }
 
-            Card(Modifier.fillMaxWidth()) {
+            Card(
+                Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+            ) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     when {
                         remaining <= 0 -> Text(stringResource(R.string.home_plan_done), style = MaterialTheme.typography.titleLarge)
                         plan == null -> Text(stringResource(R.string.home_plan_none), style = MaterialTheme.typography.titleLarge)
                         else -> {
                             Text(stringResource(R.string.home_plan_amount, fmtMl(plan.amountMl)), style = MaterialTheme.typography.headlineMedium)
-                            Text(
-                                stringResource(R.string.home_plan_next, fmtTime(plan.nextAtMin)),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            Text(stringResource(R.string.home_plan_next, fmtTime(plan.nextAtMin)))
                         }
                     }
                 }
@@ -106,6 +123,7 @@ fun HomeScreen(
                 LinearProgressIndicator(
                     progress = { (today.drankMl.toFloat() / today.goalMl).coerceIn(0f, 1f) },
                     modifier = Modifier.fillMaxWidth().height(12.dp),
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
                 )
                 Text(
                     stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
@@ -123,10 +141,95 @@ fun HomeScreen(
                     Text(stringResource(R.string.add_custom))
                 }
             }
+
+            Text(stringResource(R.string.records_title), style = MaterialTheme.typography.titleLarge)
+            if (today.entries.isEmpty()) {
+                Text(stringResource(R.string.records_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            today.entries.forEach { e ->
+                EntryRow(
+                    e,
+                    onEdit = { editing = e },
+                    onDelete = {
+                        onDelete(e)
+                        showUndo(context.getString(R.string.deleted, fmtMl(e.ml))) { onRestore(e) }
+                    },
+                )
+            }
         }
     }
 
     if (custom) CustomDialog(onDismiss = { custom = false }, onAdd = { custom = false; add(it) })
+    editing?.let { e ->
+        EditDialog(e, onDismiss = { editing = null }, onSave = { ml, minute -> editing = null; onEdit(e, ml, minute) })
+    }
+}
+
+private fun minuteOfDay(atMs: Long): Int =
+    Instant.ofEpochMilli(atMs).atZone(ZoneId.systemDefault()).let { it.hour * 60 + it.minute }
+
+@Composable
+private fun EntryRow(e: Intake, onEdit: () -> Unit, onDelete: () -> Unit) {
+    var menu by remember { mutableStateOf(false) }
+    val more = stringResource(R.string.more_options)
+    val source = stringResource(
+        when (e.source) {
+            SOURCE_NOTIFICATION -> R.string.src_notification
+            SOURCE_WIDGET -> R.string.src_widget
+            else -> R.string.src_app
+        },
+    )
+    Card(
+        Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    ) {
+        Row(Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("${fmtTime(minuteOfDay(e.atMs))}  ·  ${fmtMl(e.ml)} ml", style = MaterialTheme.typography.titleMedium)
+                Text(source, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            }
+            Box {
+                TextButton(
+                    onClick = { menu = true },
+                    modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = more },
+                ) { Text("⋮") }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.menu_edit)) }, onClick = { menu = false; onEdit() })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.menu_delete)) }, onClick = { menu = false; onDelete() })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditDialog(e: Intake, onDismiss: () -> Unit, onSave: (Int, Int) -> Unit) {
+    var text by remember { mutableStateOf(e.ml.toString()) }
+    var minute by remember { mutableIntStateOf(minuteOfDay(e.atMs)) }
+    val ml = text.toIntOrNull()?.takeIf { it in 1..5000 }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.edit_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it.filter(Char::isDigit).take(4) },
+                    suffix = { Text("ml") },
+                    isError = ml == null,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+                Stepper(
+                    stringResource(R.string.edit_time), fmtTime(minute),
+                    stringResource(R.string.earlier), stringResource(R.string.later),
+                    { minute = (minute - 5).coerceIn(0, 1439) }, { minute = (minute + 5).coerceIn(0, 1439) },
+                )
+            }
+        },
+        confirmButton = { TextButton(onClick = { ml?.let { onSave(it, minute) } }, enabled = ml != null) { Text(stringResource(R.string.save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
 }
 
 @Composable

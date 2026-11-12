@@ -20,6 +20,8 @@ class AbRepository(
         /** Planın çıpası: son içiş veya bugün gösterilen son hatırlatma, hangisi geçse. */
         val anchorMin: Int?,
         val settings: Settings,
+        /** Bugünün kayıtları, en yeniden eskiye. */
+        val entries: List<Intake>,
     )
 
     val settings: Flow<Settings> = store.flow
@@ -40,6 +42,7 @@ class AbRepository(
                         ?.let { minuteOfDay(it) },
                 ).maxOrNull(),
                 settings = s,
+                entries = list,
             )
         }
     }
@@ -47,8 +50,15 @@ class AbRepository(
     /** Widget ve bildirim aksiyonları için tek seferlik güncel durum. */
     suspend fun todayNow(): Today = today().first()
 
-    suspend fun addIntake(ml: Int, atMs: Long = System.currentTimeMillis()): Long =
-        dao.insert(Intake(atMs = atMs, ml = ml))
+    suspend fun addIntake(ml: Int, source: Int = SOURCE_APP, atMs: Long = System.currentTimeMillis()): Long =
+        dao.insert(Intake(atMs = atMs, ml = ml, source = source))
+
+    suspend fun deleteIntake(id: Long) = dao.delete(id)
+
+    /** Silinen kaydı aynı kimlikle geri koyar (geri al). */
+    suspend fun restoreIntake(e: Intake) = dao.insert(e)
+
+    suspend fun updateIntake(id: Long, ml: Int, atMs: Long) = dao.update(id, ml, atMs)
 
     suspend fun markNotified(ms: Long) = store.setLastNotified(ms)
 

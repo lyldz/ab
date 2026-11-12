@@ -40,13 +40,14 @@ import com.lyldz.ab.EXTRA_CUSTOM
 import com.lyldz.ab.MainActivity
 import com.lyldz.ab.R
 import com.lyldz.ab.data.AbRepository
+import com.lyldz.ab.data.SOURCE_WIDGET
 import com.lyldz.ab.ui.fmtMl
 
-private val BG = ColorProvider(Color(0xFFF6F1E7), Color(0xFF0E1A1F))
-private val TEXT = ColorProvider(Color(0xFF14232A), Color(0xFFE9E4D8))
-private val PRIMARY = ColorProvider(Color(0xFF0B5563), Color(0xFF5FC7C4))
-private val ON_PRIMARY = ColorProvider(Color(0xFFFFFFFF), Color(0xFF0E1A1F))
-private val TRACK = ColorProvider(Color(0x330B5563), Color(0x335FC7C4))
+private val BG = ColorProvider(Color(0xFFF4F8FC), Color(0xFF0B1B2A))
+private val TEXT = ColorProvider(Color(0xFF0A2A43), Color(0xFFE6EEF6))
+private val PRIMARY = ColorProvider(Color(0xFF1976D2), Color(0xFF64B5F6))
+private val ON_PRIMARY = ColorProvider(Color(0xFFFFFFFF), Color(0xFF06233A))
+private val TRACK = ColorProvider(Color(0x331976D2), Color(0x3364B5F6))
 
 private val ML_KEY = ActionParameters.Key<Int>("ml")
 
@@ -65,7 +66,7 @@ class AbWidgetReceiver : GlanceAppWidgetReceiver() {
 class AddWaterAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         val ml = parameters[ML_KEY] ?: return
-        (context.applicationContext as AbApp).addWater(ml)
+        (context.applicationContext as AbApp).addWater(ml, SOURCE_WIDGET)
     }
 }
 

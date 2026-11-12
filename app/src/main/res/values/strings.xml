@@ -52,4 +52,15 @@
     <string name="onb_profile_title">Let\'s set it up for you</string>
     <string name="notif_text_after">%1$s / %2$s ml · Next reminder: %3$s</string>
     <string name="notif_text_done">Goal reached today · %1$s / %2$s ml</string>
+    <string name="records_title">Today\'s records</string>
+    <string name="records_empty">No records yet</string>
+    <string name="src_app">App</string>
+    <string name="src_notification">Notification</string>
+    <string name="src_widget">Widget</string>
+    <string name="menu_edit">Edit</string>
+    <string name="menu_delete">Delete</string>
+    <string name="more_options">More options</string>
+    <string name="deleted">Deleted %1$s ml</string>
+    <string name="edit_title">Edit record</string>
+    <string name="edit_time">Time</string>
 </resources>
