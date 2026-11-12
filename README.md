@@ -15,7 +15,7 @@ Sabit saatli, bunaltıcı bildirimler yerine günün belirlediğin saat aralığ
 - Ana ekranda "şu saate kadar şu kadar ml" planı ve ilerleme çubuğu
 
 ## Gizlilik
-Reklam, analytics, hesap ve Google Play Services yok. İnternet yalnızca günde bir kez bugünün sıcaklığını almak (yaklaşık, ~11 km'ye yuvarlanmış koordinat) ve şehir aramak (yazdığın şehir adı) için [Open-Meteo](https://open-meteo.com/)'ya gider; başka hiçbir veri gönderilmez. Konum izni isteğe bağlıdır, şehri elle de seçebilirsin.
+Reklam, analytics, hesap ve Google Play Services yok. İnternet yalnızca günde bir kez bugünün sıcaklığını almak (yaklaşık, ~11 km'ye yuvarlanmış koordinat) ve şehir aramak (yazdığın şehir adı) için [Open-Meteo](https://open-meteo.com/)'ya gider; başka hiçbir veri gönderilmez. Konum izni isteğe bağlıdır, şehri elle de seçebilirsin. Ayarlar'daki "Güncellemeyi denetle" yalnızca sen dokununca bu deponun GitHub sürümlerine bakar ve istersen yeni APK'yı indirir; hiçbir kişisel veri gönderilmez.
 
 ## Derleme
 Gereksinimler: JDK 17, Android SDK (platform 34).

@@ -153,4 +153,16 @@
     <string name="onb_wx_goal">Today\'s goal: %1$s ml</string>
     <string name="onb_wx_fail">Could not get the weather. Check your connection or search for a city.</string>
     <string name="onb_finish">Finish setup</string>
+    <string name="update_title">Updates</string>
+    <string name="update_current">Installed version: %1$s</string>
+    <string name="update_check">Check for updates</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_latest">You have the latest version.</string>
+    <string name="update_available">New version available: %1$s</string>
+    <string name="update_install">Download and install</string>
+    <string name="update_downloading">Downloading…</string>
+    <string name="update_failed">Could not reach GitHub. Check your connection.</string>
+    <string name="update_download_failed">Download failed. Try again.</string>
+    <string name="update_perm">Allow installing apps from ab in the settings that just opened, then tap Download again.</string>
+    <string name="update_privacy">Only contacts GitHub when you tap; nothing personal is sent.</string>
 </resources>

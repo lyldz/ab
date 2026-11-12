@@ -153,4 +153,16 @@
     <string name="onb_wx_goal">Bugünkü hedefin: %1$s ml</string>
     <string name="onb_wx_fail">Hava alınamadı. Bağlantını kontrol et ya da şehir ara.</string>
     <string name="onb_finish">Kurulumu bitir</string>
+    <string name="update_title">Güncelleme</string>
+    <string name="update_current">Yüklü sürüm: %1$s</string>
+    <string name="update_check">Güncellemeyi denetle</string>
+    <string name="update_checking">Denetleniyor…</string>
+    <string name="update_latest">En güncel sürümü kullanıyorsun.</string>
+    <string name="update_available">Yeni sürüm var: %1$s</string>
+    <string name="update_install">İndir ve kur</string>
+    <string name="update_downloading">İndiriliyor…</string>
+    <string name="update_failed">GitHub\'a ulaşılamadı. Bağlantını kontrol et.</string>
+    <string name="update_download_failed">İndirme başarısız. Tekrar dene.</string>
+    <string name="update_perm">Açılan ayarda ab\'ın uygulama yüklemesine izin ver, sonra tekrar İndir\'e dokun.</string>
+    <string name="update_privacy">Yalnızca sen dokununca GitHub\'a bağlanır; kişisel veri gönderilmez.</string>
 </resources>
