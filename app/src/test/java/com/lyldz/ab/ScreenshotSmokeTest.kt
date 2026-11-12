@@ -76,5 +76,5 @@ abstract class ScreenshotBase(private val prefix: String) {
 class ScreenshotSmokeTest : ScreenshotBase("light")
 
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34], qualifiers = "w411dp-h891dp-normal-xxhdpi-night")
+@Config(sdk = [34], qualifiers = "w411dp-h891dp-normal-night-xxhdpi")
 class ScreenshotNightSmokeTest : ScreenshotBase("dark")
