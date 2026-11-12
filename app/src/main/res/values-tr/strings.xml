@@ -38,4 +38,14 @@
     <string name="perm_allow">İzin ver</string>
     <string name="perm_skip">Şimdi değil</string>
     <string name="widget_desc">Su ilerlemesi ve hızlı ekleme</string>
+    <string name="settings">Ayarlar</string>
+    <string name="set_cup">Bardak boyutu</string>
+    <string name="set_use_activity">Hareketi hedefe ekle</string>
+    <string name="set_use_weather">Havayı hedefe ekle</string>
+    <string name="set_override">Hedefi elle belirle</string>
+    <string name="set_goal_ml">Hedef (ml)</string>
+    <string name="set_goal_warn">Bu hedef 5 litrenin üstünde. Çok fazla su içmek zararlı olabilir.</string>
+    <string name="save">Kaydet</string>
+    <string name="less">Daha az</string>
+    <string name="more">Daha çok</string>
 </resources>

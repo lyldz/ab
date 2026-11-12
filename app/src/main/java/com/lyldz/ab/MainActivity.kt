@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -22,6 +24,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.lyldz.ab.ui.HomeScreen
 import com.lyldz.ab.ui.MainViewModel
 import com.lyldz.ab.ui.OnboardingScreen
+import com.lyldz.ab.ui.SettingsScreen
 import com.lyldz.ab.ui.theme.AbTheme
 import kotlinx.coroutines.delay
 import java.time.LocalTime
@@ -63,6 +66,11 @@ private fun AbRoot(openCustom: Boolean) {
                 nowMin = currentMin()
             }
         }
-        HomeScreen(t, nowMin, vm::add, vm::undo, openCustom)
+        var settingsOpen by rememberSaveable { mutableStateOf(false) }
+        if (settingsOpen) {
+            SettingsScreen(t.settings, onSave = { vm.saveSettings(it); settingsOpen = false }, onBack = { settingsOpen = false })
+        } else {
+            HomeScreen(t, nowMin, vm::add, vm::undo, onOpenSettings = { settingsOpen = true }, openCustom = openCustom)
+        }
     }
 }

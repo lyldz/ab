@@ -22,6 +22,13 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
         }
     }
 
+    fun saveSettings(s: Settings) {
+        viewModelScope.launch {
+            app.repo.saveSettings(s)
+            app.reminders.reschedule()
+        }
+    }
+
     fun add(ml: Int) {
         viewModelScope.launch { app.addWater(ml) }
     }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -49,6 +50,7 @@ fun HomeScreen(
     nowMin: Int,
     onAdd: (Int) -> Unit,
     onUndo: () -> Unit,
+    onOpenSettings: () -> Unit,
     openCustom: Boolean = false,
 ) {
     val s = today.settings
@@ -78,6 +80,12 @@ fun HomeScreen(
             Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onOpenSettings, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text(stringResource(R.string.settings))
+                }
+            }
+
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     when {

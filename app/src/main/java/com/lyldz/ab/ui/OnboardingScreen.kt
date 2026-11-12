@@ -78,19 +78,15 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
             )
 
             Text(stringResource(R.string.onb_activity), style = MaterialTheme.typography.titleMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Activity.entries.forEachIndexed { i, a ->
-                    FilterChip(
-                        selected = i == activityIdx,
-                        onClick = { activityIdx = i },
-                        label = { Text(stringResource(activityLabel(a))) },
-                    )
-                }
-            }
+            ActivityChips(activityIdx) { activityIdx = it }
 
             Text(stringResource(R.string.onb_window), style = MaterialTheme.typography.titleMedium)
-            TimeStepper(stringResource(R.string.onb_from), start) { start = it.coerceIn(0, end - 60) }
-            TimeStepper(stringResource(R.string.onb_to), end) { end = it.coerceIn(start + 60, 23 * 60 + 30) }
+            val earlier = stringResource(R.string.earlier)
+            val later = stringResource(R.string.later)
+            Stepper(stringResource(R.string.onb_from), fmtTime(start), earlier, later,
+                { start = (start - 30).coerceIn(0, end - 60) }, { start = (start + 30).coerceIn(0, end - 60) })
+            Stepper(stringResource(R.string.onb_to), fmtTime(end), earlier, later,
+                { end = (end - 30).coerceIn(start + 60, 23 * 60 + 30) }, { end = (end + 30).coerceIn(start + 60, 23 * 60 + 30) })
 
             Text(
                 stringResource(R.string.onb_goal, fmtMl(dailyGoalMl(kg ?: 70, activity, null))),
@@ -125,18 +121,29 @@ fun activityLabel(a: Activity): Int = when (a) {
 }
 
 @Composable
-private fun TimeStepper(label: String, minutes: Int, onChange: (Int) -> Unit) {
-    val earlier = stringResource(R.string.earlier)
-    val later = stringResource(R.string.later)
+internal fun ActivityChips(selected: Int, onSelect: (Int) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Activity.entries.forEachIndexed { i, a ->
+            FilterChip(
+                selected = i == selected,
+                onClick = { onSelect(i) },
+                label = { Text(stringResource(activityLabel(a))) },
+            )
+        }
+    }
+}
+
+@Composable
+internal fun Stepper(label: String, value: String, minusDesc: String, plusDesc: String, onMinus: () -> Unit, onPlus: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("$label  ${fmtTime(minutes)}", Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+        Text("$label  $value", Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         OutlinedButton(
-            onClick = { onChange(minutes - 30) },
-            modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = earlier },
+            onClick = onMinus,
+            modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = minusDesc },
         ) { Text("\u2212") }
         OutlinedButton(
-            onClick = { onChange(minutes + 30) },
-            modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = later },
+            onClick = onPlus,
+            modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = plusDesc },
         ) { Text("+") }
     }
 }

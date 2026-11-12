@@ -38,4 +38,14 @@
     <string name="perm_allow">Allow</string>
     <string name="perm_skip">Not now</string>
     <string name="widget_desc">Water progress and quick add</string>
+    <string name="settings">Settings</string>
+    <string name="set_cup">Glass size</string>
+    <string name="set_use_activity">Add activity to goal</string>
+    <string name="set_use_weather">Add weather to goal</string>
+    <string name="set_override">Set goal manually</string>
+    <string name="set_goal_ml">Goal (ml)</string>
+    <string name="set_goal_warn">This goal is above 5 L. Drinking too much water can be harmful.</string>
+    <string name="save">Save</string>
+    <string name="less">Less</string>
+    <string name="more">More</string>
 </resources>
