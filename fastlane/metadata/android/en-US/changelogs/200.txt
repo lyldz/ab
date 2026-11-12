@@ -1,0 +1,5 @@
+New design: filled circular water gauge, timeline, 4 tabs and a History screen.
+Black-and-white dark theme (System/Light/Dark).
+Bigger Āb logo and new icons.
+Location and weather during setup: extra water on hot days.
+Status notification shows right away.

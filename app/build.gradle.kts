@@ -6,7 +6,7 @@ plugins {
 }
 
 // SemVer tek yerde: versionCode = MAJOR*10000 + MINOR*100 + PATCH
-val appVersion = "0.1.0"
+val appVersion = "0.2.0"
 val (major, minor, patch) = appVersion.split(".").map { it.toInt() }
 
 android {
