@@ -76,6 +76,7 @@ private fun AbRoot(openCustom: Boolean) {
             HomeScreen(
                 t, nowMin, vm::add, vm::undo,
                 onDelete = vm::delete, onRestore = vm::restore, onEdit = vm::edit,
+                onSetCup = { vm.saveSettings(t.settings.copy(cupMl = it)) },
                 onOpenSettings = { settingsOpen = true }, openCustom = openCustom,
             )
         }

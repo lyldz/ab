@@ -10,7 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -19,7 +23,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -40,8 +43,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -70,6 +75,7 @@ fun HomeScreen(
     onRestore: (Intake) -> Unit,
     onEdit: (Intake, Int, Int) -> Unit,
     onOpenSettings: () -> Unit,
+    onSetCup: (Int) -> Unit,
     openCustom: Boolean = false,
 ) {
     val s = today.settings
@@ -78,6 +84,7 @@ fun HomeScreen(
     val context = LocalContext.current
     var custom by rememberSaveable { mutableStateOf(openCustom) }
     var editing by remember { mutableStateOf<Intake?>(null) }
+    var cupDialog by remember { mutableStateOf(false) }
 
     fun showUndo(message: String, undo: () -> Unit) {
         scope.launch {
@@ -122,16 +129,30 @@ fun HomeScreen(
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                LinearProgressIndicator(
-                    progress = { (today.drankMl.toFloat() / today.goalMl).coerceIn(0f, 1f) },
-                    modifier = Modifier.fillMaxWidth().height(12.dp),
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                )
-                Text(
-                    stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
-                    style = MaterialTheme.typography.titleMedium,
-                )
+            val fraction = (today.drankMl.toFloat() / today.goalMl).coerceIn(0f, 1f)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Card(
+                    Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                ) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Stat(stringResource(R.string.stat_goal), fmtMl(today.goalMl))
+                        Stat(stringResource(R.string.stat_drank), fmtMl(today.drankMl))
+                        Stat(stringResource(R.string.stat_left), fmtMl(remaining.coerceAtLeast(0)))
+                    }
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    WaterGlass(
+                        fraction,
+                        stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
+                        Modifier.size(width = 130.dp, height = 180.dp),
+                    )
+                    Text("${(fraction * 100).roundToInt()}%", style = MaterialTheme.typography.titleLarge)
+                }
+            }
+
+            OutlinedButton(onClick = { cupDialog = true }, modifier = Modifier.heightIn(min = 48.dp)) {
+                Text(stringResource(R.string.cup_button, fmtMl(s.cupMl)))
             }
 
             val temp = s.tempToday(LocalDate.now())
@@ -173,6 +194,7 @@ fun HomeScreen(
         }
     }
 
+    if (cupDialog) CupDialog(s.cupMl, onDismiss = { cupDialog = false }, onPick = { cupDialog = false; onSetCup(it) })
     if (custom) CustomDialog(onDismiss = { custom = false }, onAdd = { custom = false; add(it) })
     editing?.let { e ->
         EditDialog(e, onDismiss = { editing = null }, onSave = { ml, minute -> editing = null; onEdit(e, ml, minute) })
@@ -263,6 +285,56 @@ private fun CustomDialog(onDismiss: () -> Unit, onAdd: (Int) -> Unit) {
             )
         },
         confirmButton = { TextButton(onClick = { ml?.let(onAdd) }, enabled = ml != null) { Text(stringResource(R.string.ok_add)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
+}
+
+@Composable
+private fun Stat(label: String, value: String) {
+    Column {
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Text("$value ml", style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CupDialog(current: Int, onDismiss: () -> Unit, onPick: (Int) -> Unit) {
+    var custom by remember { mutableStateOf("") }
+    val customMl = custom.toIntOrNull()?.takeIf { it in 50..1000 }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.cup_dialog_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    listOf(100, 150, 200, 250, 300, 400, 500).forEach { ml ->
+                        val selected = ml == current
+                        Column(
+                            Modifier.selectable(selected = selected, role = Role.RadioButton, onClick = { onPick(ml) }).padding(4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Box(
+                                Modifier.size(56.dp).clip(CircleShape).background(
+                                    if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                                ),
+                                contentAlignment = Alignment.Center,
+                            ) { CupIcon(ml) }
+                            Text("${fmtMl(ml)} ml", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+                OutlinedTextField(
+                    value = custom,
+                    onValueChange = { custom = it.filter(Char::isDigit).take(4) },
+                    label = { Text(stringResource(R.string.cup_custom_hint)) },
+                    suffix = { Text("ml") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+            }
+        },
+        confirmButton = { TextButton(onClick = { customMl?.let(onPick) }, enabled = customMl != null) { Text(stringResource(R.string.cup_set)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }

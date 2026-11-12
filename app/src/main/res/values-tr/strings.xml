@@ -84,4 +84,11 @@
     <string name="goal_channel_name">Hedef güncellemeleri</string>
     <string name="weather_notif_title">Bugün hava %1$s°C</string>
     <string name="weather_notif_text">Hedefin %1$s ml oldu (+%2$s ml hava eki)</string>
+    <string name="stat_goal">Hedef</string>
+    <string name="stat_drank">İçilen</string>
+    <string name="stat_left">Kalan</string>
+    <string name="cup_button">Bardak: %1$s ml</string>
+    <string name="cup_dialog_title">Bardak seç</string>
+    <string name="cup_custom_hint">Özel (50–1000)</string>
+    <string name="cup_set">Ayarla</string>
 </resources>
