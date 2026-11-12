@@ -48,13 +48,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
 import com.lyldz.ab.core.nextPlan
+import com.lyldz.ab.core.tempExtraMl
 import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.Intake
 import com.lyldz.ab.data.SOURCE_NOTIFICATION
 import com.lyldz.ab.data.SOURCE_WIDGET
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -128,6 +131,17 @@ fun HomeScreen(
                 Text(
                     stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
                     style = MaterialTheme.typography.titleMedium,
+                )
+            }
+
+            val temp = s.tempToday(LocalDate.now())
+            if (s.useWeather && temp != null) {
+                val extra = tempExtraMl(temp)
+                val degrees = temp.roundToInt().toString()
+                Text(
+                    if (extra > 0 && s.goalOverrideMl == null) stringResource(R.string.home_weather, degrees, fmtMl(extra))
+                    else stringResource(R.string.home_weather_none, degrees),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 

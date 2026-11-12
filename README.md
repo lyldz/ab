@@ -15,7 +15,7 @@ Sabit saatli, bunaltıcı bildirimler yerine günün belirlediğin saat aralığ
 - Ana ekranda "şu saate kadar şu kadar ml" planı ve ilerleme çubuğu
 
 ## Gizlilik
-Reklam, analytics, hesap ve Google Play Services yok. İnternet yalnızca günde bir kez, seçtiğin şehrin sıcaklığını almak için kullanılır. Konum izni isteğe bağlıdır.
+Reklam, analytics, hesap ve Google Play Services yok. İnternet yalnızca günde bir kez bugünün sıcaklığını almak (yaklaşık, ~11 km'ye yuvarlanmış koordinat) ve şehir aramak (yazdığın şehir adı) için [Open-Meteo](https://open-meteo.com/)'ya gider; başka hiçbir veri gönderilmez. Konum izni isteğe bağlıdır, şehri elle de seçebilirsin.
 
 ## Derleme
 Gereksinimler: JDK 17, Android SDK (platform 34).

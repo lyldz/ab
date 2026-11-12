@@ -21,6 +21,7 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
     fun finishOnboarding(s: Settings) {
         viewModelScope.launch {
             app.repo.saveSettings(s.copy(onboarded = true))
+            app.reminders.refreshWeather()
             app.reminders.reschedule()
         }
     }
@@ -28,6 +29,7 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
     fun saveSettings(s: Settings) {
         viewModelScope.launch {
             app.repo.saveSettings(s)
+            app.reminders.refreshWeather()
             app.reminders.reschedule()
         }
     }

@@ -11,6 +11,7 @@
 - Logo ve ikon paketi (uygulama, temalı ve bildirim ikonu); onboarding'de bildirim izni ayrı adımda istenir.
 - Ana ekran widget'ı (Glance): ilerleme, +bardak/+500/+1000 ve özel miktar için uygulamayı açan düğme.
 - Mavi tema (ikon paletinden), "Bugünün kayıtları" listesi: kaynak (uygulama/bildirim/widget), düzenleme, silme ve silmeyi geri alma.
+- Hava: günde bir kez (sabah rutin başında ve ilk açılışta) Open-Meteo'dan bugünün en yüksek sıcaklığı; şehir arama veya isteğe bağlı yaklaşık konum; hedef yükselirse bildirim. Onboarding'de ayrı konum izni adımı.
 - Ayarlar ekranı: kilo, hareket, rutin saatleri, bardak boyutu, hareket/hava eklerini kapatma, elle hedef ve 5 L uyarısı.
 
 ## [0.1.0]

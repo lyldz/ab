@@ -37,10 +37,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -50,10 +52,12 @@ import com.lyldz.ab.R
 import com.lyldz.ab.core.Activity
 import com.lyldz.ab.core.dailyGoalMl
 import com.lyldz.ab.data.Settings
+import com.lyldz.ab.data.currentCoarse
+import kotlinx.coroutines.launch
 
 private val needsNotifPermission = Build.VERSION.SDK_INT >= 33
 
-/** Adım 0: karşılama, 1: bilgiler, 2: bildirim izni. Her izin ayrı ekranda, tek tek istenir. */
+/** Adım 0: karşılama, 1: bilgiler, 2: bildirim izni, 3: konum izni (isteğe bağlı). Her izin ayrı ekranda, tek tek istenir. */
 @Composable
 fun OnboardingScreen(onDone: (Settings) -> Unit) {
     var step by rememberSaveable { mutableIntStateOf(0) }
@@ -67,9 +71,17 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
 
     fun build() = Settings(weightKg = kg ?: 70, activity = activity, windowStartMin = start, windowEndMin = end)
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        onDone(build()) // izin verilse de verilmese de devam
+        step = 3 // izin verilse de verilmese de devam
     }
-    BackHandler(enabled = step >= 1) { step -= 1 }
+    val scope = rememberCoroutineScope()
+    val ctx = LocalContext.current
+    val locLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        scope.launch {
+            val pos = if (granted) currentCoarse(ctx) else null
+            onDone(build().copy(lat = pos?.first, lon = pos?.second))
+        }
+    }
+    BackHandler(enabled = step >= 1) { step = if (step == 3 && !needsNotifPermission) 1 else step - 1 }
 
     if (step == 0) {
         WelcomePage(onStart = { step = 1 })
@@ -111,15 +123,26 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
             Text(stringResource(R.string.onb_goal_note), color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             Button(
-                onClick = { if (needsNotifPermission) step = 2 else onDone(build()) },
+                onClick = { step = if (needsNotifPermission) 2 else 3 },
                 enabled = valid,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-            ) { Text(stringResource(if (needsNotifPermission) R.string.onb_next else R.string.onb_start)) }
-        } else {
+            ) { Text(stringResource(R.string.onb_next)) }
+        } else if (step == 2) {
             Text(stringResource(R.string.perm_notif_title), style = MaterialTheme.typography.headlineLarge)
             Text(stringResource(R.string.onb_notif_why), style = MaterialTheme.typography.bodyLarge)
             Button(
                 onClick = { notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+            ) { Text(stringResource(R.string.perm_allow)) }
+            OutlinedButton(
+                onClick = { step = 3 },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+            ) { Text(stringResource(R.string.perm_skip)) }
+        } else {
+            Text(stringResource(R.string.perm_loc_title), style = MaterialTheme.typography.headlineLarge)
+            Text(stringResource(R.string.onb_loc_why), style = MaterialTheme.typography.bodyLarge)
+            Button(
+                onClick = { locLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
             ) { Text(stringResource(R.string.perm_allow)) }
             OutlinedButton(

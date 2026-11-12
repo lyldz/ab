@@ -53,7 +53,10 @@ private fun AbRoot(openCustom: Boolean) {
     val app = LocalContext.current.applicationContext as AbApp
     val vm: MainViewModel = viewModel(factory = viewModelFactory { initializer { MainViewModel(app) } })
     val today by vm.today.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { app.reminders.reschedule() } // uygulama açılışında alarmı tazele
+    LaunchedEffect(Unit) {
+        app.reminders.refreshWeather() // günde bir kez; bugün alındıysa hiçbir şey yapmaz
+        app.reminders.reschedule() // uygulama açılışında alarmı tazele
+    }
     val t = today ?: return
 
     if (!t.settings.onboarded) {

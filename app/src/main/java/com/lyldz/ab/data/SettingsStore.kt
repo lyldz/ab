@@ -33,10 +33,10 @@ data class Settings(
     val lastNotifiedMs: Long? = null,
 ) {
     /** Sıcaklık yalnızca bugün alındıysa geçerli; eski gün değeri hedefi etkilemez. */
+    fun tempToday(today: LocalDate): Double? = tempC.takeIf { tempDay == today.toString() }
+
     fun goalMl(today: LocalDate): Int = goalOverrideMl ?: dailyGoalMl(
-        weightKg, activity,
-        tempC.takeIf { tempDay == today.toString() },
-        useActivity, useWeather,
+        weightKg, activity, tempToday(today), useActivity, useWeather,
     )
 }
 
@@ -67,6 +67,13 @@ class SettingsStore(private val context: Context) {
     /** Yalnızca bu alanı yazar; ayar kaydıyla yarışmasın. */
     suspend fun setLastNotified(ms: Long) {
         context.store.edit { it[LAST_NOTIFIED] = ms }
+    }
+
+    suspend fun setTemperature(tempC: Double, day: String) {
+        context.store.edit {
+            it[TEMP] = tempC
+            it[TEMP_DAY] = day
+        }
     }
 
     private fun <T> androidx.datastore.preferences.core.MutablePreferences.putOrRemove(

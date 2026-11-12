@@ -63,4 +63,25 @@
     <string name="deleted">%1$s ml silindi</string>
     <string name="edit_title">Kaydı düzenle</string>
     <string name="edit_time">Saat</string>
+    <string name="perm_loc_title">Konum (isteğe bağlı)</string>
+    <string name="onb_loc_why">ab, yalnızca bugünün sıcaklığını almak ve sıcak günlerde hedefini artırmak için yaklaşık konumunu kullanabilir. Şehri sonra Ayarlar\'dan kendin de seçebilir ya da bu adımı atlayabilirsin.</string>
+    <string name="weather_title">Hava</string>
+    <string name="weather_city">Şehir: %1$s</string>
+    <string name="weather_city_none">seçilmedi</string>
+    <string name="weather_city_location">Konumum (yaklaşık)</string>
+    <string name="weather_today">Bugün: %1$s°C (+%2$s ml)</string>
+    <string name="weather_search">Şehir ara</string>
+    <string name="weather_use_location">Konumumu kullan</string>
+    <string name="weather_clear">Kaldır</string>
+    <string name="weather_credit">Hava verisi: Open-Meteo.com</string>
+    <string name="weather_no_location">Konum alınamadı. Bunun yerine şehir ara.</string>
+    <string name="city_query">Şehir adı</string>
+    <string name="city_search_btn">Ara</string>
+    <string name="city_none">Şehir bulunamadı ya da internet yok.</string>
+    <string name="city_dialog_title">Şehir seç</string>
+    <string name="home_weather">Bugün %1$s°C · hedefe +%2$s ml</string>
+    <string name="home_weather_none">Bugün %1$s°C</string>
+    <string name="goal_channel_name">Hedef güncellemeleri</string>
+    <string name="weather_notif_title">Bugün hava %1$s°C</string>
+    <string name="weather_notif_text">Hedefin %1$s ml oldu (+%2$s ml hava eki)</string>
 </resources>

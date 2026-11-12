@@ -7,13 +7,17 @@ import android.content.Intent
 import com.lyldz.ab.R
 import com.lyldz.ab.core.Plan
 import com.lyldz.ab.core.nextPlan
+import com.lyldz.ab.core.tempExtraMl
 import androidx.glance.appwidget.updateAll
 import com.lyldz.ab.data.AbRepository
+import com.lyldz.ab.data.WeatherApi
 import com.lyldz.ab.ui.fmtMl
 import com.lyldz.ab.ui.fmtTime
 import com.lyldz.ab.widget.AbWidget
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import kotlin.math.roundToInt
 
 /**
  * Tek bir alarm tutar: sıradaki hatırlatma ya da (plan yoksa) yarının rutin başı.
@@ -28,6 +32,45 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         Intent(context, ReminderReceiver::class.java).setAction(ACTION_FIRE).putExtra(EXTRA_NOTIFY, notify),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
+
+    private fun morningPending(): PendingIntent = PendingIntent.getBroadcast(
+        context, 1,
+        Intent(context, ReminderReceiver::class.java).setAction(ACTION_MORNING),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
+
+    /** Her gün rutin başında bir kez: sıcaklığı al. Sıradaki rutin başına kurulur. */
+    private fun scheduleMorning(startMin: Int, now: ZonedDateTime) {
+        val startToday = now.toLocalDate().atStartOfDay(now.zone).plusMinutes(startMin.toLong())
+        val at = if (now.isBefore(startToday)) startToday else startToday.plusDays(1)
+        alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at.toInstant().toEpochMilli(), morningPending())
+    }
+
+    /**
+     * Günde bir kez bugünün en yüksek sıcaklığını çeker (gün içinde tekrar çekmez). Çekildiyse
+     * hava ekini (ml) döndürür; ayar kapalı, yer yok, bugün zaten alınmış ya da ağ yoksa null.
+     * Başarısız olursa işaretlenmez; sonraki açılış ya da sabah alarmı yeniden dener.
+     */
+    suspend fun refreshWeather(zone: ZoneId = ZoneId.systemDefault()): Int? {
+        val s = repo.settingsNow()
+        val lat = s.lat
+        val lon = s.lon
+        val today = LocalDate.now(zone).toString()
+        if (!s.useWeather || lat == null || lon == null || s.tempDay == today) return null
+        val t = WeatherApi.fetchMaxTemp(lat, lon) ?: return null
+        repo.saveTemperature(t, today)
+        return tempExtraMl(t)
+    }
+
+    suspend fun onMorning(zone: ZoneId = ZoneId.systemDefault()) {
+        val extra = refreshWeather(zone)
+        val s = repo.settingsNow()
+        val temp = s.tempC
+        if (extra != null && extra > 0 && s.onboarded && s.goalOverrideMl == null && temp != null) {
+            Notifier.showWeather(context, temp.roundToInt(), repo.todayNow().goalMl, extra)
+        }
+        reschedule(zone)
+    }
 
     private suspend fun planNow(now: ZonedDateTime): Pair<AbRepository.Today, Plan?> {
         val t = repo.todayNow()
@@ -50,8 +93,10 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         val (t, plan) = planNow(now)
         if (!t.settings.onboarded) {
             alarm.cancel(pending(true))
+            alarm.cancel(morningPending())
             return
         }
+        scheduleMorning(t.settings.windowStartMin, now)
         val day = now.toLocalDate().atStartOfDay(zone)
         val (at, notify) = if (plan != null) {
             day.plusMinutes(plan.nextAtMin.toLong()) to true

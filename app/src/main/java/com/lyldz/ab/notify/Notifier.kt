@@ -17,6 +17,9 @@ const val CHANNEL_ID = "reminders"
 const val NOTIF_ID = 1
 const val ACTION_ADD = "com.lyldz.ab.ADD"
 const val ACTION_FIRE = "com.lyldz.ab.FIRE"
+const val ACTION_MORNING = "com.lyldz.ab.MORNING"
+const val GOAL_CHANNEL_ID = "goal_updates"
+const val GOAL_NOTIF_ID = 2
 const val EXTRA_ML = "ml"
 const val EXTRA_NOTIFY = "notify"
 const val KEY_TEXT = "ml_text"
@@ -26,6 +29,11 @@ object Notifier {
         NotificationManagerCompat.from(ctx).createNotificationChannel(
             NotificationChannelCompat.Builder(CHANNEL_ID, NotificationManagerCompat.IMPORTANCE_DEFAULT)
                 .setName(ctx.getString(R.string.channel_name))
+                .build(),
+        )
+        NotificationManagerCompat.from(ctx).createNotificationChannel(
+            NotificationChannelCompat.Builder(GOAL_CHANNEL_ID, NotificationManagerCompat.IMPORTANCE_LOW)
+                .setName(ctx.getString(R.string.goal_channel_name))
                 .build(),
         )
     }
@@ -66,6 +74,24 @@ object Notifier {
             )
             .build()
         nm.notify(NOTIF_ID, n)
+    }
+
+    /** Sabah sıcaklığı hedefi yükselttiyse bir kez haber verir. */
+    @SuppressLint("MissingPermission") // areNotificationsEnabled() izni kapsar
+    fun showWeather(ctx: Context, tempC: Int, goalMl: Int, extraMl: Int) {
+        val nm = NotificationManagerCompat.from(ctx)
+        if (!nm.areNotificationsEnabled()) return
+        val open = PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+        nm.notify(
+            GOAL_NOTIF_ID,
+            NotificationCompat.Builder(ctx, GOAL_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_stat_ab)
+                .setContentTitle(ctx.getString(R.string.weather_notif_title, tempC.toString()))
+                .setContentText(ctx.getString(R.string.weather_notif_text, fmtMl(goalMl), fmtMl(extraMl)))
+                .setContentIntent(open)
+                .setAutoCancel(true)
+                .build(),
+        )
     }
 
     /** Bildirim şu an gösteriliyor mu (kaydırılıp kapatılmadıysa). */

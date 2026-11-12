@@ -15,5 +15,6 @@
 | 2026-11-12 | Bildirimde 3 düğme: bardak, 500 (bardak 500 ise 1000), satır içi "Özel" | Android bir bildirimde en fazla 3 düğme gösterir; 250/750/1000 uygulamada ve widget'ta. Kullanıcıya soruldu |
 | 2026-11-12 | Bildirimden/uygulamadan/widget'tan kayıt sonrası bildirim kapatılmaz, yerinde güncellenir | Kullanıcı telefonda denedi: eklenince kayboluyordu, kalması gerekiyordu |
 | 2026-11-12 | Tema ikon paletine (lacivert/mavi) çevrildi; Room şeması v2 (kayıtlara kaynak sütunu, migration ile) | Kullanıcı krem/teal temayı beğenmedi; kayıt listesi kaynak ikonu istendi |
+| 2026-11-12 | Hava: Open-Meteo (tahmin API + geocoding), günde bir kez; sabah alarmı ayrı (rutin başı), bildirim yalnızca hava eki >0 ve elle hedef yokken | Kullanıcı: günde bir kez, internetten yalnızca sıcaklık, konum isteğe bağlı. Koordinat 1 ondalığa yuvarlanır (~11 km) |
 | 2026-11-12 | Alarm inexact (setAndAllowWhileIdle); tek alarm tutulur | SPEC T-03: izin gerektirmez; Doze'da dakikalar kayabilir, tam zamanında seçeneği sonra |
 | 2026-11-12 | Görmezden gelinen hatırlatmadan sonra bir sonraki aralık sonra yine gelir | Plan çıpası son içiş veya son gösterilen hatırlatma; bıkma durumunda sıklık azaltma henüz kararlaştırılmadı, kullanıcıya soruldu |

@@ -62,6 +62,10 @@ class AbRepository(
 
     suspend fun markNotified(ms: Long) = store.setLastNotified(ms)
 
+    suspend fun settingsNow(): Settings = store.flow.first()
+
+    suspend fun saveTemperature(tempC: Double, day: String) = store.setTemperature(tempC, day)
+
     private fun minuteOfDay(ms: Long): Int =
         Instant.ofEpochMilli(ms).atZone(zone).let { it.hour * 60 + it.minute }
 

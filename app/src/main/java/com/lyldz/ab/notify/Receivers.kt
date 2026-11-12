@@ -33,6 +33,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 val notify = intent.getBooleanExtra(EXTRA_NOTIFY, true)
                 async(context) { it.reminders.onFire(notify) }
             }
+            ACTION_MORNING -> async(context) { it.reminders.onMorning() }
             ACTION_ADD -> {
                 val ml = intent.getIntExtra(EXTRA_ML, 0).takeIf { it > 0 }
                     ?: RemoteInput.getResultsFromIntent(intent)?.getCharSequence(KEY_TEXT)
