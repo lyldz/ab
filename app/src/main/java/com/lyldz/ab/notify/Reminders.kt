@@ -4,10 +4,13 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import com.lyldz.ab.R
 import com.lyldz.ab.core.Plan
 import com.lyldz.ab.core.nextPlan
 import androidx.glance.appwidget.updateAll
 import com.lyldz.ab.data.AbRepository
+import com.lyldz.ab.ui.fmtMl
+import com.lyldz.ab.ui.fmtTime
 import com.lyldz.ab.widget.AbWidget
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -59,13 +62,31 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at.toInstant().toEpochMilli(), pending(notify))
     }
 
+    /**
+     * Bildirimden, uygulamadan ya da widget'tan kayıt sonrası: bildirim hâlâ duruyorsa yerinde
+     * kalır, ilerlemesi ve sıradaki hatırlatma saati güncellenir (yeniden ses çalmaz).
+     */
+    suspend fun refreshNotification(zone: ZoneId = ZoneId.systemDefault()) {
+        if (!Notifier.isShowing(context)) return
+        val (t, plan) = planNow(ZonedDateTime.now(zone))
+        val drank = fmtMl(t.drankMl)
+        val goal = fmtMl(t.goalMl)
+        val text = when {
+            t.drankMl >= t.goalMl -> context.getString(R.string.notif_text_done, drank, goal)
+            plan != null -> context.getString(R.string.notif_text_after, drank, goal, fmtTime(plan.nextAtMin))
+            else -> context.getString(R.string.home_progress, drank, goal)
+        }
+        Notifier.show(context, text, t.drankMl, t.goalMl, t.settings.cupMl, quiet = true)
+    }
+
     suspend fun onFire(notify: Boolean, zone: ZoneId = ZoneId.systemDefault()) {
         if (notify) {
             val now = ZonedDateTime.now(zone)
             val (t, plan) = planNow(now)
             // alarm erken/geç gelebilir; yalnızca zamanı gelmişse göster
             if (plan != null && plan.nextAtMin <= now.hour * 60 + now.minute) {
-                Notifier.show(context, plan.amountMl, t.drankMl, t.goalMl, t.settings.cupMl)
+                val text = context.getString(R.string.notif_text, fmtMl(plan.amountMl), fmtMl(t.drankMl), fmtMl(t.goalMl))
+                Notifier.show(context, text, t.drankMl, t.goalMl, t.settings.cupMl)
                 repo.markNotified(System.currentTimeMillis())
             }
         }

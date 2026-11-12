@@ -23,6 +23,17 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -42,7 +53,7 @@ import com.lyldz.ab.data.Settings
 
 private val needsNotifPermission = Build.VERSION.SDK_INT >= 33
 
-/** Adım 0: bilgiler. Sonraki adımlar: her izin ayrı bir ekranda, tek tek istenir. */
+/** Adım 0: karşılama, 1: bilgiler, 2: bildirim izni. Her izin ayrı ekranda, tek tek istenir. */
 @Composable
 fun OnboardingScreen(onDone: (Settings) -> Unit) {
     var step by rememberSaveable { mutableIntStateOf(0) }
@@ -58,14 +69,19 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         onDone(build()) // izin verilse de verilmese de devam
     }
-    BackHandler(enabled = step == 1) { step = 0 }
+    BackHandler(enabled = step >= 1) { step -= 1 }
+
+    if (step == 0) {
+        WelcomePage(onStart = { step = 1 })
+        return
+    }
 
     Column(
         Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        if (step == 0) {
-            Text(stringResource(R.string.onb_title), style = MaterialTheme.typography.headlineLarge)
+        if (step == 1) {
+            Text(stringResource(R.string.onb_profile_title), style = MaterialTheme.typography.headlineLarge)
 
             OutlinedTextField(
                 value = weight,
@@ -95,7 +111,7 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
             Text(stringResource(R.string.onb_goal_note), color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             Button(
-                onClick = { if (needsNotifPermission) step = 1 else onDone(build()) },
+                onClick = { if (needsNotifPermission) step = 2 else onDone(build()) },
                 enabled = valid,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
             ) { Text(stringResource(if (needsNotifPermission) R.string.onb_next else R.string.onb_start)) }
@@ -118,6 +134,38 @@ fun activityLabel(a: Activity): Int = when (a) {
     Activity.NONE -> R.string.activity_none
     Activity.MEDIUM -> R.string.activity_medium
     Activity.HIGH -> R.string.activity_high
+}
+
+@Composable
+private fun WelcomePage(onStart: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().safeDrawingPadding().padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Box(
+            Modifier.size(220.dp).clip(RoundedCornerShape(56.dp)).background(colorResource(R.color.ic_launcher_background)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(220.dp))
+        }
+        Spacer(Modifier.height(32.dp))
+        Text(
+            stringResource(R.string.onb_title),
+            style = MaterialTheme.typography.headlineLarge,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            stringResource(R.string.onb_tagline),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(40.dp))
+        Button(onClick = onStart, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
+            Text(stringResource(R.string.onb_start))
+        }
+    }
 }
 
 @Composable

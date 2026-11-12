@@ -1,6 +1,7 @@
 package com.lyldz.ab.notify
 
 import android.annotation.SuppressLint
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -34,7 +35,7 @@ object Notifier {
      * uygulamayı açmadan miktar yazılan "Özel" satır içi giriş.
      */
     @SuppressLint("MissingPermission") // areNotificationsEnabled() izni kapsar
-    fun show(ctx: Context, amountMl: Int, drankMl: Int, goalMl: Int, cupMl: Int) {
+    fun show(ctx: Context, text: String, drankMl: Int, goalMl: Int, cupMl: Int, quiet: Boolean = false) {
         val nm = NotificationManagerCompat.from(ctx)
         if (!nm.areNotificationsEnabled()) return
 
@@ -50,7 +51,8 @@ object Notifier {
         val n = NotificationCompat.Builder(ctx, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_ab)
             .setContentTitle(ctx.getString(R.string.notif_title))
-            .setContentText(ctx.getString(R.string.notif_text, fmtMl(amountMl), fmtMl(drankMl), fmtMl(goalMl)))
+            .setContentText(text)
+            .setOnlyAlertOnce(quiet) // güncellemede ses/titreşim tekrar etmez
             .setProgress(goalMl, drankMl.coerceAtMost(goalMl), false)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setContentIntent(open)
@@ -65,6 +67,10 @@ object Notifier {
             .build()
         nm.notify(NOTIF_ID, n)
     }
+
+    /** Bildirim şu an gösteriliyor mu (kaydırılıp kapatılmadıysa). */
+    fun isShowing(ctx: Context): Boolean =
+        ctx.getSystemService(NotificationManager::class.java).activeNotifications.any { it.id == NOTIF_ID }
 
     private fun addIntent(ctx: Context) =
         Intent(ctx, ReminderReceiver::class.java).setAction(ACTION_ADD)

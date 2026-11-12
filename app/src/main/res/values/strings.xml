@@ -48,4 +48,8 @@
     <string name="save">Save</string>
     <string name="less">Less</string>
     <string name="more">More</string>
+    <string name="onb_tagline">A simple water reminder that plans your day to the minute.</string>
+    <string name="onb_profile_title">Let\'s set it up for you</string>
+    <string name="notif_text_after">%1$s / %2$s ml · Next reminder: %3$s</string>
+    <string name="notif_text_done">Goal reached today · %1$s / %2$s ml</string>
 </resources>

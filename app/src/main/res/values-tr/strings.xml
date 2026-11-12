@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ab</string>
-    <string name="onb_title">Hoş geldin</string>
+    <string name="onb_title">Hoş geldiniz</string>
     <string name="onb_weight">Kilo (kg)</string>
     <string name="onb_activity">Günlük hareket</string>
     <string name="activity_none">Hareketsiz</string>
@@ -48,4 +48,8 @@
     <string name="save">Kaydet</string>
     <string name="less">Daha az</string>
     <string name="more">Daha çok</string>
+    <string name="onb_tagline">Gününü dakikasına kadar planlayan sade su hatırlatıcı.</string>
+    <string name="onb_profile_title">Sana göre ayarlayalım</string>
+    <string name="notif_text_after">%1$s / %2$s ml · Sonraki hatırlatma: %3$s</string>
+    <string name="notif_text_done">Bugünün hedefi tamam · %1$s / %2$s ml</string>
 </resources>

@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
 import com.lyldz.ab.AbApp
 import kotlinx.coroutines.CoroutineScope
@@ -41,8 +40,8 @@ class ReminderReceiver : BroadcastReceiver() {
                     if (ml != null && ml in 1..5000) {
                         app.addWater(ml)
                     } else {
-                        NotificationManagerCompat.from(context).cancel(NOTIF_ID)
                         app.reminders.reschedule()
+                        app.reminders.refreshNotification()
                     }
                 }
             }
