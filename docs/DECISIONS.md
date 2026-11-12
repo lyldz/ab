@@ -17,5 +17,7 @@
 | 2026-11-12 | Tema ikon paletine (lacivert/mavi) çevrildi; Room şeması v2 (kayıtlara kaynak sütunu, migration ile) | Kullanıcı krem/teal temayı beğenmedi; kayıt listesi kaynak ikonu istendi |
 | 2026-11-12 | Hava: Open-Meteo (tahmin API + geocoding), günde bir kez; sabah alarmı ayrı (rutin başı), bildirim yalnızca hava eki >0 ve elle hedef yokken | Kullanıcı: günde bir kez, internetten yalnızca sıcaklık, konum isteğe bağlı. Koordinat 1 ondalığa yuvarlanır (~11 km) |
 | 2026-11-12 | Alt gezinme 3 sekme (Ana sayfa, İstatistik, Ayarlar); Room v3: day_goal tablosu | Referanstaki "Hatırlatıcı" sekmesi ayrı değil, hatırlatma ayarları Ayarlar'da. İstatistikte geçmiş hedef için günlük anlık görüntü gerekir |
+| 2026-11-12 | Tempo = rutin penceresinde düz çizgi (başta 0, sonda hedef); sürahi kapasitesi = günlük hedef | Kullanıcı: ne kadar geride olduğunu ve şu saate kadar ne kadar içmesi gerektiğini görmek istedi; doluluk kişiden kişiye değişsin |
+| 2026-11-12 | Bildirim başlığı tempo durumudur (geride/ilerde/tempoda), gövde "bardak kadar iç · içilen / hedef" | Kullanıcı: bildirim de "geridesin" desin; bildirim sıklığı ve miktarı değişmedi |
 | 2026-11-12 | Alarm inexact (setAndAllowWhileIdle); tek alarm tutulur | SPEC T-03: izin gerektirmez; Doze'da dakikalar kayabilir, tam zamanında seçeneği sonra |
 | 2026-11-12 | Görmezden gelinen hatırlatmadan sonra bir sonraki aralık sonra yine gelir | Plan çıpası son içiş veya son gösterilen hatırlatma; bıkma durumunda sıklık azaltma henüz kararlaştırılmadı, kullanıcıya soruldu |

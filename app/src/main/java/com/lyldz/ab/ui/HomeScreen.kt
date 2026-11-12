@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -52,9 +53,13 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
+import com.lyldz.ab.core.PACE_TOLERANCE_ML
 import com.lyldz.ab.core.nextPlan
+import com.lyldz.ab.core.paceMl
+import com.lyldz.ab.core.roundTo10
 import com.lyldz.ab.core.tempExtraMl
 import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.Intake
@@ -101,6 +106,8 @@ fun HomeScreen(
     }
 
     val remaining = today.goalMl - today.drankMl
+    val showPace = remaining > 0 && nowMin in s.windowStartMin..s.windowEndMin
+    val pace = paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, nowMin)
     val plan = nextPlan(nowMin, s.windowStartMin, s.windowEndMin, today.goalMl, today.drankMl, s.cupMl, today.anchorMin)
 
     Scaffold(snackbarHost = { SnackbarHost(snack) }, contentWindowInsets = WindowInsets.statusBars) { padding ->
@@ -117,8 +124,25 @@ fun HomeScreen(
                         remaining <= 0 -> Text(stringResource(R.string.home_plan_done), style = MaterialTheme.typography.titleLarge)
                         plan == null -> Text(stringResource(R.string.home_plan_none), style = MaterialTheme.typography.titleLarge)
                         else -> {
-                            Text(stringResource(R.string.home_plan_amount, fmtMl(plan.amountMl)), style = MaterialTheme.typography.headlineMedium)
-                            Text(stringResource(R.string.home_plan_next, fmtTime(plan.nextAtMin)))
+                            val diff = pace - today.drankMl
+                            Text(
+                                when {
+                                    diff >= PACE_TOLERANCE_ML -> stringResource(R.string.pace_behind, fmtMl(roundTo10(diff)))
+                                    diff <= -PACE_TOLERANCE_ML -> stringResource(R.string.pace_ahead, fmtMl(roundTo10(-diff)))
+                                    else -> stringResource(R.string.pace_on)
+                                },
+                                style = MaterialTheme.typography.headlineMedium,
+                            )
+                            // sıradaki hatırlatma saatine kadar tempoda olmak için gereken toplam
+                            val cum = paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, plan.nextAtMin)
+                            val need = cum - today.drankMl
+                            Text(
+                                if (need > 0) {
+                                    stringResource(R.string.pace_checkpoint, fmtTime(plan.nextAtMin), fmtMl(cum), fmtMl(roundTo10(need)))
+                                } else {
+                                    stringResource(R.string.pace_checkpoint_done, fmtTime(plan.nextAtMin), fmtMl(cum))
+                                },
+                            )
                         }
                     }
                 }
@@ -137,12 +161,24 @@ fun HomeScreen(
                     }
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    WaterGlass(
+                    Text("${fmtMl(today.goalMl)} ml", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    WaterPitcher(
                         fraction,
+                        if (showPace) pace.toFloat() / today.goalMl else null,
+                        today.goalMl,
                         stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
-                        Modifier.size(width = 130.dp, height = 180.dp),
+                        Modifier.size(width = 150.dp, height = 210.dp),
                     )
                     Text("${(fraction * 100).roundToInt()}%", style = MaterialTheme.typography.titleLarge)
+                    if (showPace) {
+                        Text(
+                            stringResource(R.string.pitcher_legend),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.width(150.dp),
+                        )
+                    }
                 }
             }
 

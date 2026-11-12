@@ -10,6 +10,9 @@ const val MIN_GOAL_ML = 1500
 const val ML_PER_KG = 25
 const val GOAL_WARN_ML = 5000
 
+/** Tempo farkı bu değerin altındaysa "tam tempodasın" denir (ana ekran ve bildirim ortak). */
+const val PACE_TOLERANCE_ML = 50
+
 /** Günün tahmini en yüksek sıcaklığına göre ek su. Soğukta düşürme yok. */
 fun tempExtraMl(maxTempC: Double): Int = when (maxTempC.roundToInt()) {
     in Int.MIN_VALUE..20 -> 0
@@ -59,3 +62,16 @@ fun nextPlan(
     if (next >= windowEndMin) return null
     return Plan(next, interval, amount)
 }
+
+/**
+ * Rutin penceresinde düz çizgi tempo: [atMin] anında toplamda içilmiş olması gereken miktar.
+ * Pencere başında 0, sonunda hedefin tamamı; dışarıda uçlara sabitlenir.
+ */
+fun paceMl(goalMl: Int, startMin: Int, endMin: Int, atMin: Int): Int {
+    if (endMin <= startMin) return goalMl
+    val f = ((atMin - startMin).toDouble() / (endMin - startMin)).coerceIn(0.0, 1.0)
+    return (goalMl * f).roundToInt()
+}
+
+/** Ekranda 10 ml'ye yuvarlanmış fark (küçük sapmalar rahatsız etmesin). */
+fun roundTo10(ml: Int): Int = ((ml + 5) / 10) * 10

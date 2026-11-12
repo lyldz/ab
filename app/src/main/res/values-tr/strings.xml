@@ -29,7 +29,6 @@
     <string name="added">%1$s ml eklendi</string>
     <string name="undo">Geri al</string>
     <string name="channel_name">Hatırlatmalar</string>
-    <string name="notif_title">Bir bardak iyi gelir</string>
     <string name="notif_text">%1$s ml iç · %2$s / %3$s ml</string>
     <string name="notif_custom">Özel</string>
     <string name="notif_custom_hint">ml</string>
@@ -51,7 +50,6 @@
     <string name="onb_tagline">Gününü dakikasına kadar planlayan sade su hatırlatıcı.</string>
     <string name="onb_profile_title">Sana göre ayarlayalım</string>
     <string name="notif_text_after">%1$s / %2$s ml · Sonraki hatırlatma: %3$s</string>
-    <string name="notif_text_done">Bugünün hedefi tamam · %1$s / %2$s ml</string>
     <string name="records_title">Bugünün kayıtları</string>
     <string name="records_empty">Henüz kayıt yok</string>
     <string name="src_app">Uygulama</string>
@@ -103,4 +101,11 @@
     <string name="stats_none">Bu dönemde henüz kayıt yok.</string>
     <string name="stats_chart_desc">Günlük su içme grafiği</string>
     <string name="stats_legend">Çizgiler her günün hedefini gösterir; koyu çubuklar hedefe ulaşılan günlerdir. Ortalama ve hedef günleri yalnızca kayıtlı günleri sayar.</string>
+    <string name="pace_behind">%1$s ml geridesin</string>
+    <string name="pace_ahead">%1$s ml ilerdesin</string>
+    <string name="pace_on">Tam tempodasın</string>
+    <string name="pace_checkpoint">Saat %1$s hedefi: toplam %2$s ml (%3$s ml daha)</string>
+    <string name="pace_checkpoint_done">Saat %1$s hedefi: toplam %2$s ml, şimdiden tamam</string>
+    <string name="pitcher_legend">Kesik çizgi: şu an olman gereken seviye</string>
+    <string name="notif_title_done">Bugünün hedefi tamam</string>
 </resources>

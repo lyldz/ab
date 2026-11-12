@@ -47,6 +47,20 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+}
+
+// Robolectric duman testi ağırdır (düşük RAM'li makinede çöker): yalnızca CI'da ya da AB_SMOKE=1 ile çalışır.
+tasks.withType<Test>().configureEach {
+    testLogging {
+        events("failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+    if (System.getenv("CI") != "true" && System.getenv("AB_SMOKE") == null) {
+        filter.excludeTestsMatching("*SmokeTest")
+    }
 }
 
 dependencies {
@@ -65,4 +79,7 @@ dependencies {
     implementation(libs.androidx.glance.appwidget)
     testImplementation(libs.junit)
     testImplementation(libs.json)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.androidx.compose.ui.test.junit4)
 }
