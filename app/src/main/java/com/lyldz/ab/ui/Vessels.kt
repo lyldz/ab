@@ -14,6 +14,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -240,11 +242,13 @@ private suspend fun <R> infiniteFrame(onFrame: (Long) -> R): R {
 @Composable
 private fun rememberSmoothed(target: Float): State<Float> {
     val shown = remember { mutableFloatStateOf(target) }
+    val running = remember { mutableStateOf(false) }
     val goal = rememberUpdatedState(target)
     LaunchedEffect(Unit) {
         var last = 0L
         while (true) {
             infiniteFrame { now ->
+                running.value = true
                 val dt = if (last == 0L) 0f else (now - last) / 1e9f
                 last = now
                 val k = 1f - exp(-dt / 0.3f)
@@ -253,7 +257,8 @@ private fun rememberSmoothed(target: Float): State<Float> {
             }
         }
     }
-    return shown
+    // Döngü hiç çalışmazsa (ör. testlerde sonsuz animasyonlar kapalıyken) hedef değeri doğrudan göster
+    return remember { derivedStateOf { if (running.value) shown.floatValue else goal.value } }
 }
 
 /** 0..2π arasında dönen faz; [periodMs] bir tur süresi. */
