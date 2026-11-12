@@ -31,6 +31,7 @@ data class Settings(
     val tempDay: String? = null,
     val onboarded: Boolean = false,
     val lastNotifiedMs: Long? = null,
+    val name: String = "",
 ) {
     /** Sıcaklık yalnızca bugün alındıysa geçerli; eski gün değeri hedefi etkilemez. */
     fun tempToday(today: LocalDate): Double? = tempC.takeIf { tempDay == today.toString() }
@@ -55,6 +56,7 @@ class SettingsStore(private val context: Context) {
             p[USE_ACTIVITY] = s.useActivity
             p[USE_WEATHER] = s.useWeather
             p[ONBOARDED] = s.onboarded
+            p[NAME] = s.name
             p.putOrRemove(GOAL, s.goalOverrideMl)
             p.putOrRemove(CITY, s.city)
             p.putOrRemove(LAT, s.lat)
@@ -101,6 +103,7 @@ class SettingsStore(private val context: Context) {
             tempDay = this[TEMP_DAY],
             onboarded = this[ONBOARDED] ?: d.onboarded,
             lastNotifiedMs = this[LAST_NOTIFIED],
+            name = this[NAME] ?: d.name,
         )
     }
 
@@ -119,6 +122,7 @@ class SettingsStore(private val context: Context) {
         val TEMP = doublePreferencesKey("temp_c")
         val TEMP_DAY = stringPreferencesKey("temp_day")
         val ONBOARDED = booleanPreferencesKey("onboarded")
+        val NAME = stringPreferencesKey("name")
         val LAST_NOTIFIED = longPreferencesKey("last_notified_ms")
     }
 }

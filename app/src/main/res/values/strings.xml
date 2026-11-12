@@ -90,7 +90,7 @@
     <string name="cup_custom_hint">Custom (50–1000)</string>
     <string name="cup_set">Set</string>
     <string name="nav_home">Home</string>
-    <string name="nav_stats">Statistics</string>
+    <string name="nav_stats">History</string>
     <string name="stats_title">Statistics</string>
     <string name="stats_week">7 days</string>
     <string name="stats_month">30 days</string>
@@ -111,4 +111,15 @@
     <string name="streak_title">Streak</string>
     <string name="streak_days">%1$d days</string>
     <string name="greeting">Hi</string>
+    <string name="greet_morning">Good morning</string>
+    <string name="greet_afternoon">Good afternoon</string>
+    <string name="greet_evening">Good evening</string>
+    <string name="greet_sub">Stay hydrated today</string>
+    <string name="progress_title">Today\'s Progress</string>
+    <string name="history_title">Water History</string>
+    <string name="history_empty">No water logged yet</string>
+    <string name="add_water">+ Add Water</string>
+    <string name="bell_desc">Reminder settings</string>
+    <string name="set_name">Your name (optional)</string>
+    <string name="of_goal">of %1$s ml</string>
 </resources>

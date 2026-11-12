@@ -90,7 +90,7 @@
     <string name="cup_custom_hint">Özel (50–1000)</string>
     <string name="cup_set">Ayarla</string>
     <string name="nav_home">Ana sayfa</string>
-    <string name="nav_stats">İstatistik</string>
+    <string name="nav_stats">Geçmiş</string>
     <string name="stats_title">İstatistik</string>
     <string name="stats_week">7 gün</string>
     <string name="stats_month">30 gün</string>
@@ -111,4 +111,15 @@
     <string name="streak_title">Seri</string>
     <string name="streak_days">%1$d gün</string>
     <string name="greeting">Selam</string>
+    <string name="greet_morning">Günaydın</string>
+    <string name="greet_afternoon">İyi günler</string>
+    <string name="greet_evening">İyi akşamlar</string>
+    <string name="greet_sub">Bugün suyunu ihmal etme</string>
+    <string name="progress_title">Bugünkü ilerleme</string>
+    <string name="history_title">Su geçmişi</string>
+    <string name="history_empty">Henüz su kaydı yok</string>
+    <string name="add_water">+ Su ekle</string>
+    <string name="bell_desc">Hatırlatma ayarları</string>
+    <string name="set_name">Adın (isteğe bağlı)</string>
+    <string name="of_goal">/ %1$s ml hedef</string>
 </resources>

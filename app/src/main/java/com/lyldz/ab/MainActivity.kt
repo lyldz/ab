@@ -82,6 +82,7 @@ private fun AbRoot(openCustom: Boolean) {
                         onSetCup = { vm.saveSettings(t.settings.copy(cupMl = it)) },
                         openCustom = openCustom,
                         streak = vm.streak.collectAsStateWithLifecycle().value,
+                        onOpenSettings = { tab = 2 },
                     )
                     1 -> {
                         val stats by vm.stats.collectAsStateWithLifecycle()

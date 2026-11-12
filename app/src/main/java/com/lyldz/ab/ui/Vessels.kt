@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.rotate
+import com.lyldz.ab.ui.theme.AbColors
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -150,8 +152,9 @@ fun WaterPitcher(
 }
 
 /**
- * Daire biçimli su göstergesi (marka görseli): kapasite günlük hedeftir, dalgalı su yükselir,
- * dış çift halka altın tonudur, kesik çizgi şu an olman gereken seviyedir.
+ * Günlük ilerleme göstergesi (tasarım sistemi): dışta neon aqua doluluk halkası, içte iki katmanlı,
+ * farklı faz ve hızda dalgalanan su. Kapasite günlük hedeftir; [paceFraction] varsa şu an olman
+ * gereken seviye lacivert kesik çizgiyle gösterilir. Ortadaki yazıyı çağıran koyar.
  */
 @Composable
 fun WaterOrb(
@@ -160,68 +163,64 @@ fun WaterOrb(
     description: String,
     modifier: Modifier = Modifier,
 ) {
-    val level by animateFloatAsState(
-        fraction.coerceIn(0f, 1f),
-        spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessLow),
-        label = "orbLevel",
-    )
-    val phase by rememberInfiniteTransition(label = "orbWave").animateFloat(
-        0f, (2 * PI).toFloat(),
-        infiniteRepeatable(tween(3200, easing = LinearEasing)),
-        label = "orbPhase",
-    )
-    val water = MaterialTheme.colorScheme.primary
-    val deep = MaterialTheme.colorScheme.onPrimaryContainer
-    val track = MaterialTheme.colorScheme.surfaceVariant
-    val ring = MaterialTheme.colorScheme.tertiary
-    val mark = MaterialTheme.colorScheme.tertiary
+    val spec = spring<Float>(dampingRatio = 0.7f, stiffness = Spring.StiffnessLow)
+    val level by animateFloatAsState(fraction.coerceIn(0f, 1f), spec, label = "orbLevel")
+    val sweep by animateFloatAsState(fraction.coerceIn(0f, 1f), spec, label = "orbRing")
+    val t = rememberInfiniteTransition(label = "orbWave")
+    val phaseA by t.animateFloat(0f, (2 * PI).toFloat(), infiniteRepeatable(tween(3600, easing = LinearEasing)), label = "a")
+    val phaseB by t.animateFloat((2 * PI).toFloat(), 0f, infiniteRepeatable(tween(5200, easing = LinearEasing)), label = "b")
+    val navy = AbColors.Navy
 
     Canvas(modifier.semantics { contentDescription = description }) {
-        val d = size.minDimension
         val c = Offset(size.width / 2f, size.height / 2f)
-        val outer = d / 2f - 2.dp.toPx()
-        val inner = outer - 9.dp.toPx()
+        val stroke = 12.dp.toPx()
+        val ringR = size.minDimension / 2f - stroke
+        val inner = ringR - stroke / 2f - 8.dp.toPx()
+        val arcTopLeft = Offset(c.x - ringR, c.y - ringR)
+        val arcSize = Size(ringR * 2, ringR * 2)
+
+        // halka: iz, yumuşak parlama, doluluk
+        drawCircle(AbColors.Aqua1.copy(alpha = 0.22f), ringR, c, style = Stroke(stroke))
+        if (sweep > 0.002f) {
+            val brush = Brush.sweepGradient(listOf(AbColors.Aqua1, AbColors.Aqua2, AbColors.Aqua1), c)
+            rotate(-90f, c) {
+                drawArc(brush, 0f, 360f * sweep, false, arcTopLeft, arcSize, 0.3f, Stroke(stroke + 10.dp.toPx(), cap = StrokeCap.Round))
+                drawArc(brush, 0f, 360f * sweep, false, arcTopLeft, arcSize, 1f, Stroke(stroke, cap = StrokeCap.Round))
+            }
+        }
+
+        // iç: inci zemin + iki katman dalga
         val disc = Path().apply { addOval(androidx.compose.ui.geometry.Rect(c, inner)) }
+        drawCircle(AbColors.Pearl, inner, c)
         val top = c.y - inner
         val bottom = c.y + inner
         fun yOf(f: Float) = bottom - (bottom - top) * f.coerceIn(0f, 1f)
-
-        drawCircle(ring.copy(alpha = 0.85f), outer, c, style = Stroke(1.5.dp.toPx()))
-        drawCircle(ring.copy(alpha = 0.45f), outer - 4.dp.toPx(), c, style = Stroke(1.dp.toPx()))
-        drawCircle(track, inner, c)
         clipPath(disc) {
             if (level > 0.001f) {
                 val sy = yOf(level)
-                val amp = 3.dp.toPx()
-                fun wave(shift: Float, off: Float) = Path().apply {
+                fun wave(phase: Float, amp: Float, freq: Float, off: Float) = Path().apply {
                     moveTo(c.x - inner, bottom)
                     lineTo(c.x - inner, sy + off)
                     var x = c.x - inner
                     while (x <= c.x + inner) {
-                        lineTo(x, sy + off + amp * sin((x - c.x + inner) / d * 2f * PI.toFloat() * 1.4f + phase + shift))
+                        lineTo(x, sy + off + amp * sin((x - c.x + inner) / (inner * 2f) * 2f * PI.toFloat() * freq + phase))
                         x += 4f
                     }
                     lineTo(c.x + inner, bottom)
                     close()
                 }
-                drawPath(wave(1.6f, 3.dp.toPx()), water.copy(alpha = 0.45f))
-                drawPath(wave(0f, 0f), Brush.verticalGradient(listOf(water, deep.copy(alpha = 0.9f)), startY = sy, endY = bottom))
+                drawPath(wave(phaseB, 4.dp.toPx(), 1.1f, 4.dp.toPx()), AbColors.Aqua1.copy(alpha = 0.45f))
+                drawPath(
+                    wave(phaseA, 3.dp.toPx(), 1.6f, 0f),
+                    Brush.verticalGradient(listOf(AbColors.Aqua2.copy(alpha = 0.85f), AbColors.Aqua1), startY = sy, endY = bottom),
+                )
             }
-        }
-        drawCircle(ring.copy(alpha = 0.6f), inner, c, style = Stroke(1.dp.toPx()))
-        // şu an olman gereken seviye: halkaya kadar uzanan altın kesik çizgi + iki yanda ok
-        paceFraction?.let {
-            val y = yOf(it)
-            val dy = y - c.y
-            val hw = kotlin.math.sqrt((outer * outer - dy * dy).coerceAtLeast(0f))
-            drawLine(
-                mark, Offset(c.x - hw, y), Offset(c.x + hw, y), 2.5.dp.toPx(),
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 9f)),
-            )
-            val t = 6.dp.toPx()
-            for (side in listOf(-1f, 1f)) {
-                val x = c.x + side * (hw + 1.dp.toPx())
-                drawPath(Path().apply { moveTo(x, y); lineTo(x + side * t, y - t * 0.7f); lineTo(x + side * t, y + t * 0.7f); close() }, mark)
+            paceFraction?.let {
+                val y = yOf(it)
+                drawLine(
+                    navy.copy(alpha = 0.75f), Offset(c.x - inner, y), Offset(c.x + inner, y), 2.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 9f)),
+                )
             }
         }
     }

@@ -7,18 +7,26 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
+/** Marka belirteçleri (tasarım sistemi): Aqua gradyanı, Deep Navy, Pearl White. */
+object AbColors {
+    val Aqua1 = Color(0xFF88D9E6)
+    val Aqua2 = Color(0xFFA0E7E5)
+    val Navy = Color(0xFF0F203C)
+    val Pearl = Color(0xFFF8FAFC)
+}
+
 // Marka paleti: Aqua, Deep Navy, Pearl White (docs/design/brand). Yazılar lacivert, vurgu su yeşili-mavisi.
 private val Light = lightColorScheme(
     primary = Color(0xFF2C7C8C),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFCDEEEB),
-    onPrimaryContainer = Color(0xFF0F2A4A),
+    primaryContainer = Color(0xFFD3F0F4),
+    onPrimaryContainer = Color(0xFF0F203C),
     secondaryContainer = Color(0xFFDCEFEC),
     onSecondaryContainer = Color(0xFF0F2A4A),
-    background = Color(0xFFF4F1EA),
-    onBackground = Color(0xFF0F2A4A),
-    surface = Color(0xFFFBF9F4),
-    onSurface = Color(0xFF0F2A4A),
+    background = Color(0xFFF3F6F9),
+    onBackground = Color(0xFF0F203C),
+    surface = Color(0xFFF8FAFC),
+    onSurface = Color(0xFF0F203C),
     surfaceVariant = Color(0xFFE3EEEA),
     onSurfaceVariant = Color(0xFF4B6470),
     outline = Color(0xFF8FA8AA),

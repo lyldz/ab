@@ -55,6 +55,7 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
+    var name by rememberSaveable { mutableStateOf(s.name) }
     var weight by rememberSaveable { mutableStateOf(s.weightKg.toString()) }
     var activityIdx by rememberSaveable { mutableIntStateOf(s.activity.ordinal) }
     var start by rememberSaveable { mutableIntStateOf(s.windowStartMin) }
@@ -93,6 +94,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     val manualMl = manualText.toIntOrNull()?.takeIf { it in 500..8000 }
     val placeChanged = lat != s.lat || lon != s.lon
     val draft = s.copy(
+        name = name.trim(),
         weightKg = kg ?: s.weightKg,
         activity = Activity.entries[activityIdx],
         windowStartMin = start,
@@ -119,6 +121,14 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineLarge)
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it.take(30) },
+            label = { Text(stringResource(R.string.set_name)) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
 
         OutlinedTextField(
             value = weight,

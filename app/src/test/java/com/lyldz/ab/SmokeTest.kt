@@ -56,7 +56,7 @@ class SmokeTest {
         compose.onNodeWithContentDescription("+200 ml").performScrollTo().performClick()
         waitFor("Added 200 ml")
 
-        tap("Statistics") // alt gezinme: İstatistik
+        tap("History") // alt gezinme: İstatistik
         waitFor("7 days")
         tap("Settings") // alt gezinme: Ayarlar
         waitFor("Weight (kg)")
