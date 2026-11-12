@@ -205,7 +205,7 @@ fun HomeScreen(
                     Text(stringResource(R.string.goal_label, fmtMl(today.goalMl)), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                     Text(
                         stringResource(R.string.left_label, fmtMl(remaining.coerceAtLeast(0))),
-                        style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = AbColors.SlateLight,
+                        style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = AbColors.Slate,
                     )
                 }
             }
