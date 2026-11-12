@@ -3,6 +3,7 @@ package com.lyldz.ab
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.lyldz.ab.ui.BottomBar
+import com.lyldz.ab.ui.HistoryScreen
 import com.lyldz.ab.ui.HomeScreen
 import com.lyldz.ab.ui.MainViewModel
 import com.lyldz.ab.ui.OnboardingScreen
@@ -38,7 +40,11 @@ const val EXTRA_CUSTOM = "open_custom"
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // Tasarım yalnızca açık tema: sistem koyu olsa da durum/gezinme çubuğu simgeleri koyu kalsın
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+        )
         setContent {
             AbTheme {
                 Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -72,7 +78,7 @@ private fun AbRoot(openCustom: Boolean) {
                 nowMin = currentMin()
             }
         }
-        var tab by rememberSaveable { mutableIntStateOf(0) } // 0 ana sayfa, 1 istatistik, 2 ayarlar
+        var tab by rememberSaveable { mutableIntStateOf(0) } // 0 bugün, 1 grafikler, 2 geçmiş, 3 ayarlar
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.weight(1f)) {
                 when (tab) {
@@ -82,12 +88,14 @@ private fun AbRoot(openCustom: Boolean) {
                         onSetCup = { vm.saveSettings(t.settings.copy(cupMl = it)) },
                         openCustom = openCustom,
                         streak = vm.streak.collectAsStateWithLifecycle().value,
+                        onOpenSettings = { tab = 3 },
                     )
                     1 -> {
                         val stats by vm.stats.collectAsStateWithLifecycle()
                         val days by vm.periodDays.collectAsStateWithLifecycle()
                         StatsScreen(stats, days, vm::setPeriod, onBack = { tab = 0 })
                     }
+                    2 -> HistoryScreen(vm.history.collectAsStateWithLifecycle().value, onBack = { tab = 0 })
                     else -> SettingsScreen(t.settings, onSave = { vm.saveSettings(it); tab = 0 }, onBack = { tab = 0 })
                 }
             }

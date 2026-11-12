@@ -162,9 +162,10 @@ fun WaterPitcher(
 }
 
 /**
- * Günlük ilerleme göstergesi (tasarım sistemi): dışta neon aqua doluluk halkası, içte iki katmanlı,
- * farklı faz ve hızda dalgalanan su. Kapasite günlük hedeftir; [paceFraction] varsa şu an olman
- * gereken seviye lacivert kesik çizgiyle gösterilir. Ortadaki yazıyı çağıran koyar.
+ * Günlük ilerleme göstergesi (tasarım sistemi): yumuşak aqua ışıltı halkası, inci iç yüzey ve iki
+ * katmanlı su (arka #A0E7E5 %65, ön #88D9E6 %85) farklı faz ve hızda dalgalanır. Kapasite günlük
+ * hedeftir; [paceFraction] varsa şu an olman gereken seviye ince kesik çizgiyle gösterilir.
+ * Ortadaki yazıyı çağıran koyar.
  */
 @Composable
 fun WaterOrb(
@@ -176,32 +177,28 @@ fun WaterOrb(
     // Sistem "animasyon ölçeği" kapalıyken (pil tasarrufu, geliştirici seçeneği) Compose'un animate*
     // API'leri durur; gösterge canlı kalsın diye kare saatine bağlı kendi animasyonumuzu kullanıyoruz.
     val level by rememberSmoothed(fraction.coerceIn(0f, 1f))
-    val sweep = level
     val phaseA by rememberPhase(3600)
     val phaseB by rememberPhase(5200, reverse = true)
-    val navy = AbColors.Navy
 
     Canvas(modifier.semantics { contentDescription = description }) {
         val c = Offset(size.width / 2f, size.height / 2f)
-        val stroke = 12.dp.toPx()
-        val ringR = size.minDimension / 2f - stroke
-        val inner = ringR - stroke / 2f - 8.dp.toPx()
-        val arcTopLeft = Offset(c.x - ringR, c.y - ringR)
-        val arcSize = Size(ringR * 2, ringR * 2)
+        val outer = size.minDimension / 2f
+        val ring = outer * 0.80f
+        val inner = ring - 7.dp.toPx()
 
-        // halka: iz, yumuşak parlama, doluluk
-        drawCircle(AbColors.Aqua1.copy(alpha = 0.22f), ringR, c, style = Stroke(stroke))
-        if (sweep > 0.002f) {
-            val brush = Brush.sweepGradient(listOf(AbColors.Aqua1, AbColors.Aqua2, AbColors.Aqua1), c)
-            rotate(-90f, c) {
-                drawArc(brush, 0f, 360f * sweep, false, arcTopLeft, arcSize, 0.3f, Stroke(stroke + 10.dp.toPx(), cap = StrokeCap.Round))
-                drawArc(brush, 0f, 360f * sweep, false, arcTopLeft, arcSize, 1f, Stroke(stroke, cap = StrokeCap.Round))
-            }
-        }
+        // ışıltı + halka
+        drawCircle(
+            Brush.radialGradient(listOf(AbColors.Aqua1.copy(alpha = 0.40f), Color.Transparent), c, outer),
+            outer, c,
+        )
+        drawCircle(Color.White, ring, c)
+        drawCircle(AbColors.Mist, ring, c, style = Stroke(1.5.dp.toPx()))
+        drawCircle(
+            Brush.verticalGradient(listOf(Color.White, AbColors.Mist), c.y - ring, c.y + ring),
+            ring - 2.dp.toPx(), c, style = Stroke(6.dp.toPx()),
+        )
 
-        // iç: inci zemin + iki katman dalga
         val disc = Path().apply { addOval(androidx.compose.ui.geometry.Rect(c, inner)) }
-        drawCircle(AbColors.Pearl, inner, c)
         val top = c.y - inner
         val bottom = c.y + inner
         fun yOf(f: Float) = bottom - (bottom - top) * f.coerceIn(0f, 1f)
@@ -219,17 +216,14 @@ fun WaterOrb(
                     lineTo(c.x + inner, bottom)
                     close()
                 }
-                drawPath(wave(phaseB, 4.dp.toPx(), 1.1f, 4.dp.toPx()), AbColors.Aqua1.copy(alpha = 0.45f))
-                drawPath(
-                    wave(phaseA, 3.dp.toPx(), 1.6f, 0f),
-                    Brush.verticalGradient(listOf(AbColors.Aqua2.copy(alpha = 0.85f), AbColors.Aqua1), startY = sy, endY = bottom),
-                )
+                drawPath(wave(phaseB, 5.dp.toPx(), 1.1f, 5.dp.toPx()), AbColors.Aqua2.copy(alpha = 0.65f))
+                drawPath(wave(phaseA, 4.dp.toPx(), 1.7f, 0f), AbColors.Aqua1.copy(alpha = 0.85f))
             }
             paceFraction?.let {
                 val y = yOf(it)
                 drawLine(
-                    navy.copy(alpha = 0.75f), Offset(c.x - inner, y), Offset(c.x + inner, y), 2.dp.toPx(),
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 9f)),
+                    AbColors.Navy.copy(alpha = 0.45f), Offset(c.x - inner, y), Offset(c.x + inner, y), 1.5.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f)),
                 )
             }
         }

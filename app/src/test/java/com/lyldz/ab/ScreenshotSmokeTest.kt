@@ -59,7 +59,7 @@ class ScreenshotSmokeTest {
         compose.onNodeWithContentDescription("+200 ml").performScrollTo()
         shot("home-actions")
         repeat(6) { compose.onNodeWithContentDescription("+200 ml").performScrollTo().performClick() }
-        compose.onNodeWithText("Stay hydrated", substring = true).performScrollTo()
+        compose.onNodeWithText("DAILY WATER INTAKE").performScrollTo()
         shot("home-top-filled")
     }
 }

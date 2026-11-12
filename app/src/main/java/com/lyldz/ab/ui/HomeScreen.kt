@@ -17,6 +17,12 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import com.lyldz.ab.ui.theme.AbColors
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Box
@@ -104,6 +110,7 @@ fun HomeScreen(
     onSetCup: (Int) -> Unit,
     openCustom: Boolean = false,
     streak: Int = 0,
+    onOpenSettings: () -> Unit = {},
 ) {
     val s = today.settings
     val snack = remember { SnackbarHostState() }
@@ -136,94 +143,109 @@ fun HomeScreen(
             Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            val greeting = stringResource(
-                when {
-                    nowMin < 12 * 60 -> R.string.greet_morning
-                    nowMin < 18 * 60 -> R.string.greet_afternoon
-                    else -> R.string.greet_evening
-                },
-            )
-            Column {
+            // üst çubuk: wordmark | selamlama | bildirim çanı
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Image(painterResource(R.drawable.ic_wordmark), contentDescription = stringResource(R.string.app_name), modifier = Modifier.height(34.dp))
+                Spacer(Modifier.width(10.dp))
+                Box(Modifier.width(1.dp).height(22.dp).background(AbColors.Mist))
+                Spacer(Modifier.width(10.dp))
                 Text(
-                    if (s.name.isBlank()) greeting else "$greeting, ${s.name}",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    if (s.name.isBlank()) stringResource(R.string.greet_great) else stringResource(R.string.greet_hello, s.name),
+                    color = AbColors.Slate, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f),
                 )
-                Text(
-                    stringResource(R.string.greet_sub) +
-                        if (streak > 0) "  ·  " + context.resources.getQuantityString(R.plurals.streak_days, streak, streak) else "",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                val bellDesc = stringResource(R.string.bell_desc)
+                Box(
+                    Modifier.size(44.dp).clip(CircleShape).background(Color.White).border(1.dp, AbColors.Mist, CircleShape)
+                        .clickable(role = Role.Button, onClick = onOpenSettings).semantics { contentDescription = bellDesc },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    BellIcon(AbColors.Navy)
+                    Box(Modifier.align(Alignment.TopEnd).padding(10.dp).size(9.dp).clip(CircleShape).background(AbColors.Aqua1))
+                }
             }
 
             val fraction = (today.drankMl.toFloat() / today.goalMl).coerceIn(0f, 1f)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                WaterPitcher(
+            Column(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    stringResource(R.string.gauge_title), color = AbColors.SlateLight,
+                    style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
+                )
+                Text(
+                    when {
+                        remaining <= 0 -> stringResource(R.string.home_plan_done)
+                        plan == null -> stringResource(R.string.home_plan_none)
+                        pace - today.drankMl >= PACE_TOLERANCE_ML -> stringResource(R.string.pace_behind, fmtMl(roundTo10(pace - today.drankMl)))
+                        today.drankMl - pace >= PACE_TOLERANCE_ML -> stringResource(R.string.pace_ahead, fmtMl(roundTo10(today.drankMl - pace)))
+                        else -> stringResource(R.string.pace_on)
+                    },
+                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
+                )
+            }
+
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                WaterOrb(
                     fraction,
                     if (showPace) pace.toFloat() / today.goalMl else null,
-                    today.goalMl,
                     stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
-                    Modifier.size(width = 150.dp, height = 210.dp),
+                    Modifier.size(272.dp),
                 )
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(fmtMl(today.drankMl), style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Bold)
-                    Text(stringResource(R.string.of_goal, fmtMl(today.goalMl)), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("${(fraction * 100).roundToInt()}%", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.height(10.dp))
-                    when {
-                        remaining <= 0 -> Text(stringResource(R.string.home_plan_done), style = MaterialTheme.typography.titleMedium)
-                        plan == null -> Text(stringResource(R.string.home_plan_none), style = MaterialTheme.typography.titleMedium)
-                        else -> {
-                            val diff = pace - today.drankMl
-                            Text(
-                                when {
-                                    diff >= PACE_TOLERANCE_ML -> stringResource(R.string.pace_behind, fmtMl(roundTo10(diff)))
-                                    diff <= -PACE_TOLERANCE_ML -> stringResource(R.string.pace_ahead, fmtMl(roundTo10(-diff)))
-                                    else -> stringResource(R.string.pace_on)
-                                },
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            // sıradaki hatırlatma saatine kadar tempoda olmak için gereken toplam
-                            val cum = paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, plan.nextAtMin)
-                            val need = cum - today.drankMl
-                            Text(
-                                if (need > 0) {
-                                    stringResource(R.string.pace_checkpoint, fmtTime(plan.nextAtMin), fmtMl(cum), fmtMl(roundTo10(need)))
-                                } else {
-                                    stringResource(R.string.pace_checkpoint_done, fmtTime(plan.nextAtMin), fmtMl(cum))
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Row(
+                        Modifier.clip(RoundedCornerShape(999.dp)).background(Color.White).padding(horizontal = 12.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Canvas(Modifier.size(width = 10.dp, height = 13.dp)) { drawPath(dropPath(size.width, size.height), AbColors.Teal) }
+                        Text("${(fraction * 100).roundToInt()}%", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                     }
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(fmtMl(today.drankMl), fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, color = AbColors.Navy)
+                        Text(" ml", color = AbColors.Slate, modifier = Modifier.padding(bottom = 7.dp))
+                    }
+                    Text(stringResource(R.string.goal_label, fmtMl(today.goalMl)), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        stringResource(R.string.left_label, fmtMl(remaining.coerceAtLeast(0))),
+                        style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = AbColors.SlateLight,
+                    )
                 }
             }
+
+            val nextAt = plan?.nextAtMin
+            val nextNeed = if (plan != null) paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, plan.nextAtMin) - today.drankMl else 0
+            TimelineCard(today.entries, nextAt, nextNeed, streak)
 
             val pill = RoundedCornerShape(999.dp)
             val addDesc = stringResource(R.string.add_ml, fmtMl(s.cupMl))
             Box(
-                Modifier.fillMaxWidth().height(56.dp)
+                Modifier.fillMaxWidth().height(60.dp)
+                    .shadow(10.dp, pill, ambientColor = AbColors.Aqua1, spotColor = AbColors.Aqua1)
                     .clip(pill).background(Brush.horizontalGradient(listOf(AbColors.Aqua1, AbColors.Aqua2)))
                     .clickable(role = Role.Button) { add(s.cupMl) }
                     .semantics { contentDescription = addDesc },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "${stringResource(R.string.add_water)} · ${fmtMl(s.cupMl)} ml",
-                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White,
+                    "${stringResource(R.string.add_water)} (${fmtMl(s.cupMl)} ml)",
+                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = AbColors.Navy,
                 )
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                listOf(250, 350, 500).forEach { ml -> QuickChip(ml, Modifier.weight(1f)) { add(ml) } }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                QuickCard(stringResource(R.string.quick_glass), 250, Modifier.weight(1f)) { add(250) }
+                QuickCard(stringResource(R.string.quick_mug), 350, Modifier.weight(1f)) { add(350) }
+                QuickCard(stringResource(R.string.quick_bottle), 500, Modifier.weight(1f)) { add(500) }
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { custom = true }, modifier = Modifier.heightIn(min = 48.dp)) {
-                    Text(stringResource(R.string.add_custom))
-                }
-                TextButton(onClick = { cupDialog = true }, modifier = Modifier.heightIn(min = 48.dp)) {
-                    Text(stringResource(R.string.cup_button, fmtMl(s.cupMl)))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                TextButton(
+                    onClick = onUndo,
+                    enabled = today.entries.isNotEmpty(), modifier = Modifier.heightIn(min = 48.dp),
+                    colors = ButtonDefaults.textButtonColors(contentColor = AbColors.Slate),
+                ) { Text(stringResource(R.string.undo)) }
+                Row {
+                    TextButton(onClick = { custom = true }, modifier = Modifier.heightIn(min = 48.dp), colors = ButtonDefaults.textButtonColors(contentColor = AbColors.Slate)) {
+                        Text(stringResource(R.string.add_custom))
+                    }
+                    TextButton(onClick = { cupDialog = true }, modifier = Modifier.heightIn(min = 48.dp), colors = ButtonDefaults.textButtonColors(contentColor = AbColors.Slate)) {
+                        Text(stringResource(R.string.cup_button, fmtMl(s.cupMl)))
+                    }
                 }
             }
 
@@ -234,7 +256,7 @@ fun HomeScreen(
                 Text(
                     if (extra > 0 && s.goalOverrideMl == null) stringResource(R.string.home_weather, degrees, fmtMl(extra))
                     else stringResource(R.string.home_weather_none, degrees),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = AbColors.Slate,
                 )
             }
 
@@ -350,13 +372,120 @@ private fun CustomDialog(onDismiss: () -> Unit, onAdd: (Int) -> Unit) {
     )
 }
 
+private fun dropPath(w: Float, h: Float) = Path().apply {
+    moveTo(w * .5f, h * .02f)
+    cubicTo(w * .62f, h * .28f, w * .94f, h * .5f, w * .94f, h * .68f)
+    cubicTo(w * .94f, h * .88f, w * .74f, h * .98f, w * .5f, h * .98f)
+    cubicTo(w * .26f, h * .98f, w * .06f, h * .88f, w * .06f, h * .68f)
+    cubicTo(w * .06f, h * .5f, w * .38f, h * .28f, w * .5f, h * .02f)
+    close()
+}
+
 @Composable
-private fun QuickChip(ml: Int, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Box(
-        modifier.height(44.dp).clip(RoundedCornerShape(22.dp))
-            .background(MaterialTheme.colorScheme.primaryContainer).clickable(role = Role.Button, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) { Text("${fmtMl(ml)} ml", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onPrimaryContainer) }
+private fun QuickCard(label: String, ml: Int, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(20.dp)
+    Column(
+        modifier.shadow(6.dp, shape, ambientColor = AbColors.Navy.copy(alpha = 0.12f), spotColor = AbColors.Navy.copy(alpha = 0.12f))
+            .clip(shape).background(Color.White).border(1.dp, AbColors.Mist, shape)
+            .clickable(role = Role.Button, onClick = onClick).padding(vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = AbColors.Slate)
+        Text("+${fmtMl(ml)} ml", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = AbColors.Navy)
+    }
+}
+
+/** Bugünün kayıtları: çizgi üzerinde onay işaretli düğümler, son düğüm sıradaki hatırlatma; çoksa yatay kayar. */
+@Composable
+private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int, streak: Int) {
+    val shape = RoundedCornerShape(24.dp)
+    val context = LocalContext.current
+    val sorted = entries.sortedBy { it.atMs }
+    val scroll = rememberScrollState()
+    LaunchedEffect(sorted.size) { scroll.animateScrollTo(scroll.maxValue) }
+    Column(
+        Modifier.fillMaxWidth().shadow(6.dp, shape, ambientColor = AbColors.Navy.copy(alpha = 0.08f), spotColor = AbColors.Navy.copy(alpha = 0.08f))
+            .clip(shape).background(Color.White).border(1.dp, AbColors.Mist, shape).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                stringResource(R.string.tl_title), color = AbColors.Slate,
+                style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, letterSpacing = 1.sp,
+            )
+            Text(
+                context.resources.getQuantityString(R.plurals.tl_count, sorted.size, sorted.size) +
+                    if (streak > 0) "  ·  " + context.resources.getQuantityString(R.plurals.streak_days, streak, streak) else "",
+                color = AbColors.SlateLight, style = MaterialTheme.typography.labelMedium,
+            )
+        }
+        if (sorted.isEmpty() && nextAtMin == null) {
+            Text(stringResource(R.string.history_empty), color = AbColors.SlateLight)
+        } else {
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                Row(
+                    Modifier.horizontalScroll(scroll).widthIn(min = maxWidth).drawBehind {
+                        val y = 16.dp.toPx()
+                        drawLine(AbColors.Mist, Offset(38.dp.toPx(), y), Offset(size.width - 38.dp.toPx(), y), 2.dp.toPx(), StrokeCap.Round)
+                    },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    sorted.forEach { e ->
+                        TimelineNode(done = true, time = fmtTime(minuteOfDay(e.atMs)), detail = "${fmtMl(e.ml)} ml")
+                    }
+                    if (nextAtMin != null) {
+                        TimelineNode(
+                            done = false, time = stringResource(R.string.tl_next),
+                            detail = fmtTime(nextAtMin) + if (nextNeedMl > 0) " · +${fmtMl(roundTo10(nextNeedMl))}" else "",
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TimelineNode(done: Boolean, time: String, detail: String) {
+    Column(Modifier.width(76.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Canvas(Modifier.size(32.dp)) {
+            val r = size.minDimension / 2f
+            if (done) {
+                drawCircle(Brush.linearGradient(listOf(AbColors.Aqua1, AbColors.Aqua2)), r)
+                val check = Path().apply {
+                    moveTo(size.width * .30f, size.height * .52f)
+                    lineTo(size.width * .44f, size.height * .66f)
+                    lineTo(size.width * .70f, size.height * .38f)
+                }
+                drawPath(check, Color.White, style = Stroke(2.4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+            } else {
+                drawCircle(Color.White, r)
+                drawCircle(
+                    AbColors.SlateLight, r - 1.dp.toPx(), style = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 5f))),
+                )
+                drawCircle(AbColors.SlateLight, 2.5.dp.toPx())
+            }
+        }
+        Text(time, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = if (done) AbColors.Navy else AbColors.Slate)
+        Text(detail, style = MaterialTheme.typography.labelSmall, color = AbColors.SlateLight, textAlign = TextAlign.Center)
+    }
+}
+
+@Composable
+private fun BellIcon(color: Color) {
+    Canvas(Modifier.size(22.dp)) {
+        val k = size.width / 24f
+        val body = Path().apply {
+            moveTo(12 * k, 3 * k)
+            cubicTo(8 * k, 3 * k, 6 * k, 6 * k, 6 * k, 10 * k)
+            lineTo(6 * k, 14 * k); lineTo(4 * k, 17 * k); lineTo(20 * k, 17 * k); lineTo(18 * k, 14 * k)
+            lineTo(18 * k, 10 * k)
+            cubicTo(18 * k, 6 * k, 16 * k, 3 * k, 12 * k, 3 * k)
+            close()
+        }
+        drawPath(body, color, style = Stroke(1.8f * k, join = StrokeJoin.Round))
+        drawArc(color, 20f, 140f, false, Offset(9.5f * k, 17.5f * k), androidx.compose.ui.geometry.Size(5 * k, 4 * k), style = Stroke(1.8f * k, cap = StrokeCap.Round))
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
