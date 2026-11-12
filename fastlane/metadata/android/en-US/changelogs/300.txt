@@ -1,0 +1,2 @@
+In-app updater: Settings > Updates checks GitHub for a new version, downloads and installs it.
+Only connects when you tap; sends no personal data.

@@ -1,0 +1,2 @@
+Uygulama içi güncelleyici: Ayarlar > Güncelleme, yeni sürümü GitHub'dan denetler, indirir ve kurar.
+Yalnızca sen dokununca bağlanır, kişisel veri göndermez.
