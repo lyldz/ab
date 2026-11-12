@@ -7,7 +7,7 @@ Son güncelleme: 2026-11-12. Durum: uygulama telefonda yalnızca kısmen denendi
 - [ ] Bildirimden kayıt (bardak, 500, satır içi "Özel") ve kayıttan sonra bildirimin yerinde güncellenmesi
 - [ ] Widget (Glance): görünüm, düğmeler, "Özel" ile uygulamanın açılması
 - [ ] Hava: onboarding konum adımı, Ayarlar > Hava (şehir arama, konumumu kullan), sabah bildirimi
-- [ ] Sürahi ve tempo kartı görünümü (boyut, renk, kesik çizgi), bardak seçici, alt gezinme kenar boşlukları
+- [ ] Yeni ana ekran (dairesel gösterge, büyük "+" düğmesi, çipler, seri kartı), yeni ikonlar (ana ekran, temalı, bildirim 24 dp) ve tempo kartı görünümü (boyut, renk, kesik çizgi), bardak seçici, alt gezinme kenar boşlukları
 - [ ] İstatistik ekranı
 - [ ] Room v1 → v2 → v3 geçişi (eski kurulumun üstüne kurulum)
 - [ ] Açık/koyu tema, büyük yazı tipi, TalkBack

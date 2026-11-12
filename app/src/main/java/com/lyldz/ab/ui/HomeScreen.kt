@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -83,6 +85,7 @@ fun HomeScreen(
     onEdit: (Intake, Int, Int) -> Unit,
     onSetCup: (Int) -> Unit,
     openCustom: Boolean = false,
+    streak: Int = 0,
 ) {
     val s = today.settings
     val snack = remember { SnackbarHostState() }
@@ -115,6 +118,30 @@ fun HomeScreen(
             Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
+            Text(stringResource(R.string.greeting), style = MaterialTheme.typography.headlineSmall)
+
+            val fraction = (today.drankMl.toFloat() / today.goalMl).coerceIn(0f, 1f)
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                WaterOrb(
+                    fraction,
+                    if (showPace) pace.toFloat() / today.goalMl else null,
+                    stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
+                    Modifier.size(240.dp),
+                )
+                Text(
+                    "${fmtMl(today.drankMl)} / ${fmtMl(today.goalMl)} ml  ·  ${(fraction * 100).roundToInt()}%",
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                if (showPace) {
+                    Text(
+                        stringResource(R.string.pitcher_legend),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+
             Card(
                 Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -148,42 +175,35 @@ fun HomeScreen(
                 }
             }
 
-            val fraction = (today.drankMl.toFloat() / today.goalMl).coerceIn(0f, 1f)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Card(
-                    Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            val chips = listOf(250, 500, 750, 1000).filter { it != s.cupMl }.take(4)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { chips.take(2).forEach { QuickChip(it) { add(it) } } }
+                Box(
+                    Modifier.size(104.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary)
+                        .clickable(role = Role.Button) { add(s.cupMl) }
+                        .semantics { contentDescription = context.getString(R.string.add_ml, fmtMl(s.cupMl)) },
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Stat(stringResource(R.string.stat_goal), fmtMl(today.goalMl))
-                        Stat(stringResource(R.string.stat_drank), fmtMl(today.drankMl))
-                        Stat(stringResource(R.string.stat_left), fmtMl(remaining.coerceAtLeast(0)))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("+", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onPrimary)
+                        Text("${fmtMl(s.cupMl)} ml", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("${fmtMl(today.goalMl)} ml", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    WaterPitcher(
-                        fraction,
-                        if (showPace) pace.toFloat() / today.goalMl else null,
-                        today.goalMl,
-                        stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
-                        Modifier.size(width = 150.dp, height = 210.dp),
-                    )
-                    Text("${(fraction * 100).roundToInt()}%", style = MaterialTheme.typography.titleLarge)
-                    if (showPace) {
-                        Text(
-                            stringResource(R.string.pitcher_legend),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.width(150.dp),
-                        )
-                    }
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { chips.drop(2).forEach { QuickChip(it) { add(it) } } }
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = { custom = true }, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text(stringResource(R.string.add_custom))
+                }
+                OutlinedButton(onClick = { cupDialog = true }, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text(stringResource(R.string.cup_button, fmtMl(s.cupMl)))
                 }
             }
 
-            OutlinedButton(onClick = { cupDialog = true }, modifier = Modifier.heightIn(min = 48.dp)) {
-                Text(stringResource(R.string.cup_button, fmtMl(s.cupMl)))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                InfoCard(stringResource(R.string.stat_goal), "${fmtMl(today.goalMl)} ml", Modifier.weight(1f))
+                InfoCard(stringResource(R.string.streak_title), stringResource(R.string.streak_days, streak), Modifier.weight(1f))
             }
 
             val temp = s.tempToday(LocalDate.now())
@@ -195,17 +215,6 @@ fun HomeScreen(
                     else stringResource(R.string.home_weather_none, degrees),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            }
-
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(s.cupMl, 250, 500, 750, 1000).distinct().forEach { ml ->
-                    FilledTonalButton(onClick = { add(ml) }, modifier = Modifier.heightIn(min = 48.dp)) {
-                        Text(stringResource(R.string.add_ml, fmtMl(ml)))
-                    }
-                }
-                OutlinedButton(onClick = { custom = true }, modifier = Modifier.heightIn(min = 48.dp)) {
-                    Text(stringResource(R.string.add_custom))
-                }
             }
 
             Text(stringResource(R.string.records_title), style = MaterialTheme.typography.titleLarge)
@@ -321,10 +330,21 @@ private fun CustomDialog(onDismiss: () -> Unit, onAdd: (Int) -> Unit) {
 }
 
 @Composable
-private fun Stat(label: String, value: String) {
-    Column {
-        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-        Text("$value ml", style = MaterialTheme.typography.titleMedium)
+private fun QuickChip(ml: Int, onClick: () -> Unit) {
+    Box(
+        Modifier.size(width = 84.dp, height = 48.dp).clip(RoundedCornerShape(24.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant).clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Text("${fmtMl(ml)} ml", style = MaterialTheme.typography.titleSmall) }
+}
+
+@Composable
+private fun InfoCard(label: String, value: String, modifier: Modifier = Modifier) {
+    Card(modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.padding(16.dp)) {
+            Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            Text(value, style = MaterialTheme.typography.titleLarge)
+        }
     }
 }
 

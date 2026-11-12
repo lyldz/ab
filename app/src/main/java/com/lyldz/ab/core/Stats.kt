@@ -41,3 +41,12 @@ fun summarize(stats: List<DayStat>): StatSummary {
         best = recorded.maxByOrNull { it.ml },
     )
 }
+
+/**
+ * Üst üste hedefe ulaşılan gün sayısı. [stats] eskiden yeniye, sonuncusu bugündür; bugün henüz
+ * hedefe varmadıysa seri bozulmaz, dünden geriye sayılır.
+ */
+fun streakDays(stats: List<DayStat>): Int {
+    val days = if (stats.lastOrNull()?.reached == false) stats.dropLast(1) else stats
+    return days.takeLastWhile { it.reached }.size
+}

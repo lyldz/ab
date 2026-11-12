@@ -4,6 +4,7 @@ import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.printToString
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
@@ -51,7 +52,8 @@ class SmokeTest {
 
         waitFor("Glass: 200 ml") // ana ekran açıldı
         waitFor("Today's records")
-        tap("+200 ml") // kayıt ekle
+        // büyük "+" düğmesi (varsayılan bardak) kayıt ekler; erişilebilirlik açıklamasıyla bulunur
+        compose.onNodeWithContentDescription("+200 ml").performScrollTo().performClick()
         waitFor("Added 200 ml")
 
         tap("Statistics") // alt gezinme: İstatistik

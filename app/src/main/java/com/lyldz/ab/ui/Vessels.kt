@@ -149,6 +149,84 @@ fun WaterPitcher(
     }
 }
 
+/**
+ * Daire biçimli su göstergesi (marka görseli): kapasite günlük hedeftir, dalgalı su yükselir,
+ * dış çift halka altın tonudur, kesik çizgi şu an olman gereken seviyedir.
+ */
+@Composable
+fun WaterOrb(
+    fraction: Float,
+    paceFraction: Float?,
+    description: String,
+    modifier: Modifier = Modifier,
+) {
+    val level by animateFloatAsState(
+        fraction.coerceIn(0f, 1f),
+        spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessLow),
+        label = "orbLevel",
+    )
+    val phase by rememberInfiniteTransition(label = "orbWave").animateFloat(
+        0f, (2 * PI).toFloat(),
+        infiniteRepeatable(tween(3200, easing = LinearEasing)),
+        label = "orbPhase",
+    )
+    val water = MaterialTheme.colorScheme.primary
+    val deep = MaterialTheme.colorScheme.onPrimaryContainer
+    val track = MaterialTheme.colorScheme.surfaceVariant
+    val ring = MaterialTheme.colorScheme.tertiary
+    val mark = MaterialTheme.colorScheme.tertiary
+
+    Canvas(modifier.semantics { contentDescription = description }) {
+        val d = size.minDimension
+        val c = Offset(size.width / 2f, size.height / 2f)
+        val outer = d / 2f - 2.dp.toPx()
+        val inner = outer - 9.dp.toPx()
+        val disc = Path().apply { addOval(androidx.compose.ui.geometry.Rect(c, inner)) }
+        val top = c.y - inner
+        val bottom = c.y + inner
+        fun yOf(f: Float) = bottom - (bottom - top) * f.coerceIn(0f, 1f)
+
+        drawCircle(ring.copy(alpha = 0.85f), outer, c, style = Stroke(1.5.dp.toPx()))
+        drawCircle(ring.copy(alpha = 0.45f), outer - 4.dp.toPx(), c, style = Stroke(1.dp.toPx()))
+        drawCircle(track, inner, c)
+        clipPath(disc) {
+            if (level > 0.001f) {
+                val sy = yOf(level)
+                val amp = 3.dp.toPx()
+                fun wave(shift: Float, off: Float) = Path().apply {
+                    moveTo(c.x - inner, bottom)
+                    lineTo(c.x - inner, sy + off)
+                    var x = c.x - inner
+                    while (x <= c.x + inner) {
+                        lineTo(x, sy + off + amp * sin((x - c.x + inner) / d * 2f * PI.toFloat() * 1.4f + phase + shift))
+                        x += 4f
+                    }
+                    lineTo(c.x + inner, bottom)
+                    close()
+                }
+                drawPath(wave(1.6f, 3.dp.toPx()), water.copy(alpha = 0.45f))
+                drawPath(wave(0f, 0f), Brush.verticalGradient(listOf(water, deep.copy(alpha = 0.9f)), startY = sy, endY = bottom))
+            }
+        }
+        drawCircle(ring.copy(alpha = 0.6f), inner, c, style = Stroke(1.dp.toPx()))
+        // şu an olman gereken seviye: halkaya kadar uzanan altın kesik çizgi + iki yanda ok
+        paceFraction?.let {
+            val y = yOf(it)
+            val dy = y - c.y
+            val hw = kotlin.math.sqrt((outer * outer - dy * dy).coerceAtLeast(0f))
+            drawLine(
+                mark, Offset(c.x - hw, y), Offset(c.x + hw, y), 2.5.dp.toPx(),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 9f)),
+            )
+            val t = 6.dp.toPx()
+            for (side in listOf(-1f, 1f)) {
+                val x = c.x + side * (hw + 1.dp.toPx())
+                drawPath(Path().apply { moveTo(x, y); lineTo(x + side * t, y - t * 0.7f); lineTo(x + side * t, y + t * 0.7f); close() }, mark)
+            }
+        }
+    }
+}
+
 /** Bardak boyutunu gösteren küçük simge; büyük hacim daha büyük çizilir. */
 @Composable
 fun CupIcon(ml: Int, modifier: Modifier = Modifier) {
