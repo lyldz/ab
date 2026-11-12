@@ -7,39 +7,39 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-// İkon paletinden (lacivert #0A2A43, mavi, açık mavi) türetilmiş mavi tema.
+// Marka paleti: Aqua, Deep Navy, Pearl White (docs/design/brand). Yazılar lacivert, vurgu su yeşili-mavisi.
 private val Light = lightColorScheme(
-    primary = Color(0xFF1976D2),
+    primary = Color(0xFF2C7C8C),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFD6E9FB),
-    onPrimaryContainer = Color(0xFF0A2A43),
-    secondaryContainer = Color(0xFFDCEAF8),
-    onSecondaryContainer = Color(0xFF0A2A43),
-    background = Color(0xFFF4F8FC),
-    onBackground = Color(0xFF0A2A43),
-    surface = Color.White,
-    onSurface = Color(0xFF0A2A43),
-    surfaceVariant = Color(0xFFE4EEF8),
-    onSurfaceVariant = Color(0xFF4A6078),
-    outline = Color(0xFF8AA0B6),
-    tertiary = Color(0xFFC25B00),
+    primaryContainer = Color(0xFFCDEEEB),
+    onPrimaryContainer = Color(0xFF0F2A4A),
+    secondaryContainer = Color(0xFFDCEFEC),
+    onSecondaryContainer = Color(0xFF0F2A4A),
+    background = Color(0xFFF4F1EA),
+    onBackground = Color(0xFF0F2A4A),
+    surface = Color(0xFFFBF9F4),
+    onSurface = Color(0xFF0F2A4A),
+    surfaceVariant = Color(0xFFE3EEEA),
+    onSurfaceVariant = Color(0xFF4B6470),
+    outline = Color(0xFF8FA8AA),
+    tertiary = Color(0xFFB08A3E),
 )
 
 private val Dark = darkColorScheme(
-    primary = Color(0xFF64B5F6),
-    onPrimary = Color(0xFF06233A),
-    primaryContainer = Color(0xFF17405F),
-    onPrimaryContainer = Color(0xFFE6F3FF),
-    secondaryContainer = Color(0xFF1F4468),
-    onSecondaryContainer = Color(0xFFE6F3FF),
-    background = Color(0xFF0B1B2A),
-    onBackground = Color(0xFFE6EEF6),
-    surface = Color(0xFF12283D),
-    onSurface = Color(0xFFE6EEF6),
-    surfaceVariant = Color(0xFF1D3550),
-    onSurfaceVariant = Color(0xFFA9BED2),
-    outline = Color(0xFF5E7790),
-    tertiary = Color(0xFFFFB074),
+    primary = Color(0xFF7CCFCB),
+    onPrimary = Color(0xFF06302F),
+    primaryContainer = Color(0xFF184A56),
+    onPrimaryContainer = Color(0xFFDDF5F2),
+    secondaryContainer = Color(0xFF1B3F55),
+    onSecondaryContainer = Color(0xFFDDF5F2),
+    background = Color(0xFF0B1D33),
+    onBackground = Color(0xFFEAF1F3),
+    surface = Color(0xFF122A45),
+    onSurface = Color(0xFFEAF1F3),
+    surfaceVariant = Color(0xFF1B3A52),
+    onSurfaceVariant = Color(0xFFADC4CC),
+    outline = Color(0xFF5F7E8C),
+    tertiary = Color(0xFFD9B96A),
 )
 
 @Composable

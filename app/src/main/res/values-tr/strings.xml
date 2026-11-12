@@ -108,4 +108,7 @@
     <string name="pace_checkpoint_done">Saat %1$s hedefi: toplam %2$s ml, şimdiden tamam</string>
     <string name="pitcher_legend">Kesik çizgi: şu an olman gereken seviye</string>
     <string name="notif_title_done">Bugünün hedefi tamam</string>
+    <string name="streak_title">Seri</string>
+    <string name="streak_days">%1$d gün</string>
+    <string name="greeting">Selam</string>
 </resources>

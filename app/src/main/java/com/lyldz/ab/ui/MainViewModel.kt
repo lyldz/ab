@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lyldz.ab.AbApp
 import com.lyldz.ab.core.DayStat
+import com.lyldz.ab.core.streakDays
 import com.lyldz.ab.core.withMinuteOfDay
 import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.Intake
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.ZoneId
@@ -28,6 +30,9 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
     @OptIn(ExperimentalCoroutinesApi::class)
     val stats: StateFlow<List<DayStat>> =
         period.flatMapLatest { app.repo.stats(it) }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val streak: StateFlow<Int> =
+        app.repo.stats(60).map(::streakDays).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     fun setPeriod(days: Int) {
         period.value = days

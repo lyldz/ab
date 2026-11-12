@@ -69,14 +69,14 @@ Kütüphanelerden birleşen normal izinler: `WAKE_LOCK`, `ACCESS_NETWORK_STATE`,
 
 - **Karşılama:** büyük logo, "Hoş geldiniz", Başla.
 - **Onboarding (adımlar, geri tuşuyla geri gidilir):** karşılama → bilgiler (kilo 30–250, hareket seviyesi, uyanma/uyku saati ±30 dk, canlı hedef önizlemesi) → bildirim izni (yalnızca Android 13+) → konum izni (isteğe bağlı).
-- **Ana sayfa:** tempo kartı ("450 ml geridesin" + "Saat 10:45 hedefi: toplam 1.800 ml (650 ml daha)"), sürahi, hedef/içilen/kalan kartları, bardak boyutu düğmesi (simgeli seçici: 100–500 ml + özel), hızlı ekleme (bardak, 250, 500, 750, 1000, Özel), o günün hava satırı, "Bugünün kayıtları" (saat, ml, kaynak: Uygulama/Bildirim/Widget; ⋮ menüsünden Düzenle/Sil; silmede ve eklemede "Geri al").
-- **Sürahi:** kapasite = kişinin günlük hedefi (tam dolu = hedef), dalgalı su, yaylı seviye animasyonu, solda 500 ml (küçük kapasitede 250) ölçek çizgileri, kesik çizgi = şu an olman gereken seviye.
+- **Ana sayfa (marka görseline göre):** "Selam", dairesel su göstergesi (WaterOrb; kapasite = günlük hedef, altın çift halka, altın kesik çizgi + yan oklar = şu an olman gereken seviye), altında "içilen / hedef ml · %", tempo kartı ("X ml geridesin" + sıradaki hedef), ortada büyük "+" düğmesi (varsayılan bardak) ve yanlarda 4 hızlı çip (250/500/750/1000), Özel ve Bardak düğmeleri (simgeli seçici), Hedef ve Seri (üst üste hedefe ulaşılan gün) kartları, hava satırı, "Bugünün kayıtları" (⋮ Düzenle/Sil, Geri al).
+- **Gösterge:** WaterOrb ana ekranda; eski WaterPitcher (sürahi) kodu Vessels.kt'de duruyor, kullanılmıyor.
 - **İstatistik:** 7 / 30 gün çubuk grafiği, her günün hedef çizgisi, ortalama, hedefe ulaşılan gün, en iyi gün. Ortalama ve hedef günleri yalnızca kayıtlı günleri sayar. Geçmiş hedef için günlük anlık görüntü tutulur (hedef her gün değişebilir).
 - **Ayarlar:** kilo, hareket, hareket/hava eki anahtarları, hava (şehir ara, konumumu kullan, kaldır, bugünün sıcaklığı, Open-Meteo atfı), rutin saatleri, bardak boyutu (±50 ml), elle hedef, 5 L uyarısı. Değişiklikler yalnızca **Kaydet** ile yazılır.
 - **Alt gezinme:** Ana sayfa, İstatistik, Ayarlar (Canvas ile çizilmiş simgeler).
 - **Bildirim:** başlık = tempo durumu, gövde "200 ml iç · 1.250 / 2.750 ml" + ilerleme çubuğu; düğmeler: bardak, 500 (bardak 500 ise 1000), satır içi "Özel" (uygulamayı açmadan miktar yazılır; Android en fazla 3 düğme gösterir). Kayıttan sonra bildirim kapanmaz, yerinde ve sessizce güncellenir; hedef tamamsa başlık "Bugünün hedefi tamam".
 - **Widget (Glance):** ilerleme çubuğu, "1.250 / 2.750 ml", +bardak/+500/+1000 ve "Özel" (uygulamayı özel miktar penceresi açık başlatır).
-- **Tema:** ikon paletinden mavi tema (açık: birincil `#1976D2`, zemin `#F4F8FC`, metin lacivert `#0A2A43`; koyu: `#64B5F6` / `#0B1B2A`). İkon: lacivert zemin, damla içinde "A" + "b" (paket `docs/design/icon/`).
+- **Tema/marka:** Aqua/Deep Navy/Pearl (açık: birincil `#2C7C8C`, zemin `#F4F1EA`, metin `#0F2A4A`; koyu: `#7CCFCB` / `#0B1D33`; altın vurgu `#B08A3E`). İkon: inci zemin, "Ãb" yazı logosu (Cormorant Garamond SemiBold, OFL, vektör) + damla, aqua gradyan; bildirim ikonu aynı şeklin beyaz silueti. Referans: `docs/design/brand/`.
 - **Diller:** `values/` (İngilizce) ve `values-tr/` (Türkçe). Kodda sabit metin yok. Türkçe ek hatasından kaçınmak için "10:45'e kadar" gibi ekli saat kalıbı kullanılmaz.
 
 ---
@@ -125,7 +125,7 @@ Kütüphanelerden birleşen normal izinler: `WAKE_LOCK`, `ACCESS_NETWORK_STATE`,
 
 **Telefonda HENÜZ doğrulanmadı:** hatırlatmanın hesaplanan dakikada gelmesi (pil/otomatik başlatma kısıtları!), widget, hava, sürahi/tempo görünümü, istatistik, Room v1→v2→v3 geçişi, açık/koyu tema, TalkBack.
 
-**Git:** `main` = Faz 0 + Faz 1 dilim 1–6 + hava + bardak seçici + alt gezinme/istatistik. Dal `smoke-test` = [PR #10](https://github.com/lyldz/ab/pull/10): duman testi + tempo + sürahi + bildirim başlığı + `docs/TODO.md` + bu dosya (CI yeşil, `main`'e birleştirme bekliyor). Büyük Dependabot sürüm atlamaları (AGP 9, Kotlin 2.4, Gradle 9, BOM 2026) kapatıldı; targetSdk 36 geçişinde birlikte ele alınacak.
+**Git:** `main` = Faz 0 + Faz 1 dilim 1–6 + hava + bardak seçici + alt gezinme/istatistik. [PR #11](https://github.com/lyldz/ab/pull/11) (marka + yeni ana ekran, #10'un üstünde) ve dal `smoke-test` = [PR #10](https://github.com/lyldz/ab/pull/10): duman testi + tempo + sürahi + bildirim başlığı + `docs/TODO.md` + bu dosya (CI yeşil, `main`'e birleştirme bekliyor). Büyük Dependabot sürüm atlamaları (AGP 9, Kotlin 2.4, Gradle 9, BOM 2026) kapatıldı; targetSdk 36 geçişinde birlikte ele alınacak.
 
 ---
 
