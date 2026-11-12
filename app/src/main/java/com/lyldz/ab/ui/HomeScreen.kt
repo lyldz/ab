@@ -260,7 +260,7 @@ fun HomeScreen(
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 InfoCard(stringResource(R.string.stat_goal), "${fmtMl(today.goalMl)} ml", Modifier.weight(1f))
-                InfoCard(stringResource(R.string.streak_title), stringResource(R.string.streak_days, streak), Modifier.weight(1f))
+                InfoCard(stringResource(R.string.streak_title), context.resources.getQuantityString(R.plurals.streak_days, streak, streak), Modifier.weight(1f))
             }
 
             val temp = s.tempToday(LocalDate.now())

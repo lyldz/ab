@@ -109,7 +109,10 @@
     <string name="pitcher_legend">Kesik çizgi: şu an olman gereken seviye</string>
     <string name="notif_title_done">Bugünün hedefi tamam</string>
     <string name="streak_title">Seri</string>
-    <string name="streak_days">%1$d gün</string>
+    <plurals name="streak_days">
+        <item quantity="one">%1$d gün</item>
+        <item quantity="other">%1$d gün</item>
+    </plurals>
     <string name="greeting">Selam</string>
     <string name="greet_morning">Günaydın</string>
     <string name="greet_afternoon">İyi günler</string>

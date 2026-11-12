@@ -109,7 +109,10 @@
     <string name="pitcher_legend">Dashed line: where you should be by now</string>
     <string name="notif_title_done">Goal reached today</string>
     <string name="streak_title">Streak</string>
-    <string name="streak_days">%1$d days</string>
+    <plurals name="streak_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
     <string name="greeting">Hi</string>
     <string name="greet_morning">Good morning</string>
     <string name="greet_afternoon">Good afternoon</string>
