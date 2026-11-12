@@ -1,12 +1,9 @@
 package com.lyldz.ab
 
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -41,7 +38,10 @@ class ScreenshotSmokeTest {
         val dir = File("build/screenshots").apply { mkdirs() }
         try {
             compose.waitForIdle()
-            val bmp = compose.onRoot().captureToImage().asAndroidBitmap()
+            // captureToImage Robolectric'te çizim bekleyip zaman aşımına uğruyor; görünümü doğrudan çiz
+            val view = compose.activity.window.decorView
+            val bmp = android.graphics.Bitmap.createBitmap(view.width, view.height, android.graphics.Bitmap.Config.ARGB_8888)
+            view.draw(android.graphics.Canvas(bmp))
             File(dir, "$name.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
         } catch (t: Throwable) {
             File(dir, "$name.error.txt").writeText(t.stackTraceToString())
