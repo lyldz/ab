@@ -239,7 +239,7 @@ private suspend fun <R> infiniteFrame(onFrame: (Long) -> R): R {
 /** [target]'a her karede üstel yaklaşan değer (yaklaşık 0,3 sn); sistem animasyon ölçeğinden bağımsız. */
 @Composable
 private fun rememberSmoothed(target: Float): State<Float> {
-    val shown = remember { mutableFloatStateOf(0f) }
+    val shown = remember { mutableFloatStateOf(target) }
     val goal = rememberUpdatedState(target)
     LaunchedEffect(Unit) {
         var last = 0L
