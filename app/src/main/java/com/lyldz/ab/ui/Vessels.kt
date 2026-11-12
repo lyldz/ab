@@ -17,7 +17,9 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.platform.withInfiniteAnimationFrameNanos
+import androidx.compose.ui.platform.InfiniteAnimationPolicy
+import androidx.compose.runtime.withFrameNanos
+import kotlin.coroutines.coroutineContext
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -234,6 +236,12 @@ fun WaterOrb(
     }
 }
 
+/** Sonsuz kare döngüsü: testlerde InfiniteAnimationPolicy döngüyü sonlandırır, uygulama boşta kalabilir. */
+private suspend fun <R> infiniteFrame(onFrame: (Long) -> R): R {
+    val policy = coroutineContext[InfiniteAnimationPolicy]
+    return if (policy != null) policy.onInfiniteOperation { withFrameNanos(onFrame) } else withFrameNanos(onFrame)
+}
+
 /** [target]'a her karede üstel yaklaşan değer (yaklaşık 0,3 sn); sistem animasyon ölçeğinden bağımsız. */
 @Composable
 private fun rememberSmoothed(target: Float): State<Float> {
@@ -242,7 +250,7 @@ private fun rememberSmoothed(target: Float): State<Float> {
     LaunchedEffect(Unit) {
         var last = 0L
         while (true) {
-            withInfiniteAnimationFrameNanos { now ->
+            infiniteFrame { now ->
                 val dt = if (last == 0L) 0f else (now - last) / 1e9f
                 last = now
                 val k = 1f - exp(-dt / 0.3f)
@@ -262,7 +270,7 @@ private fun rememberPhase(periodMs: Int, reverse: Boolean = false): State<Float>
         var last = 0L
         val twoPi = (2 * PI).toFloat()
         while (true) {
-            withInfiniteAnimationFrameNanos { now ->
+            infiniteFrame { now ->
                 if (last != 0L) {
                     val step = (now - last) / 1e6f / periodMs * twoPi
                     phase.floatValue = ((phase.floatValue + if (reverse) -step else step) % twoPi + twoPi) % twoPi
