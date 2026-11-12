@@ -174,7 +174,7 @@ fun WaterOrb(
     val deep = MaterialTheme.colorScheme.onPrimaryContainer
     val track = MaterialTheme.colorScheme.surfaceVariant
     val ring = MaterialTheme.colorScheme.tertiary
-    val mark = MaterialTheme.colorScheme.onSurface
+    val mark = MaterialTheme.colorScheme.tertiary
 
     Canvas(modifier.semantics { contentDescription = description }) {
         val d = size.minDimension
@@ -207,16 +207,23 @@ fun WaterOrb(
                 drawPath(wave(1.6f, 3.dp.toPx()), water.copy(alpha = 0.45f))
                 drawPath(wave(0f, 0f), Brush.verticalGradient(listOf(water, deep.copy(alpha = 0.9f)), startY = sy, endY = bottom))
             }
-            paceFraction?.let {
-                val y = yOf(it)
-                drawLine(
-                    mark.copy(alpha = 0.7f), Offset(c.x - inner, y), Offset(c.x + inner, y), 2.dp.toPx(),
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 10f)),
-                )
-            }
-            drawCircle(Color.White.copy(alpha = 0.18f), inner * 0.5f, Offset(c.x - inner * 0.35f, c.y - inner * 0.45f))
         }
         drawCircle(ring.copy(alpha = 0.6f), inner, c, style = Stroke(1.dp.toPx()))
+        // şu an olman gereken seviye: halkaya kadar uzanan altın kesik çizgi + iki yanda ok
+        paceFraction?.let {
+            val y = yOf(it)
+            val dy = y - c.y
+            val hw = kotlin.math.sqrt((outer * outer - dy * dy).coerceAtLeast(0f))
+            drawLine(
+                mark, Offset(c.x - hw, y), Offset(c.x + hw, y), 2.5.dp.toPx(),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 9f)),
+            )
+            val t = 6.dp.toPx()
+            for (side in listOf(-1f, 1f)) {
+                val x = c.x + side * (hw + 1.dp.toPx())
+                drawPath(Path().apply { moveTo(x, y); lineTo(x + side * t, y - t * 0.7f); lineTo(x + side * t, y + t * 0.7f); close() }, mark)
+            }
+        }
     }
 }
 

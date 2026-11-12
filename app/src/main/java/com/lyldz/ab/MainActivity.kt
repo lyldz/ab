@@ -81,6 +81,7 @@ private fun AbRoot(openCustom: Boolean) {
                         onDelete = vm::delete, onRestore = vm::restore, onEdit = vm::edit,
                         onSetCup = { vm.saveSettings(t.settings.copy(cupMl = it)) },
                         openCustom = openCustom,
+                        streak = vm.streak.collectAsStateWithLifecycle().value,
                     )
                     1 -> {
                         val stats by vm.stats.collectAsStateWithLifecycle()

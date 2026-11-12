@@ -108,4 +108,7 @@
     <string name="pace_checkpoint_done">Target at %1$s: %2$s ml total, you are already there</string>
     <string name="pitcher_legend">Dashed line: where you should be by now</string>
     <string name="notif_title_done">Goal reached today</string>
+    <string name="streak_title">Streak</string>
+    <string name="streak_days">%1$d days</string>
+    <string name="greeting">Hi</string>
 </resources>

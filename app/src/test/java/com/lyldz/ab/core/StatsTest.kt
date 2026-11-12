@@ -48,4 +48,14 @@ class StatsTest {
         assertEquals(0, sum.recordedDays)
         assertNull(sum.best)
     }
+
+    @Test
+    fun streak_countsBackAndSkipsUnfinishedToday() {
+        val d = java.time.LocalDate.of(2026, 1, 1)
+        fun st(vararg ml: Int) = ml.mapIndexed { i, v -> DayStat(d.plusDays(i.toLong()), v, 2000) }
+        assertEquals(0, streakDays(emptyList()))
+        assertEquals(2, streakDays(st(500, 2000, 2500)))
+        assertEquals(2, streakDays(st(500, 2000, 2500, 300))) // bugün bitmedi, seri durur
+        assertEquals(0, streakDays(st(2000, 100, 100)))
+    }
 }
