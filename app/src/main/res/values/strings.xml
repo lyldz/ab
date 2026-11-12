@@ -14,7 +14,7 @@
     <string name="later">Later</string>
     <string name="onb_goal">Daily goal: %1$s ml</string>
     <string name="onb_goal_note">An estimate, not medical advice. You can change it later.</string>
-    <string name="onb_notif_why">Reminders arrive as notifications, so ab asks for notification permission next.</string>
+    <string name="onb_notif_why">Reminders arrive as notifications. Without this permission ab cannot remind you, but you can still log your water.</string>
     <string name="onb_start">Start</string>
     <string name="home_plan_amount">Drink %1$s ml</string>
     <string name="home_plan_next">Next reminder: %1$s</string>
@@ -29,8 +29,12 @@
     <string name="added">Added %1$s ml</string>
     <string name="undo">Undo</string>
     <string name="channel_name">Reminders</string>
-    <string name="notif_title">Time for some water</string>
+    <string name="notif_title">A glass of water will do you good</string>
     <string name="notif_text">Drink %1$s ml · %2$s / %3$s ml</string>
     <string name="notif_custom">Custom</string>
     <string name="notif_custom_hint">ml</string>
+    <string name="onb_next">Continue</string>
+    <string name="perm_notif_title">Notifications</string>
+    <string name="perm_allow">Allow</string>
+    <string name="perm_skip">Not now</string>
 </resources>

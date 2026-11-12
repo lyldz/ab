@@ -48,7 +48,7 @@ object Notifier {
         )
 
         val n = NotificationCompat.Builder(ctx, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_stat_drop)
+            .setSmallIcon(R.drawable.ic_stat_ab)
             .setContentTitle(ctx.getString(R.string.notif_title))
             .setContentText(ctx.getString(R.string.notif_text, fmtMl(amountMl), fmtMl(drankMl), fmtMl(goalMl)))
             .setProgress(goalMl, drankMl.coerceAtMost(goalMl), false)

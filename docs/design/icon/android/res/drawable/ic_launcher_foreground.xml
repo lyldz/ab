@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ab adaptive icon layer (A-drop + b). Scaled 0.86 to stay inside the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+  <group android:scaleX="0.86" android:scaleY="0.86" android:pivotX="54" android:pivotY="54">
+      <path android:pathData="M36,26C36,26 20,48 20,66A16,16 0,0 0,52 66C52,48 36,26 36,26Z" android:fillColor="#00000000" android:strokeColor="#FFFFFF" android:strokeWidth="7" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+      <path android:pathData="M23.5,63Q27.75,59 32,63T40.5,63T49,63" android:fillColor="#00000000" android:strokeColor="#4FC3F7" android:strokeWidth="5" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+      <path android:pathData="M64,30L64,82" android:fillColor="#00000000" android:strokeColor="#FFFFFF" android:strokeWidth="7" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+      <path android:pathData="M64,70a12,12 0,1 0,24 0a12,12 0,1 0,-24 0" android:fillColor="#00000000" android:strokeColor="#FFFFFF" android:strokeWidth="7" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+  </group>
+</vector>

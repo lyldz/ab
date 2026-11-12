@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/design/icon/svg/ab-logo.svg" alt="ab" height="96"></p>
+
 # ab
 
 **ab** Farsça "su" demek. Offline çalışan, takipsiz, sade bir Android su takibi uygulaması.
