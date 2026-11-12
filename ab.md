@@ -125,7 +125,7 @@ Kütüphanelerden birleşen normal izinler: `WAKE_LOCK`, `ACCESS_NETWORK_STATE`,
 
 **Telefonda HENÜZ doğrulanmadı:** hatırlatmanın hesaplanan dakikada gelmesi (pil/otomatik başlatma kısıtları!), widget, hava, sürahi/tempo görünümü, istatistik, Room v1→v2→v3 geçişi, açık/koyu tema, TalkBack.
 
-**Git:** tek dal `main`; Faz 0 + Faz 1 + hava + bardak seçici + alt gezinme/istatistik + duman testi + tempo/gösterge + marka görseli ve yeni ana ekran hepsi birleşti (PR #10 ve #13, CI yeşil; `smoke-test`, `marka`, `marka2` dalları silindi). Büyük Dependabot sürüm atlamaları (AGP 9, Kotlin 2.4, Gradle 9, BOM 2026) kapatıldı; targetSdk 36 geçişinde birlikte ele alınacak.
+**Git:** tek dal `main`; tüm özellikler birleşti (PR #10, #13, #14). **Sürüm 0.2.0 (versionCode 200) yayında:** https://github.com/lyldz/ab/releases/tag/v0.2.0 (tag `v0.2.0` → release workflow `assembleRelease`, `app-release.apk`, imzalı). İmza: yeni `ab-release` anahtarı `/root/anahtarlar/ab-release.jks` + `ab-release-keystore.properties` (yedeği kullanıcıda olmalı; kaybolursa güncelleme yapılamaz); GitHub secret'ları KEYSTORE_BASE64/KEYSTORE_PASSWORD/KEY_ALIAS/KEY_PASSWORD tanımlı. `test` pre-release'indeki debug APK farklı anahtarla imzalı: release APK'sı üstüne kurulmaz (önce kaldır). Sonraki iş: uygulama içi güncelleyici (kullanıcı istedi, "ilerleyen zamanda").
 
 ---
 

@@ -47,3 +47,6 @@ Hızlı Ayarlar kutucuğu, içecek türleri (çay, kahve katsayıları), Ramazan
 - Hava ve konum: son bilinen konum yoksa tek seferlik istek yalnızca Android 11+
 - Sunucuda 2 GB RAM: yerel test+lint 12–17 dk; doğrulama CI'da
 - docs/SPEC.md ilk konuşmaya göre; tempo, sürahi, istatistik, alt gezinme ve hava ayrıntıları DECISIONS.md ve CHANGELOG.md'de
+
+- [ ] Uygulama içi güncelleyici (GitHub release API; Yeter'deki Updater.kt örnek) — kullanıcı "ilerleyen zamanda" dedi
+- [ ] Bildirim: "İçtim" / "15 Dk Ertele" düğmeleri (tasarım kılavuzunda var, 3 düğme sınırı nedeniyle ertelendi)
