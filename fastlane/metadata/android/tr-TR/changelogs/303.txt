@@ -1,0 +1,2 @@
+Telefonu baş aşağı çevirince su artık yer çekimini izliyor, açıda takılmıyor.
+Ayarlar kendiliğinden kaydediliyor; Kaydet düğmesi yok, su hareketi anahtarı hemen çalışıyor.

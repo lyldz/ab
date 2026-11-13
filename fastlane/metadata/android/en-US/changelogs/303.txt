@@ -1,0 +1,2 @@
+Water now follows gravity when the phone is upside down instead of getting stuck at an angle.
+Settings save automatically; no Save button, and the water motion switch takes effect right away.
