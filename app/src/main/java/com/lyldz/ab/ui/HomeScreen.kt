@@ -264,7 +264,7 @@ fun HomeScreen(
     }
 
     if (goalInfo) GoalInfoDialog(today, temp, onDismiss = { goalInfo = false }, onSettings = { goalInfo = false; onOpenSettings() })
-    if (cupDialog) CupDialog(s.cupMl, onDismiss = { cupDialog = false }, onPick = { cupDialog = false; onSetCup(it) })
+    if (cupDialog) CupDialog(s.cupMl, onDismiss = { cupDialog = false }, onPick = { cupDialog = false; onSetCup(it); add(it) })
     if (custom) CustomDialog(onDismiss = { custom = false }, onAdd = { custom = false; add(it) })
     editing?.let { e ->
         EditDialog(

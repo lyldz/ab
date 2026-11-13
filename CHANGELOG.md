@@ -3,6 +3,8 @@
 [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimi, [SemVer](https://semver.org/lang/tr/) sürümleme.
 
 ## [Unreleased]
+### Fixed
+- "+ Su Ekle" düğmesine uzun basınca açılan bardak menüsünde bir ölçü seçince (ya da özel miktar yazınca) miktar hemen eklenir ve varsayılan bardak olur; eskiden seçtikten sonra düğmeye bir kez daha basmak gerekiyordu.
 
 ## [0.3.1] - 2026-11-13 · Testi
 ### Added
