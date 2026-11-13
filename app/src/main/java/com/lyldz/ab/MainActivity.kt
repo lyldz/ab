@@ -101,6 +101,8 @@ private fun AbContent(t: com.lyldz.ab.data.AbRepository.Today, vm: MainViewModel
                         openCustom = openCustom,
                         streak = vm.streak.collectAsStateWithLifecycle().value,
                         onOpenSettings = { tab = 3 },
+                        hintsShown = t.settings.longPressHints,
+                        onHintCount = vm::setHintCount,
                     )
                     1 -> {
                         val stats by vm.stats.collectAsStateWithLifecycle()

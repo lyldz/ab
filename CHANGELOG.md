@@ -3,6 +3,8 @@
 [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimi, [SemVer](https://semver.org/lang/tr/) sürümleme.
 
 ## [Unreleased]
+### Changed
+- Ana ekran sadeleşti: alttaki Bardak/Kupa/Şişe/Özel kartları kaldırıldı (miktar seçmek için "+ Su Ekle"ye uzun basılır), gösterge büyüdü. Uzun basmayı keşfettirmek için ilk 3 açılışta 5 saniyelik oklu geçici ipucu çıkar, bir kez uzun basınca bir daha çıkmaz.
 ### Fixed
 - "+ Su Ekle" düğmesine uzun basınca açılan bardak menüsünde bir ölçü seçince (ya da özel miktar yazınca) miktar hemen eklenir ve varsayılan bardak olur; eskiden seçtikten sonra düğmeye bir kez daha basmak gerekiyordu.
 ### Changed
