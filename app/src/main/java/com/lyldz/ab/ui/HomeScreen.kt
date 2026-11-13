@@ -143,7 +143,7 @@ fun HomeScreen(
     val remaining = today.goalMl - today.drankMl
     val showPace = remaining > 0 && nowMin in s.windowStartMin..s.windowEndMin
     val pace = paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, nowMin)
-    val plan = nextPlan(nowMin, s.windowStartMin, s.windowEndMin, today.goalMl, today.drankMl, s.cupMl, today.anchorMin)
+    val plan = nextPlan(nowMin, s.windowStartMin, s.windowEndMin, today.goalMl, today.drankMl, s.reminderIntervalMin(), today.anchorMin)
 
     val temp = s.tempToday(LocalDate.now())
     Scaffold(snackbarHost = { SnackbarHost(snack) }, contentWindowInsets = WindowInsets.statusBars) { padding ->
