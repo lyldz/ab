@@ -10,33 +10,53 @@ import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.Intake
 import com.lyldz.ab.data.Settings
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.ZoneId
 
 class MainViewModel(private val app: AbApp) : ViewModel() {
+    /**
+     * Bugünün tarihi (30 sn'de bir denetlenir). Depo akışları abone olunduğu andaki güne sabitlendiği için,
+     * uygulama gece yarısını açık geçerse akışlar yeni güne yeniden kurulur; yoksa ekran dünü izlemeye devam eder.
+     */
+    private val date = flow {
+        while (true) {
+            emit(LocalDate.now())
+            delay(30_000)
+        }
+    }.distinctUntilChanged()
+
     /** null: veri henüz okunmadı. */
+    @OptIn(ExperimentalCoroutinesApi::class)
     val today: StateFlow<AbRepository.Today?> =
-        app.repo.today().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        date.flatMapLatest { app.repo.today() }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val period = MutableStateFlow(7)
     val periodDays: StateFlow<Int> = period
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val stats: StateFlow<List<DayStat>> =
-        period.flatMapLatest { app.repo.stats(it) }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        combine(period, date) { p, _ -> p }.flatMapLatest { app.repo.stats(it) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val streak: StateFlow<Int> =
-        app.repo.stats(60).map(::streakDays).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+        date.flatMapLatest { app.repo.stats(60) }.map(::streakDays).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     /** Geçmiş sekmesi: son 30 günün günlük toplamları. */
+    @OptIn(ExperimentalCoroutinesApi::class)
     val history: StateFlow<List<DayStat>> =
-        app.repo.stats(30).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        date.flatMapLatest { app.repo.stats(30) }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setPeriod(days: Int) {
         period.value = days

@@ -27,7 +27,13 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease
+      - name: SHA-256
+        run: |
+          cd app/build/outputs/apk/release
+          for f in *.apk; do sha256sum "$f" > "$f.sha256"; done
       - uses: softprops/action-gh-release@v3
         with:
-          files: app/build/outputs/apk/release/*.apk
+          files: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/release/*.apk.sha256
           generate_release_notes: true

@@ -111,12 +111,11 @@ private fun SummaryCard(label: String, value: String, sub: String?, modifier: Mo
     }
 }
 
-/** Her gün bir çubuk (hedefe ulaşıldıysa tam renk) ve o günün hedefini gösteren çizgi. */
+/** Her gün bir çubuk (hedefe ulaşıldıysa tam renk); arkasındaki soluk zemin o günün hedef yüksekliğidir. */
 @Composable
 private fun BarChart(stats: List<DayStat>, modifier: Modifier) {
     val bar = MaterialTheme.colorScheme.primary
     val dim = bar.copy(alpha = 0.45f)
-    val mark = MaterialTheme.colorScheme.onSurface
     val axis = MaterialTheme.colorScheme.surfaceVariant
     val maxV = (stats.maxOf { maxOf(it.ml, it.goalMl) } * 1.1f).coerceAtLeast(1f)
     Canvas(modifier) {
@@ -125,10 +124,10 @@ private fun BarChart(stats: List<DayStat>, modifier: Modifier) {
         drawLine(axis, Offset(0f, size.height), Offset(size.width, size.height), 2.dp.toPx())
         stats.forEachIndexed { i, d ->
             val x = i * slot + (slot - barW) / 2f
+            val goalH = size.height * (d.goalMl / maxV)
+            drawRoundRect(axis.copy(alpha = 0.6f), Offset(x, size.height - goalH), Size(barW, goalH), CornerRadius(4.dp.toPx()))
             val h = size.height * (d.ml / maxV)
             drawRoundRect(if (d.reached) bar else dim, Offset(x, size.height - h), Size(barW, h), CornerRadius(4.dp.toPx()))
-            val gy = size.height - size.height * (d.goalMl / maxV)
-            drawLine(mark, Offset(x - 2f, gy), Offset(x + barW + 2f, gy), 2.dp.toPx())
         }
     }
 }

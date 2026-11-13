@@ -57,6 +57,7 @@ object WeatherApi {
         runCatching {
             val c = URL(url).openConnection() as HttpURLConnection
             try {
+                c.setRequestProperty("User-Agent", Updater.USER_AGENT) // Open-Meteo uygulama adını ister
                 c.connectTimeout = 10_000
                 c.readTimeout = 10_000
                 if (c.responseCode == 200) c.inputStream.bufferedReader().use { it.readText() } else null

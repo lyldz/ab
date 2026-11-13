@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
+import com.lyldz.ab.data.DownloadResult
 import com.lyldz.ab.data.UpdateInfo
 import com.lyldz.ab.data.Updater
 import kotlinx.coroutines.launch
@@ -81,12 +82,15 @@ fun UpdateSection() {
                             permHint = false
                             scope.launch {
                                 state = UpdateState.Downloading(0f)
-                                val file = Updater.download(ctx, st.info.downloadUrl) { state = UpdateState.Downloading(it) }
-                                if (file == null) {
-                                    state = UpdateState.Failed(R.string.update_download_failed)
-                                } else {
-                                    Updater.install(ctx, file)
-                                    state = UpdateState.Available(st.info)
+                                val res = Updater.download(ctx, st.info) { state = UpdateState.Downloading(it) }
+                                when (res) {
+                                    is DownloadResult.Ok -> {
+                                        Updater.install(ctx, res.file)
+                                        state = UpdateState.Available(st.info)
+                                    }
+                                    DownloadResult.HashMismatch -> state = UpdateState.Failed(R.string.update_hash_failed)
+                                    DownloadResult.WrongSignature -> state = UpdateState.Failed(R.string.update_sig_failed)
+                                    DownloadResult.Failed -> state = UpdateState.Failed(R.string.update_download_failed)
                                 }
                             }
                         }

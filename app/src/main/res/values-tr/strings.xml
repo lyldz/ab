@@ -100,7 +100,7 @@
     <string name="stats_best">En iyi gün</string>
     <string name="stats_none">Bu dönemde henüz kayıt yok.</string>
     <string name="stats_chart_desc">Günlük su içme grafiği</string>
-    <string name="stats_legend">Çizgiler her günün hedefini gösterir; koyu çubuklar hedefe ulaşılan günlerdir. Ortalama ve hedef günleri yalnızca kayıtlı günleri sayar.</string>
+    <string name="stats_legend">Soluk zemin her günün hedefini gösterir; koyu çubuklar hedefe ulaşılan günlerdir. Ortalama ve hedef günleri yalnızca kayıtlı günleri sayar.</string>
     <string name="pace_behind">%1$s ml geridesin</string>
     <string name="pace_ahead">%1$s ml ilerdesin</string>
     <string name="pace_on">Tam tempodasın</string>
@@ -178,4 +178,10 @@
     <string name="gi_total">Toplam</string>
     <string name="gi_manual">Hedefi elle belirledin; yukarıdaki parçalar kullanılmıyor.</string>
     <string name="ok">Tamam</string>
+    <string name="update_hash_failed">İndirilen dosya doğrulanamadı (SHA-256 uyuşmuyor). Kurulum iptal edildi.</string>
+    <string name="update_sig_failed">İndirilen sürüm farklı bir anahtarla imzalı, bunun üstüne kurulamaz. Önce kaldırıp elle kurman gerekir.</string>
+    <string name="battery_title">Hatırlatmalar gelmiyor mu?</string>
+    <string name="battery_text">Bazı telefonlar (Xiaomi, Samsung, Huawei…) pil tasarrufu için arka planı kısıtlar. Hatırlatmaların zamanında gelmesi için ab\'a arka planda çalışma ve otomatik başlatma izni ver.</string>
+    <string name="battery_open">Pil ayarları</string>
+    <string name="battery_app">Uygulama ayarları</string>
 </resources>
