@@ -149,7 +149,7 @@ fun HomeScreen(
     Scaffold(snackbarHost = { SnackbarHost(snack) }, contentWindowInsets = WindowInsets.statusBars) { padding ->
         // tek sayfa: gösterge, kalan boşluğa göre büyür/küçülür; çok küçük ekranda içerik kayar
         BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
-            val orb = (maxHeight - 470.dp).coerceIn(160.dp, 280.dp)
+            val orb = (maxHeight - 450.dp).coerceIn(160.dp, 320.dp)
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
