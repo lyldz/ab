@@ -68,6 +68,7 @@ import kotlin.math.roundToInt
 fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
     var name by rememberSaveable { mutableStateOf(s.name) }
     var themeMode by rememberSaveable { mutableIntStateOf(s.themeMode) }
+    var motionWater by rememberSaveable { mutableStateOf(s.motionWater) }
     var weight by rememberSaveable { mutableStateOf(s.weightKg.toString()) }
     var activityIdx by rememberSaveable { mutableIntStateOf(s.activity.ordinal) }
     var start by rememberSaveable { mutableIntStateOf(s.windowStartMin) }
@@ -108,6 +109,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     val draft = s.copy(
         name = name.trim(),
         themeMode = themeMode,
+        motionWater = motionWater,
         weightKg = kg ?: s.weightKg,
         activity = Activity.entries[activityIdx],
         windowStartMin = start,
@@ -234,6 +236,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
                     FilterChip(selected = themeMode == i, onClick = { themeMode = i }, label = { Text(stringResource(label)) })
                 }
             }
+            SwitchRow(stringResource(R.string.set_motion), motionWater) { motionWater = it }
         }
 
         SettingsGroup(stringResource(R.string.grp_perms)) { PermissionsContent() }

@@ -36,6 +36,8 @@ data class Settings(
     val lastNotifiedMs: Long? = null,
     val name: String = "",
     val themeMode: Int = 0, // 0 sistem, 1 açık, 2 koyu
+    /** Gösterge suyu telefonun eğimine/hareketine göre oynar (ivmeölçer, izin gerekmez). */
+    val motionWater: Boolean = true,
 ) {
     /** Sıcaklık yalnızca bugün alındıysa geçerli; eski gün değeri hedefi etkilemez. */
     fun tempToday(today: LocalDate): Double? = tempC.takeIf { tempDay == today.toString() }
@@ -68,6 +70,7 @@ class SettingsStore(private val context: Context) {
             p[ONBOARDED] = s.onboarded
             p[NAME] = s.name
             p[THEME] = s.themeMode
+            p[MOTION] = s.motionWater
             p.putOrRemove(GOAL, s.goalOverrideMl)
             p.putOrRemove(CITY, s.city)
             p.putOrRemove(LAT, s.lat)
@@ -116,6 +119,7 @@ class SettingsStore(private val context: Context) {
             lastNotifiedMs = this[LAST_NOTIFIED],
             name = this[NAME] ?: d.name,
             themeMode = this[THEME] ?: d.themeMode,
+            motionWater = this[MOTION] ?: d.motionWater,
         )
     }
 
@@ -136,6 +140,7 @@ class SettingsStore(private val context: Context) {
         val ONBOARDED = booleanPreferencesKey("onboarded")
         val NAME = stringPreferencesKey("name")
         val THEME = intPreferencesKey("theme_mode")
+        val MOTION = booleanPreferencesKey("motion_water")
         val LAST_NOTIFIED = longPreferencesKey("last_notified_ms")
     }
 }
