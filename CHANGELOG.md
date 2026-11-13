@@ -3,6 +3,8 @@
 [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimi, [SemVer](https://semver.org/lang/tr/) sürümleme.
 
 ## [Unreleased]
+
+## [0.3.2] - 2026-11-13 · Testi
 ### Changed
 - Ana ekran sadeleşti: alttaki Bardak/Kupa/Şişe/Özel kartları kaldırıldı (miktar seçmek için "+ Su Ekle"ye uzun basılır), gösterge büyüdü. Uzun basmayı keşfettirmek için ilk 3 açılışta 5 saniyelik oklu geçici ipucu çıkar, bir kez uzun basınca bir daha çıkmaz.
 - Su hareketi: el titremesini süzen filtre, yan ivmeyle yüzeyin gidip gelmesi (yaylı sönüm), eğim üst sınırı 60°; sensör oyun hızında (yalnızca Bugün sekmesi açıkken) dinlenir. Eğim ve yay mantığı birim testli.

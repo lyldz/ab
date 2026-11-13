@@ -2,7 +2,7 @@
 
 **ab** Farsça "su" demek. Offline çalışan, reklamsız, hesapsız, takipsiz bir Android su takibi uygulaması. Bu dosya projeyle ilgili bilinen her şeyin tek yerde özetidir: ürün kararları, kod haritası, çalışma düzeni, durum ve açık işler. Ayrıntılar için: `docs/SPEC.md`, `docs/DECISIONS.md`, `docs/ARCHITECTURE.md`, `docs/TODO.md`, `CHANGELOG.md`.
 
-Son güncelleme: 2026-11-12 · Sürüm 0.3.1 · Testi (versionCode 301; 0.3.0 yayında, 0.3.1 hazırlandı) · Lisans GPL-3.0-or-later · Paket `com.lyldz.ab` · Repo `github.com/lyldz/ab` (public)
+Son güncelleme: 2026-11-12 · Sürüm 0.3.2 · Testi (versionCode 302; 0.3.1 yayında, 0.3.2 hazırlandı) · Lisans GPL-3.0-or-later · Paket `com.lyldz.ab` · Repo `github.com/lyldz/ab` (public)
 
 ---
 

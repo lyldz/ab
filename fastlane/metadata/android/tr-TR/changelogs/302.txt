@@ -1,0 +1,3 @@
+Sade ana ekran: büyük su dairesi, uzun basınca ölçü seç ve hemen ekle, oklu ipucu.
+Su telefonun eğimine ve sallanmasına göre oynar (Ayarlar > Görünüm'den kapatılır).
+Bardak menüsünden seçilen miktar hemen eklenir.
