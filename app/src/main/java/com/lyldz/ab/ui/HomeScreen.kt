@@ -282,12 +282,7 @@ fun HomeScreen(
                         )
                     }
                     // uzun basmayı keşfettirmek için geçici ok işaretli ipucu (ilk birkaç açılışta, bir kez uzun basınca kalkar)
-                    AnimatedVisibility(
-                        visible = hintVisible,
-                        enter = fadeIn() + slideInVertically { it / 2 },
-                        exit = fadeOut(),
-                        modifier = Modifier.align(Alignment.TopCenter).offset(y = (-54).dp),
-                    ) { HintBubble(stringResource(R.string.hint_long_press)) }
+                    HintHost(hintVisible, stringResource(R.string.hint_long_press), Modifier.align(Alignment.TopCenter).offset(y = (-54).dp))
                 }
             }
         }
@@ -373,6 +368,14 @@ private fun dropPath(w: Float, h: Float) = Path().apply {
     cubicTo(w * .26f, h * .98f, w * .06f, h * .88f, w * .06f, h * .68f)
     cubicTo(w * .06f, h * .5f, w * .38f, h * .28f, w * .5f, h * .02f)
     close()
+}
+
+/** İpucunu belirip kaybolan animasyonla gösterir (üst düzey çağrı: dış Column kapsamıyla karışmasın). */
+@Composable
+private fun HintHost(visible: Boolean, text: String, modifier: Modifier) {
+    AnimatedVisibility(visible = visible, enter = fadeIn() + slideInVertically { it / 2 }, exit = fadeOut(), modifier = modifier) {
+        HintBubble(text)
+    }
 }
 
 /** Aşağı bakan oklu ipucu balonu. */
