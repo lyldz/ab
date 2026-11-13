@@ -477,37 +477,6 @@ fun activityLabel(a: Activity): Int = when (a) {
 }
 
 @Composable
-private fun WelcomePage(onStart: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().safeDrawingPadding().padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Image(
-            painterResource(if (Ab.isDark) R.drawable.ic_wordmark_light else R.drawable.ic_wordmark),
-            contentDescription = stringResource(R.string.app_name),
-            modifier = Modifier.width(280.dp),
-        )
-        Spacer(Modifier.height(32.dp))
-        Text(
-            stringResource(R.string.onb_title),
-            style = MaterialTheme.typography.headlineLarge,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            stringResource(R.string.onb_tagline),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(40.dp))
-        Button(onClick = onStart, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
-            Text(stringResource(R.string.onb_start))
-        }
-    }
-}
-
-@Composable
 internal fun ActivityChips(selected: Int, onSelect: (Int) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Activity.entries.forEachIndexed { i, a ->
