@@ -3,6 +3,8 @@
 [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimi, [SemVer](https://semver.org/lang/tr/) sürümleme.
 
 ## [Unreleased]
+### Fixed
+- Telefonu baş aşağı çevirince su 60°'de takılıp kalıyordu (eğim üst sınırı vardı, ±180°'de açı da zıplıyordu): artık tam tur dönüyor, su baş aşağıda da yer çekimini izliyor (ekranın üst tarafında toplanıyor), sınırdan en kısa yoldan geçiyor; telefon yüz yukarıyken son açı korunuyor.
 
 ## [0.3.2] - 2026-11-13 · Testi
 ### Changed

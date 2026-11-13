@@ -8,6 +8,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
 import com.lyldz.ab.core.SloshSpring
 import com.lyldz.ab.core.tiltDegrees
+import com.lyldz.ab.core.unwrapNear
+import com.lyldz.ab.core.wrap180
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -270,7 +272,7 @@ fun WaterOrb(
  * (alfa 0,15), sonra yaylı sönümle (sıvı gibi bir miktar sallanır). Ayrıca ani yan ivme (ham değerin farkı) ikinci bir
  * yayı iter: su dengeye gelirken yüzeyi birkaç kez gidip gelir. Yalnızca ekran açıkken (RESUME/PAUSE) ve Bugün sekmesi
  * görünürken (bileşen çizilirken) dinler; sensör yoksa ya da [enabled] kapalıysa 0.
- * shortcut: yalnızca ivmeölçer; telefon yüz yukarıyken eğim 0 sayılır.
+ * shortcut: yalnızca ivmeölçer; telefon yüz yukarı/aşağı yatıkken son açı korunur.
  */
 @Composable
 private fun rememberTilt(enabled: Boolean): State<Offset> {
@@ -320,15 +322,16 @@ private fun rememberTilt(enabled: Boolean): State<Offset> {
         }
         var angle = 0f
         var vel = 0f
+        var goal = 0f // son geçerli hedef açı (telefon yatıkken korunur)
         val slosh = SloshSpring()
         var last = 0L
         while (true) {
             infiniteFrame { now ->
                 val dt = if (last == 0L) 0f else ((now - last) / 1e9f).coerceAtMost(0.05f)
                 last = now
-                val target = tiltDegrees(shared[0], shared[1])
-                vel += (-70f * (angle - target) - 9f * vel) * dt // eğim yayı (hafif sönümsüz: biraz sallanır)
-                angle += vel * dt
+                goal = unwrapNear(tiltDegrees(shared[0], shared[1], goal), angle) // en kısa yoldan, baş aşağıda da yer çekimini izler
+                vel += (-70f * (angle - goal) - 9f * vel) * dt // eğim yayı (hafif sönümsüz: biraz sallanır)
+                angle = wrap180(angle + vel * dt)
                 slosh.step(-shared[2] * 40f, dt) // yan ivme: su ters yöne yığılır (5 m/s² fark ≈ 6° yüzey oynaması)
                 shared[2] = 0f
                 out.value = Offset(angle + slosh.pos * 18f, abs(slosh.pos))
