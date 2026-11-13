@@ -3,6 +3,10 @@
 [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimi, [SemVer](https://semver.org/lang/tr/) sürümleme.
 
 ## [Unreleased]
+### Added
+- Yedek: Ayarlar > Yedek ile kayıtlar, günlük hedefler ve ayarlar tek JSON dosyasına yazılır ya da dosyadan geri yüklenir (dosya seçici, izin gerekmez, hiçbir yere gönderilmez). Geri yükleme kayıtları ekler (aynı an+miktar yeniden eklenmez), ayarları yedektekilerle değiştirir.
+### Changed
+- Kurulum ve ayarlarda "Uyanma / Uyku" yerine "Su içme başlangıcı / sonu".
 ### Changed
 - Hatırlatma aralığı sabit: geride kalınca bildirim sıklaşmaz (eskiden 46 dk'dan 19 dk'ya, akşama doğru birkaç dakikaya inebiliyordu). Aralık yalnızca kilo, hareket, rutin, bardak ya da elle hedef değişince değişir; her hatırlatmada içilecek miktar kalan toplama göre hesaplanır (50 ml adım, 100–500 ml).
 

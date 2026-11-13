@@ -7,9 +7,9 @@
     <string name="activity_none">Hareketsiz</string>
     <string name="activity_medium">Orta</string>
     <string name="activity_high">Çok aktif</string>
-    <string name="onb_window">Rutinin</string>
-    <string name="onb_from">Uyanma</string>
-    <string name="onb_to">Uyku</string>
+    <string name="onb_window">Su içme saatlerin</string>
+    <string name="onb_from">Su içme başlangıcı</string>
+    <string name="onb_to">Su içme sonu</string>
     <string name="earlier">Daha erken</string>
     <string name="later">Daha geç</string>
     <string name="onb_goal">Günlük hedef: %1$s ml</string>
@@ -184,4 +184,17 @@
     <string name="battery_text">Bazı telefonlar (Xiaomi, Samsung, Huawei…) pil tasarrufu için arka planı kısıtlar. Hatırlatmaların zamanında gelmesi için ab\'a arka planda çalışma ve otomatik başlatma izni ver.</string>
     <string name="battery_open">Pil ayarları</string>
     <string name="battery_app">Uygulama ayarları</string>
+    <string name="backup_title">Yedek</string>
+    <string name="backup_text">Kayıtlarını ve ayarlarını bir dosyaya kaydet ya da dosyadan geri yükle. Dosya kaydettiğin yerde kalır, hiçbir yere gönderilmez.</string>
+    <string name="backup_privacy">Dosyada kayıtların, kilon ve yaklaşık konumun bulunur. Güvenli bir yerde sakla.</string>
+    <string name="backup_export">Yedeği dışa aktar</string>
+    <string name="backup_import">Yedekten geri yükle</string>
+    <string name="backup_exported">Yedek kaydedildi.</string>
+    <string name="backup_export_failed">Yedek kaydedilemedi.</string>
+    <string name="backup_invalid">Bu dosya geçerli bir ab yedeği değil.</string>
+    <string name="backup_import_failed">Yedek geri yüklenemedi.</string>
+    <string name="backup_confirm_title">Yedek geri yüklensin mi?</string>
+    <string name="backup_confirm_text">Yedekte %2$d güne ait %1$d kayıt var. Yeni kayıtlar eklenir, mevcut kayıtların kalır. Ayarların yedektekilerle değişir.</string>
+    <string name="backup_restore">Geri yükle</string>
+    <string name="backup_imported">Geri yüklendi. %1$d yeni kayıt eklendi.</string>
 </resources>

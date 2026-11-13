@@ -7,9 +7,9 @@
     <string name="activity_none">Low</string>
     <string name="activity_medium">Medium</string>
     <string name="activity_high">High</string>
-    <string name="onb_window">Your routine</string>
-    <string name="onb_from">Wake up</string>
-    <string name="onb_to">Sleep</string>
+    <string name="onb_window">Your drinking hours</string>
+    <string name="onb_from">Drinking starts</string>
+    <string name="onb_to">Drinking ends</string>
     <string name="earlier">Earlier</string>
     <string name="later">Later</string>
     <string name="onb_goal">Daily goal: %1$s ml</string>
@@ -184,4 +184,17 @@
     <string name="battery_text">Some phones (Xiaomi, Samsung, Huawei…) stop background apps to save battery. Let ab run in the background and start automatically so reminders arrive on time.</string>
     <string name="battery_open">Battery settings</string>
     <string name="battery_app">App settings</string>
+    <string name="backup_title">Backup</string>
+    <string name="backup_text">Save your records and settings to a file, or restore them from one. The file stays wherever you save it; nothing is sent anywhere.</string>
+    <string name="backup_privacy">The file contains your records, weight and approximate location. Keep it somewhere safe.</string>
+    <string name="backup_export">Export backup</string>
+    <string name="backup_import">Restore from backup</string>
+    <string name="backup_exported">Backup saved.</string>
+    <string name="backup_export_failed">Could not save the backup.</string>
+    <string name="backup_invalid">This file is not a valid ab backup.</string>
+    <string name="backup_import_failed">Could not restore the backup.</string>
+    <string name="backup_confirm_title">Restore backup?</string>
+    <string name="backup_confirm_text">The backup has %1$d records over %2$d days. New records are added and your current records stay. Your settings are replaced with the backup\'s.</string>
+    <string name="backup_restore">Restore</string>
+    <string name="backup_imported">Restored. %1$d new records added.</string>
 </resources>

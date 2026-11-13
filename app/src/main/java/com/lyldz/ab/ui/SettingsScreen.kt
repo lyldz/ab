@@ -217,6 +217,8 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
         }
         Text(stringResource(R.string.onb_goal_note), color = MaterialTheme.colorScheme.onSurfaceVariant)
 
+        BackupSection(onRestored = onBack)
+
         BatteryTipSection()
 
         UpdateSection()

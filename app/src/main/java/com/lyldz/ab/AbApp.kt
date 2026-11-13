@@ -3,6 +3,7 @@ package com.lyldz.ab
 import android.app.Application
 import androidx.room.Room
 import com.lyldz.ab.data.AbDb
+import com.lyldz.ab.data.BackupData
 import com.lyldz.ab.data.Intake
 import com.lyldz.ab.data.MIGRATION_1_2
 import com.lyldz.ab.data.MIGRATION_2_3
@@ -43,6 +44,12 @@ class AbApp : Application() {
     suspend fun editEntry(e: Intake, ml: Int, atMs: Long) {
         repo.updateIntake(e.id, ml, atMs)
         afterChange()
+    }
+
+    suspend fun importBackup(d: BackupData): Int {
+        val n = repo.importData(d)
+        afterChange()
+        return n
     }
 
     private suspend fun afterChange() {
