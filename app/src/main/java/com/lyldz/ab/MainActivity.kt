@@ -110,7 +110,7 @@ private fun AbContent(t: com.lyldz.ab.data.AbRepository.Today, vm: MainViewModel
                         StatsScreen(stats, days, vm::setPeriod, onBack = { tab = 0 })
                     }
                     2 -> HistoryScreen(vm.history.collectAsStateWithLifecycle().value, onBack = { tab = 0 })
-                    else -> SettingsScreen(t.settings, onSave = { vm.saveSettings(it); tab = 0 }, onBack = { tab = 0 })
+                    else -> SettingsScreen(t.settings, onSave = vm::saveSettings, onBack = { tab = 0 })
                 }
             }
             BottomBar(tab) { tab = it }

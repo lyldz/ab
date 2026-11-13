@@ -13,6 +13,8 @@ import androidx.compose.ui.text.font.FontWeight
 import com.lyldz.ab.core.seriesName
 import com.lyldz.ab.data.Updater
 import com.lyldz.ab.ui.theme.Ab
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -62,7 +64,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import kotlin.math.roundToInt
 
-/** Değişiklikler yerelde tutulur; yalnızca "Kaydet" yazar, geri/vazgeç atar. */
+/** Değişiklikler geçerliyse yarım saniye sonra kendiliğinden kaydedilir (kaydet düğmesi yok); geçersiz alan kırmızı kalır, kaydedilmez. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
@@ -128,6 +130,13 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     val today = LocalDate.now()
     val goal = draft.goalMl(today)
     val valid = weightOk && (!manual || manualMl != null)
+    // otomatik kaydet: kullanıcı kaydet düğmesine basmayı unutup sekme değiştirince ayar kaybolmasın
+    LaunchedEffect(draft, valid) {
+        if (valid && draft != s) {
+            delay(500)
+            onSave(draft)
+        }
+    }
     val earlier = stringResource(R.string.earlier)
     val later = stringResource(R.string.later)
 
@@ -253,14 +262,11 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
             Text(stringResource(R.string.about_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
-        Button(
-            onClick = { onSave(draft) },
-            enabled = valid,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-        ) { Text(stringResource(R.string.save)) }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
-            Text(stringResource(R.string.cancel))
-        }
+        Text(
+            stringResource(if (valid) R.string.settings_autosave else R.string.settings_invalid),
+            style = MaterialTheme.typography.bodySmall,
+            color = if (valid) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error,
+        )
     }
 
     if (cityDialog) {

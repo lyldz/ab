@@ -245,4 +245,6 @@
     <string name="set_motion">Su, telefonun eğimine ve hareketine göre oynasın</string>
     <string name="about_version">Sürüm %1$s · %2$s</string>
     <string name="hint_long_press">Basılı tut: istediğin miktarı seç</string>
+    <string name="settings_autosave">Değişiklikler otomatik kaydedilir.</string>
+    <string name="settings_invalid">Kırmızı alanları düzelt; geçersiz değişiklikler kaydedilmez.</string>
 </resources>

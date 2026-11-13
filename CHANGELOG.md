@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 ### Fixed
+- Ayarlardaki değişiklikler artık kendiliğinden kaydediliyor (yarım saniye sonra, kaydet düğmesi yok). Eskiden sayfanın en altındaki "Kaydet"e basmadan sekme değiştirince anahtarlar (örn. su hareketi) kaybolup "işe yaramıyor" gibi görünüyordu. Geçersiz alan (örn. kilo) kaydedilmez, kırmızı kalır.
+### Fixed
 - Telefonu baş aşağı çevirince su 60°'de takılıp kalıyordu (eğim üst sınırı vardı, ±180°'de açı da zıplıyordu): artık tam tur dönüyor, su baş aşağıda da yer çekimini izliyor (ekranın üst tarafında toplanıyor), sınırdan en kısa yoldan geçiyor; telefon yüz yukarıyken son açı korunuyor.
 
 ## [0.3.2] - 2026-11-13 · Testi
