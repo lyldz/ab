@@ -242,4 +242,5 @@
     <string name="onb_sum_hot">Extra water is added automatically on hot days.</string>
     <string name="onb_sum_foot">You can change your goal and glass size any time in Settings.</string>
     <string name="onb_welcome_title">Start tracking water with Āb</string>
+    <string name="about_version">Version %1$s · %2$s</string>
 </resources>
