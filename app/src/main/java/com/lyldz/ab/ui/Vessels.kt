@@ -329,7 +329,7 @@ private fun rememberTilt(enabled: Boolean): State<Offset> {
                 val target = tiltDegrees(shared[0], shared[1])
                 vel += (-70f * (angle - target) - 9f * vel) * dt // eğim yayı (hafif sönümsüz: biraz sallanır)
                 angle += vel * dt
-                slosh.step(-shared[2] * 3f, dt) // yan ivme: su ters yöne yığılır
+                slosh.step(-shared[2] * 40f, dt) // yan ivme: su ters yöne yığılır (5 m/s² fark ≈ 6° yüzey oynaması)
                 shared[2] = 0f
                 out.value = Offset(angle + slosh.pos * 18f, abs(slosh.pos))
             }

@@ -19,10 +19,10 @@ class SloshTest {
 
     @Test fun springSettlesAfterImpulseAndStaysBounded() {
         val s = SloshSpring()
-        s.step(40f, 0.016f)
+        s.step(200f, 0.016f) // yaklaşık 5 m/s² yan ivme farkı × kazanç 40
         var peak = 0f
         repeat(60) { s.step(0f, 0.016f); peak = maxOf(peak, kotlin.math.abs(s.pos)) }
-        assertTrue("itme yüzeyi oynatmalı", peak > 0.05f)
+        assertTrue("itme yüzeyi gözle görülür oynatmalı: $peak", peak > 0.2f)
         repeat(400) { s.step(0f, 0.016f) } // ~6 sn
         assertTrue("su sakinleşmeli", kotlin.math.abs(s.pos) < 0.02f && kotlin.math.abs(s.vel) < 0.05f)
         repeat(50) { s.step(500f, 0.016f) }
