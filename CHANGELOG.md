@@ -3,6 +3,8 @@
 [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimi, [SemVer](https://semver.org/lang/tr/) sürümleme.
 
 ## [Unreleased]
+### Changed
+- Hatırlatma aralığı sabit: geride kalınca bildirim sıklaşmaz (eskiden 46 dk'dan 19 dk'ya, akşama doğru birkaç dakikaya inebiliyordu). Aralık yalnızca kilo, hareket, rutin, bardak ya da elle hedef değişince değişir; her hatırlatmada içilecek miktar kalan toplama göre hesaplanır (50 ml adım, 100–500 ml).
 
 ## [0.3.0] - 2026-11-12
 ### Added

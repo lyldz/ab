@@ -11,7 +11,7 @@ Son güncelleme: 2026-11-12 · Sürüm 0.2.0 (versionCode 200, GitHub'da yayınd
 Çoğu su uygulaması "saatte bir" gibi sabit ve bunaltıcı bildirim yollar. ab, günün belirlenen saat aralığı (rutin) ve günlük hedef su miktarından **kaç dakikada bir ne kadar içilmesi gerektiğini tam dakikaya hesaplar**; su içildikçe yeniden hesaplar. Kullanıcı bildirimden bıkıp uygulamayı bırakmamalıdır.
 
 **Kullanıcının olmazsa olmazları (öncelik sırasıyla):**
-1. Akıllı hatırlatma: aralık = kalan süre ÷ (kalan ml ÷ blok). Alt sınır (45 dk gibi) ve yuvarlak saat yok. Geride kalınca bildirimler sıklaşmaz. Baskıcı olmayan dil.
+1. Akıllı hatırlatma: sabit aralık (pencere × bardak ÷ plan hedefi, tam dakika), miktar kalan toplama göre değişir. Sabit alt sınır (45 dk gibi) ve yuvarlak saat yok. Geride kalınca bildirimler **sıklaşmaz**, yalnızca miktar büyür. Baskıcı olmayan dil.
 2. Hızlı kayıt: yalnızca bildirim düğmesinden (uygulama açılmadan) ve ana ekran widget'ından.
 
 **Yapılmayacaklar:** reklam, analytics, Firebase, Google Play Services, hesap/giriş, sabit saatli spam bildirim, hedef dolduktan sonra bildirim, suçlayıcı pop-up, hatırlatma dışı amaçla pil muafiyeti isteme.
@@ -43,7 +43,8 @@ Son güncelleme: 2026-11-12 · Sürüm 0.2.0 (versionCode 200, GitHub'da yayınd
 
 ### Hatırlatma ve tempo
 - Rutin penceresi (varsayılan 06:00–18:00, her gün aynı) dışında **hatırlatma** yok. Durum bildirimi ise uygulama açılınca ve kurulum bitince sessizce gösterilir (pencere dışında başlığı "Bugünkü su"); hatırlatmalar yalnızca hesaplanan dakikada sesle gelir.
-- Her blokta içilecek miktar = bardak boyutu (varsayılan 200 ml, değiştirilebilir); blok = min(bardak, kalan ml). Aralık = kalan süre × blok ÷ kalan ml, tam dakika.
+- **Aralık günün başında sabit:** `baseIntervalMin` = pencere × bardak ÷ **plan hedefi** (kilo + hareket, elle hedef varsa o; **hava eki yok**), tam dakika. Yalnızca kilo, hareket, rutin saatleri, bardak boyutu ya da elle hedef değişince değişir (varsayılan 200 ml bardak, 06:00–18:00, 2.850 ml → 51 dk). Hava sıcaklığı sıklığı değil miktarı artırır.
+- **Miktar kalan toplama göre:** `nextPlan` = kalan ml ÷ pencereye sığan kalan hatırlatma sayısı, 50 ml'ye yuvarlanır, 100–500 ml arası, kalandan fazla olmaz ("1.900 ml kaldı → 250 ml iç"). Geride kalan kişi aynı aralıkla ama daha büyük miktar görür; tempo kartı geri kalmayı gösterir.
 - Plan çıpası = son içiş **veya** son gösterilen hatırlatma (hangisi geçse); yani görmezden gelinen hatırlatmadan sonra bir sonraki aralık yine gelir. Hedef dolunca veya sıradaki hatırlatma pencereyi aşıyorsa o gün bildirim yok.
 - **Tempo** = rutin penceresinde düz çizgi: pencere başında 0, sonunda hedefin tamamı. "X ml geridesin / ilerdesin / tam tempodasın" (eşik ±50 ml, 10 ml'ye yuvarlanır). Ana ekran kartı ve bildirim başlığı aynı kuralı kullanır.
 

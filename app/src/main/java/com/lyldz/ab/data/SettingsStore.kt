@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.lyldz.ab.core.Activity
+import com.lyldz.ab.core.baseIntervalMin
 import com.lyldz.ab.core.dailyGoalMl
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -36,6 +37,12 @@ data class Settings(
 ) {
     /** Sıcaklık yalnızca bugün alındıysa geçerli; eski gün değeri hedefi etkilemez. */
     fun tempToday(today: LocalDate): Double? = tempC.takeIf { tempDay == today.toString() }
+
+    /** Hatırlatma aralığı için hava eki olmayan hedef: yalnızca kilo, hareket ya da elle hedef değişince değişir. */
+    fun planGoalMl(): Int = goalOverrideMl ?: dailyGoalMl(weightKg, activity, null, useActivity, false)
+
+    /** Günün sabit hatırlatma aralığı (dk). */
+    fun reminderIntervalMin(): Int = baseIntervalMin(windowStartMin, windowEndMin, cupMl, planGoalMl())
 
     fun goalMl(today: LocalDate): Int = goalOverrideMl ?: dailyGoalMl(
         weightKg, activity, tempToday(today), useActivity, useWeather,

@@ -39,18 +39,18 @@ object Notifier {
     }
 
     /**
-     * Android bir bildirimde en fazla 3 düğme gösterir: bardak, 500 (bardak 500 ise 1000) ve
+     * Android bir bildirimde en fazla 3 düğme gösterir: önerilen miktar (plan yoksa bardak), 500 (ilki 500 ise 1000) ve
      * uygulamayı açmadan miktar yazılan "Özel" satır içi giriş.
      */
     @SuppressLint("MissingPermission") // areNotificationsEnabled() izni kapsar
-    fun show(ctx: Context, title: String, text: String, drankMl: Int, goalMl: Int, cupMl: Int, quiet: Boolean = false) {
+    fun show(ctx: Context, title: String, text: String, drankMl: Int, goalMl: Int, firstMl: Int, quiet: Boolean = false) {
         val nm = NotificationManagerCompat.from(ctx)
         if (!nm.areNotificationsEnabled()) return
 
         val open = PendingIntent.getActivity(
             ctx, 0, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE,
         )
-        val second = if (cupMl == 500) 1000 else 500
+        val second = if (firstMl == 500) 1000 else 500
         val custom = RemoteInput.Builder(KEY_TEXT).setLabel(ctx.getString(R.string.notif_custom_hint)).build()
         val customPi = PendingIntent.getBroadcast(
             ctx, 3, addIntent(ctx), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE, // RemoteInput mutable ister
@@ -65,7 +65,7 @@ object Notifier {
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setContentIntent(open)
             .setAutoCancel(true)
-            .addAction(addAction(ctx, 1, cupMl))
+            .addAction(addAction(ctx, 1, firstMl))
             .addAction(addAction(ctx, 2, second))
             .addAction(
                 NotificationCompat.Action.Builder(0, ctx.getString(R.string.notif_custom), customPi)

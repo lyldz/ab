@@ -80,7 +80,7 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         val s = t.settings
         val plan = if (!s.onboarded) null else nextPlan(
             now.hour * 60 + now.minute, s.windowStartMin, s.windowEndMin,
-            t.goalMl, t.drankMl, s.cupMl, t.anchorMin,
+            t.goalMl, t.drankMl, s.reminderIntervalMin(), t.anchorMin,
         )
         return t to plan
     }
@@ -135,7 +135,7 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
             plan != null -> context.getString(R.string.notif_text_after, drank, goal, fmtTime(plan.nextAtMin))
             else -> context.getString(R.string.home_progress, drank, goal)
         }
-        Notifier.show(context, title, text, t.drankMl, t.goalMl, t.settings.cupMl, quiet = true)
+        Notifier.show(context, title, text, t.drankMl, t.goalMl, plan?.amountMl ?: t.settings.cupMl, quiet = true)
     }
 
     /** Bildirim başlığı: tempoya göre "X ml geridesin / ilerdesin / tam tempodasın" (ana ekranla aynı kural). */
@@ -156,7 +156,7 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
             // alarm erken/geç gelebilir; yalnızca zamanı gelmişse göster
             if (plan != null && plan.nextAtMin <= now.hour * 60 + now.minute) {
                 val text = context.getString(R.string.notif_text, fmtMl(plan.amountMl), fmtMl(t.drankMl), fmtMl(t.goalMl))
-                Notifier.show(context, paceTitle(t, now.hour * 60 + now.minute), text, t.drankMl, t.goalMl, t.settings.cupMl)
+                Notifier.show(context, paceTitle(t, now.hour * 60 + now.minute), text, t.drankMl, t.goalMl, plan.amountMl)
                 repo.markNotified(System.currentTimeMillis())
             }
         }
