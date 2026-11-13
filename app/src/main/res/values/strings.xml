@@ -7,9 +7,9 @@
     <string name="activity_none">Low</string>
     <string name="activity_medium">Medium</string>
     <string name="activity_high">High</string>
-    <string name="onb_window">Your drinking hours</string>
-    <string name="onb_from">Drinking starts</string>
-    <string name="onb_to">Drinking ends</string>
+    <string name="onb_window">Your day</string>
+    <string name="onb_from">Wake up</string>
+    <string name="onb_to">Bedtime</string>
     <string name="earlier">Earlier</string>
     <string name="later">Later</string>
     <string name="onb_goal">Daily goal: %1$s ml</string>
@@ -197,4 +197,19 @@
     <string name="backup_confirm_text">The backup has %1$d records over %2$d days. New records are added and your current records stay. Your settings are replaced with the backup\'s.</string>
     <string name="backup_restore">Restore</string>
     <string name="backup_imported">Restored. %1$d new records added.</string>
+    <string name="window_note">Reminders run from %1$s to %2$s. For better sleep it is best to stop drinking water 2 hours before bed, so the plan ends 2 hours before bedtime.</string>
+    <string name="grp_profile">Profile</string>
+    <string name="grp_goal">Daily goal</string>
+    <string name="grp_day">Your day</string>
+    <string name="grp_weather">Weather and location</string>
+    <string name="grp_look">Appearance</string>
+    <string name="grp_perms">Permissions and notifications</string>
+    <string name="grp_about">About</string>
+    <string name="perm_notifications">Notifications</string>
+    <string name="perm_location">Location (approximate)</string>
+    <string name="perm_status_on">Allowed</string>
+    <string name="perm_status_off">Not allowed</string>
+    <string name="perm_open">Open settings</string>
+    <string name="about_license">GPL-3.0-or-later license. No ads, no analytics, no account.</string>
+    <string name="about_source">Source code: github.com/lyldz/ab</string>
 </resources>

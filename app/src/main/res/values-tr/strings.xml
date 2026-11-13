@@ -7,9 +7,9 @@
     <string name="activity_none">Hareketsiz</string>
     <string name="activity_medium">Orta</string>
     <string name="activity_high">Çok aktif</string>
-    <string name="onb_window">Su içme saatlerin</string>
-    <string name="onb_from">Su içme başlangıcı</string>
-    <string name="onb_to">Su içme sonu</string>
+    <string name="onb_window">Günün</string>
+    <string name="onb_from">Kalkış</string>
+    <string name="onb_to">Yatış</string>
     <string name="earlier">Daha erken</string>
     <string name="later">Daha geç</string>
     <string name="onb_goal">Günlük hedef: %1$s ml</string>
@@ -197,4 +197,19 @@
     <string name="backup_confirm_text">Yedekte %2$d güne ait %1$d kayıt var. Yeni kayıtlar eklenir, mevcut kayıtların kalır. Ayarların yedektekilerle değişir.</string>
     <string name="backup_restore">Geri yükle</string>
     <string name="backup_imported">Geri yüklendi. %1$d yeni kayıt eklendi.</string>
+    <string name="window_note">Hatırlatmalar %1$s – %2$s arasında gelir. Uyku kalitesi için yatmadan 2 saat önce su içmeyi bırakmak önerilir, bu yüzden hesap yatıştan 2 saat önce biter.</string>
+    <string name="grp_profile">Profil</string>
+    <string name="grp_goal">Günlük hedef</string>
+    <string name="grp_day">Gün düzeni</string>
+    <string name="grp_weather">Hava ve konum</string>
+    <string name="grp_look">Görünüm</string>
+    <string name="grp_perms">İzinler ve bildirimler</string>
+    <string name="grp_about">Hakkında</string>
+    <string name="perm_notifications">Bildirimler</string>
+    <string name="perm_location">Konum (yaklaşık)</string>
+    <string name="perm_status_on">İzin verildi</string>
+    <string name="perm_status_off">İzin verilmedi</string>
+    <string name="perm_open">Ayarları aç</string>
+    <string name="about_license">GPL-3.0-or-later lisansı. Reklam, analitik ve hesap yok.</string>
+    <string name="about_source">Kaynak kod: github.com/lyldz/ab</string>
 </resources>

@@ -69,6 +69,13 @@ abstract class ScreenshotBase(private val prefix: String) {
         compose.onNodeWithText("OK").performClick()
         repeat(6) { compose.onNodeWithContentDescription("+200 ml").performScrollTo().performClick() }
         shot("home-top-filled")
+        tap("Settings")
+        wait("Profile")
+        shot("settings-1")
+        compose.onNodeWithText("Permissions and notifications").performScrollTo()
+        shot("settings-2")
+        compose.onNodeWithText("About").performScrollTo()
+        shot("settings-3")
     }
 }
 

@@ -4,6 +4,14 @@ import android.Manifest
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import com.lyldz.ab.data.Updater
+import com.lyldz.ab.ui.theme.Ab
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -43,6 +51,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
 import com.lyldz.ab.core.Activity
+import com.lyldz.ab.core.STOP_BEFORE_BED_MIN
 import com.lyldz.ab.core.GOAL_WARN_ML
 import com.lyldz.ab.core.tempExtraMl
 import com.lyldz.ab.data.Settings
@@ -125,103 +134,118 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     ) {
         Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineLarge)
 
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it.take(30) },
-            label = { Text(stringResource(R.string.set_name)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Text(stringResource(R.string.set_theme), style = MaterialTheme.typography.titleMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(R.string.theme_system, R.string.theme_light, R.string.theme_dark).forEachIndexed { i, label ->
-                FilterChip(selected = themeMode == i, onClick = { themeMode = i }, label = { Text(stringResource(label)) })
-            }
-        }
-
-        OutlinedTextField(
-            value = weight,
-            onValueChange = { weight = it.filter(Char::isDigit).take(3) },
-            label = { Text(stringResource(R.string.onb_weight)) },
-            isError = !weightOk,
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Text(stringResource(R.string.onb_activity), style = MaterialTheme.typography.titleMedium)
-        ActivityChips(activityIdx) { activityIdx = it }
-        SwitchRow(stringResource(R.string.set_use_activity), useActivity) { useActivity = it }
-
-        Text(stringResource(R.string.weather_title), style = MaterialTheme.typography.titleMedium)
-        SwitchRow(stringResource(R.string.set_use_weather), useWeather) { useWeather = it }
-        val cityText = when {
-            city != null -> city!!
-            lat != null -> stringResource(R.string.weather_city_location)
-            else -> stringResource(R.string.weather_city_none)
-        }
-        Text(stringResource(R.string.weather_city, cityText), style = MaterialTheme.typography.bodyLarge)
-        draft.tempToday(today)?.let {
-            Text(
-                stringResource(R.string.weather_today, it.roundToInt().toString(), fmtMl(tempExtraMl(it))),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { cityDialog = true }, modifier = Modifier.heightIn(min = 48.dp)) {
-                Text(stringResource(R.string.weather_search))
-            }
-            OutlinedButton(
-                onClick = { locLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) },
-                modifier = Modifier.heightIn(min = 48.dp),
-            ) { Text(stringResource(R.string.weather_use_location)) }
-            if (lat != null) {
-                TextButton(
-                    onClick = { lat = null; lon = null; city = null },
-                    modifier = Modifier.heightIn(min = 48.dp),
-                ) { Text(stringResource(R.string.weather_clear)) }
-            }
-        }
-        if (locMessage) Text(stringResource(R.string.weather_no_location), color = MaterialTheme.colorScheme.tertiary)
-        Text(
-            stringResource(R.string.weather_credit),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall,
-        )
-
-        Text(stringResource(R.string.onb_window), style = MaterialTheme.typography.titleMedium)
-        Stepper(stringResource(R.string.onb_from), fmtTime(start), earlier, later,
-            { start = (start - 30).coerceIn(0, end - 60) }, { start = (start + 30).coerceIn(0, end - 60) })
-        Stepper(stringResource(R.string.onb_to), fmtTime(end), earlier, later,
-            { end = (end - 30).coerceIn(start + 60, 23 * 60 + 30) }, { end = (end + 30).coerceIn(start + 60, 23 * 60 + 30) })
-
-        Stepper(stringResource(R.string.set_cup), "${fmtMl(cup)} ml", stringResource(R.string.less), stringResource(R.string.more),
-            { cup = (cup - 50).coerceIn(100, 1000) }, { cup = (cup + 50).coerceIn(100, 1000) })
-
-        Text(stringResource(R.string.onb_goal, fmtMl(goal)), style = MaterialTheme.typography.titleLarge)
-        SwitchRow(stringResource(R.string.set_override), manual) { manual = it }
-        if (manual) {
+        SettingsGroup(stringResource(R.string.grp_profile)) {
             OutlinedTextField(
-                value = manualText,
-                onValueChange = { manualText = it.filter(Char::isDigit).take(4) },
-                label = { Text(stringResource(R.string.set_goal_ml)) },
-                isError = manualMl == null,
+                value = name,
+                onValueChange = { name = it.take(30) },
+                label = { Text(stringResource(R.string.set_name)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = weight,
+                onValueChange = { weight = it.filter(Char::isDigit).take(3) },
+                label = { Text(stringResource(R.string.onb_weight)) },
+                isError = !weightOk,
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
             )
+            Text(stringResource(R.string.onb_activity), style = MaterialTheme.typography.titleSmall)
+            ActivityChips(activityIdx) { activityIdx = it }
         }
-        if (goal > GOAL_WARN_ML) {
-            Text(stringResource(R.string.set_goal_warn), color = MaterialTheme.colorScheme.tertiary)
+
+        SettingsGroup(stringResource(R.string.grp_goal)) {
+            Text(stringResource(R.string.onb_goal, fmtMl(goal)), style = MaterialTheme.typography.titleLarge)
+            SwitchRow(stringResource(R.string.set_use_activity), useActivity) { useActivity = it }
+            SwitchRow(stringResource(R.string.set_use_weather), useWeather) { useWeather = it }
+            SwitchRow(stringResource(R.string.set_override), manual) { manual = it }
+            if (manual) {
+                OutlinedTextField(
+                    value = manualText,
+                    onValueChange = { manualText = it.filter(Char::isDigit).take(4) },
+                    label = { Text(stringResource(R.string.set_goal_ml)) },
+                    isError = manualMl == null,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            if (goal > GOAL_WARN_ML) {
+                Text(stringResource(R.string.set_goal_warn), color = MaterialTheme.colorScheme.tertiary)
+            }
+            Text(stringResource(R.string.onb_goal_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Text(stringResource(R.string.onb_goal_note), color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-        BackupSection(onRestored = onBack)
+        SettingsGroup(stringResource(R.string.grp_day)) {
+            Stepper(stringResource(R.string.onb_from), fmtTime(start), earlier, later,
+                { start = (start - 30).coerceIn(0, end - 60) }, { start = (start + 30).coerceIn(0, end - 60) })
+            Stepper(stringResource(R.string.onb_to), fmtTime((end + STOP_BEFORE_BED_MIN) % 1440), earlier, later,
+                { end = (end - 30).coerceIn(start + 60, 23 * 60 + 30) }, { end = (end + 30).coerceIn(start + 60, 23 * 60 + 30) })
+            Text(
+                stringResource(R.string.window_note, fmtTime(start), fmtTime(end)),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Stepper(stringResource(R.string.set_cup), "${fmtMl(cup)} ml", stringResource(R.string.less), stringResource(R.string.more),
+                { cup = (cup - 50).coerceIn(100, 1000) }, { cup = (cup + 50).coerceIn(100, 1000) })
+        }
 
-        BatteryTipSection()
+        SettingsGroup(stringResource(R.string.grp_weather)) {
+            val cityText = when {
+                city != null -> city!!
+                lat != null -> stringResource(R.string.weather_city_location)
+                else -> stringResource(R.string.weather_city_none)
+            }
+            Text(stringResource(R.string.weather_city, cityText), style = MaterialTheme.typography.bodyLarge)
+            draft.tempToday(today)?.let {
+                Text(
+                    stringResource(R.string.weather_today, it.roundToInt().toString(), fmtMl(tempExtraMl(it))),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = { cityDialog = true }, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text(stringResource(R.string.weather_search))
+                }
+                OutlinedButton(
+                    onClick = { locLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) },
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) { Text(stringResource(R.string.weather_use_location)) }
+                if (lat != null) {
+                    TextButton(
+                        onClick = { lat = null; lon = null; city = null },
+                        modifier = Modifier.heightIn(min = 48.dp),
+                    ) { Text(stringResource(R.string.weather_clear)) }
+                }
+            }
+            if (locMessage) Text(stringResource(R.string.weather_no_location), color = MaterialTheme.colorScheme.tertiary)
+            Text(
+                stringResource(R.string.weather_credit),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
 
-        UpdateSection()
+        SettingsGroup(stringResource(R.string.grp_look)) {
+            Text(stringResource(R.string.set_theme), style = MaterialTheme.typography.titleSmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(R.string.theme_system, R.string.theme_light, R.string.theme_dark).forEachIndexed { i, label ->
+                    FilterChip(selected = themeMode == i, onClick = { themeMode = i }, label = { Text(stringResource(label)) })
+                }
+            }
+        }
+
+        SettingsGroup(stringResource(R.string.grp_perms)) { PermissionsContent() }
+
+        SettingsGroup(stringResource(R.string.backup_title)) { BackupSection(onRestored = onBack) }
+
+        SettingsGroup(stringResource(R.string.update_title)) { UpdateSection() }
+
+        SettingsGroup(stringResource(R.string.grp_about)) {
+            Text(stringResource(R.string.update_current, Updater.currentVersion(ctx)))
+            Text(stringResource(R.string.about_license), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.about_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
 
         Button(
             onClick = { onSave(draft) },
@@ -244,6 +268,19 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
                 locMessage = false
             },
         )
+    }
+}
+
+/** Ayarlar'da gruplanmış bölüm: başlık + içerik, kenarlıklı yuvarlak kart. */
+@Composable
+internal fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
+    val shape = RoundedCornerShape(20.dp)
+    Column(
+        Modifier.fillMaxWidth().clip(shape).background(MaterialTheme.colorScheme.surface).border(1.dp, Ab.line, shape).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        content()
     }
 }
 

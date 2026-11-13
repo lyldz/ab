@@ -56,6 +56,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
 import com.lyldz.ab.core.Activity
+import com.lyldz.ab.core.STOP_BEFORE_BED_MIN
 import com.lyldz.ab.core.dailyGoalMl
 import com.lyldz.ab.core.tempExtraMl
 import com.lyldz.ab.data.WeatherApi
@@ -73,8 +74,8 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
     var step by rememberSaveable { mutableIntStateOf(0) }
     var weight by rememberSaveable { mutableStateOf("70") }
     var activityIdx by rememberSaveable { mutableIntStateOf(0) }
-    var start by rememberSaveable { mutableIntStateOf(6 * 60) }
-    var end by rememberSaveable { mutableIntStateOf(18 * 60) }
+    var start by rememberSaveable { mutableIntStateOf(6 * 60 + 30) }
+    var end by rememberSaveable { mutableIntStateOf(20 * 60) }
     val activity = Activity.entries[activityIdx]
     val kg = weight.toIntOrNull()
     val valid = kg != null && kg in 30..250
@@ -158,8 +159,12 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
             val later = stringResource(R.string.later)
             Stepper(stringResource(R.string.onb_from), fmtTime(start), earlier, later,
                 { start = (start - 30).coerceIn(0, end - 60) }, { start = (start + 30).coerceIn(0, end - 60) })
-            Stepper(stringResource(R.string.onb_to), fmtTime(end), earlier, later,
+            Stepper(stringResource(R.string.onb_to), fmtTime((end + STOP_BEFORE_BED_MIN) % 1440), earlier, later,
                 { end = (end - 30).coerceIn(start + 60, 23 * 60 + 30) }, { end = (end + 30).coerceIn(start + 60, 23 * 60 + 30) })
+            Text(
+                stringResource(R.string.window_note, fmtTime(start), fmtTime(end)),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
 
             Text(
                 stringResource(R.string.onb_goal, fmtMl(dailyGoalMl(kg ?: 70, activity, null))),
