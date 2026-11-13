@@ -20,6 +20,13 @@ import androidx.compose.ui.text.font.FontWeight
 import com.lyldz.ab.ui.theme.Ab
 import com.lyldz.ab.ui.theme.AbColors
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -103,6 +110,9 @@ import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.roundToInt
 
+private const val MAX_HINTS = 3
+private var hintShownThisRun = false
+
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
@@ -117,6 +127,8 @@ fun HomeScreen(
     openCustom: Boolean = false,
     streak: Int = 0,
     onOpenSettings: () -> Unit = {},
+    hintsShown: Int = MAX_HINTS,
+    onHintCount: (Int) -> Unit = {},
 ) {
     val s = today.settings
     val snack = remember { SnackbarHostState() }
@@ -126,6 +138,18 @@ fun HomeScreen(
     var editing by remember { mutableStateOf<Intake?>(null) }
     var cupDialog by remember { mutableStateOf(false) }
     var goalInfo by remember { mutableStateOf(false) }
+    var hintVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        // uygulama başına bir kez, ilk MAX_HINTS açılışta; sekme değiştirince tekrar çıkmaz
+        if (!hintShownThisRun && hintsShown < MAX_HINTS) {
+            hintShownThisRun = true
+            onHintCount(hintsShown + 1)
+            delay(700)
+            hintVisible = true
+            delay(5000)
+            hintVisible = false
+        }
+    }
 
     fun showUndo(message: String, undo: () -> Unit) {
         scope.launch {
@@ -148,7 +172,7 @@ fun HomeScreen(
     Scaffold(snackbarHost = { SnackbarHost(snack) }, contentWindowInsets = WindowInsets.statusBars) { padding ->
         // tek sayfa: gösterge, kalan boşluğa göre büyür/küçülür; çok küçük ekranda içerik kayar
         BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
-            val orb = (maxHeight - 450.dp).coerceIn(160.dp, 380.dp).coerceAtMost(maxWidth - 16.dp)
+            val orb = (maxHeight - 380.dp).coerceIn(160.dp, 400.dp).coerceAtMost(maxWidth - 16.dp)
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -239,25 +263,26 @@ fun HomeScreen(
 
                 val pill = RoundedCornerShape(999.dp)
                 val addDesc = stringResource(R.string.add_ml, fmtMl(s.cupMl))
-                Box(
-                    Modifier.fillMaxWidth().height(56.dp)
-                        .shadow(10.dp, pill, ambientColor = AbColors.Aqua1, spotColor = AbColors.Aqua1)
-                        .clip(pill).background(Brush.horizontalGradient(listOf(AbColors.Aqua1, AbColors.Aqua2)))
-                        // basınca bardak boyutu kadar ekler, uzun basınca bardak boyutunu seçtirir
-                        .combinedClickable(role = Role.Button, onLongClick = { cupDialog = true }) { add(s.cupMl) }
-                        .semantics { contentDescription = addDesc },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        "${stringResource(R.string.add_water)} (${fmtMl(s.cupMl)} ml)",
-                        style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = AbColors.Navy,
-                    )
-                }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    QuickCard(stringResource(R.string.quick_glass), "+250 ml", Modifier.weight(1f)) { add(250) }
-                    QuickCard(stringResource(R.string.quick_mug), "+350 ml", Modifier.weight(1f)) { add(350) }
-                    QuickCard(stringResource(R.string.quick_bottle), "+500 ml", Modifier.weight(1f)) { add(500) }
-                    QuickCard(stringResource(R.string.add_custom), "+", Modifier.weight(1f)) { custom = true }
+                Box(Modifier.fillMaxWidth()) {
+                    Box(
+                        Modifier.fillMaxWidth().height(56.dp)
+                            .shadow(10.dp, pill, ambientColor = AbColors.Aqua1, spotColor = AbColors.Aqua1)
+                            .clip(pill).background(Brush.horizontalGradient(listOf(AbColors.Aqua1, AbColors.Aqua2)))
+                            // basınca bardak boyutu kadar ekler, uzun basınca ölçü seçtirir ve seçileni hemen ekler
+                            .combinedClickable(
+                                role = Role.Button,
+                                onLongClick = { hintVisible = false; onHintCount(MAX_HINTS); cupDialog = true },
+                            ) { add(s.cupMl) }
+                            .semantics { contentDescription = addDesc },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            "${stringResource(R.string.add_water)} (${fmtMl(s.cupMl)} ml)",
+                            style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = AbColors.Navy,
+                        )
+                    }
+                    // uzun basmayı keşfettirmek için geçici ok işaretli ipucu (ilk birkaç açılışta, bir kez uzun basınca kalkar)
+                    HintHost(hintVisible, stringResource(R.string.hint_long_press), Modifier.align(Alignment.TopCenter).offset(y = (-54).dp))
                 }
             }
         }
@@ -345,17 +370,25 @@ private fun dropPath(w: Float, h: Float) = Path().apply {
     close()
 }
 
+/** İpucunu belirip kaybolan animasyonla gösterir (üst düzey çağrı: dış Column kapsamıyla karışmasın). */
 @Composable
-private fun QuickCard(label: String, value: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(20.dp)
-    Column(
-        modifier.shadow(6.dp, shape, ambientColor = AbColors.Navy.copy(alpha = 0.12f), spotColor = AbColors.Navy.copy(alpha = 0.12f))
-            .clip(shape).background(Ab.card).border(1.dp, Ab.line, shape)
-            .clickable(role = Role.Button, onClick = onClick).padding(vertical = 10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(label, style = MaterialTheme.typography.labelMedium, color = Ab.muted)
-        Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Ab.strong)
+private fun HintHost(visible: Boolean, text: String, modifier: Modifier) {
+    AnimatedVisibility(visible = visible, enter = fadeIn() + slideInVertically { it / 2 }, exit = fadeOut(), modifier = modifier) {
+        HintBubble(text)
+    }
+}
+
+/** Aşağı bakan oklu ipucu balonu. */
+@Composable
+private fun HintBubble(text: String) {
+    val bg = MaterialTheme.colorScheme.inverseSurface
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(Modifier.clip(RoundedCornerShape(14.dp)).background(bg).padding(horizontal = 16.dp, vertical = 10.dp)) {
+            Text(text, color = MaterialTheme.colorScheme.inverseOnSurface, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+        }
+        Canvas(Modifier.size(width = 18.dp, height = 9.dp)) {
+            drawPath(Path().apply { moveTo(0f, 0f); lineTo(size.width, 0f); lineTo(size.width / 2f, size.height); close() }, bg)
+        }
     }
 }
 

@@ -58,6 +58,10 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
     val history: StateFlow<List<DayStat>> =
         date.flatMapLatest { app.repo.stats(30) }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    fun setHintCount(n: Int) {
+        viewModelScope.launch { app.repo.setHintCount(n) }
+    }
+
     fun setPeriod(days: Int) {
         period.value = days
     }

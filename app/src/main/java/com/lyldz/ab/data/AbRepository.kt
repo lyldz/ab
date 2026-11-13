@@ -105,6 +105,8 @@ class AbRepository(
 
     suspend fun markNotified(ms: Long) = store.setLastNotified(ms)
 
+    suspend fun setHintCount(n: Int) = store.setHintCount(n)
+
     suspend fun settingsNow(): Settings = store.flow.first()
 
     suspend fun saveTemperature(tempC: Double, day: String) = store.setTemperature(tempC, day)

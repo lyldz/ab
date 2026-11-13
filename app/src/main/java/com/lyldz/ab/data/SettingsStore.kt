@@ -38,6 +38,8 @@ data class Settings(
     val themeMode: Int = 0, // 0 sistem, 1 açık, 2 koyu
     /** Gösterge suyu telefonun eğimine/hareketine göre oynar (ivmeölçer, izin gerekmez). */
     val motionWater: Boolean = true,
+    /** "Uzun bas" ipucunun kaç kez gösterildiği (3'te durur); ayar kaydı yazmaz, yalnızca [SettingsStore.setHintCount]. */
+    val longPressHints: Int = 0,
 ) {
     /** Sıcaklık yalnızca bugün alındıysa geçerli; eski gün değeri hedefi etkilemez. */
     fun tempToday(today: LocalDate): Double? = tempC.takeIf { tempDay == today.toString() }
@@ -85,6 +87,10 @@ class SettingsStore(private val context: Context) {
         context.store.edit { it[LAST_NOTIFIED] = ms }
     }
 
+    suspend fun setHintCount(n: Int) {
+        context.store.edit { it[HINTS] = n }
+    }
+
     suspend fun setTemperature(tempC: Double, day: String) {
         context.store.edit {
             it[TEMP] = tempC
@@ -120,6 +126,7 @@ class SettingsStore(private val context: Context) {
             name = this[NAME] ?: d.name,
             themeMode = this[THEME] ?: d.themeMode,
             motionWater = this[MOTION] ?: d.motionWater,
+            longPressHints = this[HINTS] ?: d.longPressHints,
         )
     }
 
@@ -141,6 +148,7 @@ class SettingsStore(private val context: Context) {
         val NAME = stringPreferencesKey("name")
         val THEME = intPreferencesKey("theme_mode")
         val MOTION = booleanPreferencesKey("motion_water")
+        val HINTS = intPreferencesKey("long_press_hints")
         val LAST_NOTIFIED = longPreferencesKey("last_notified_ms")
     }
 }
