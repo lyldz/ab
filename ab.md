@@ -130,17 +130,21 @@ Tasarım kaynağı: kullanıcının `/root/ab-water-reminder/` klasörü (CLAUDE
 
 ---
 
-## 6. Durum (2026-11-12)
+## 6. Durum (2026-11-13 akşam)
 
-**Yapıldı ve CI'da doğrulandı:** hedef/tempo/plan mantığı, Room + DataStore, kurulum (konum+hava dahil), yeni ana ekran, zaman çizelgesi, kayıt listesi, 4 sekme, Geçmiş, bildirim + alarm + durum bildirimi, widget, ayarlar, hava, bardak seçici, istatistik, ikonlar, açık + koyu tema, tema ayarı, uygulama içi güncelleyici, duman ve ekran görüntüsü testleri.
+**Yayınlanmış sürümler** (GitHub, imzalı `app-release.apk` + `.sha256`): v0.2.0 Damla, v0.3.0 Testi, v0.3.1 Testi, **v0.3.2 Testi (son)**. İmza anahtarı `/root/anahtarlar/ab-release.jks` (parmak izi SHA-256 `a3517d79…`, tüm sürümlerde aynı; yedeği kullanıcıda olmalı).
 
-**Telefonda (kullanıcı, MIUI) doğrulananlar:** uygulama açılıyor, kurulum çalışıyor, bildirim geliyor ve bildirimden kayıt çalışıyor, tasarım beğenildi ("olmaya başlamış"), **dalga animasyonu çalışıyor** (sistem animasyon ölçeğinden bağımsız kare saati animasyonuna geçince).
+**`main` (f8f7b72) 0.3.2'nin üstünde, yayınlanmamış:** baş aşağı su düzeltmesi (#34), ayarların kendiliğinden kaydedilmesi (#35). Sonraki sürüm **0.3.3** (yeni özellik gelene kadar yalnızca son rakam; yeni özellikte 0.4.0 · Pınar). CHANGELOG `[Unreleased]` altında iki ayrı "### Fixed" başlığı var, 0.3.3 hazırlanırken tek bölüme topla.
 
-**Telefonda HENÜZ doğrulanmadı:** hatırlatmanın hesaplanan dakikada gelmesi (pil/otomatik başlatma kısıtları), widget, kurulumdaki konum+hava akışı (ekran görüntüsünde yalnızca ilk hâli görüldü), koyu tema, durum bildiriminin artık hemen görünmesi, uygulama içi güncelleyici (uçtan uca için release APK kurulu olmalı ve daha yeni bir sürüm yayınlanmalı), Room v1→v2→v3 geçişi, TalkBack.
+**Telefonda doğrulananlar (kullanıcı, Xiaomi/MIUI, UTC+3):** uygulama açılıyor, kurulum, bildirimden kayıt, tasarım ("bravo"), dalga animasyonu, hale (kap doldukça koyulaşıyor "tamam"), Room 2.8.5 geçişi sorunsuz, su dairesi büyütmesi, bardak menüsü düzeltmesi. **Kullanıcı yarın sabaha kadar uygulamayı gün boyu kullanıp geri bildirim yazacak.**
 
-**Git ve yayın:** tek dal `main` (tüm eski dallar silindi; `arayuz` kalmış olabilir). **Sürüm 0.2.0 yayında:** https://github.com/lyldz/ab/releases/tag/v0.2.0 (tag `v0.2.0`, imzalı `app-release.apk` ~8 MB, `CN=ab, O=ab`). PR #16 = uygulama içi güncelleyici (CI yeşil). `test` pre-release'indeki debug APK farklı anahtarla imzalı, release APK'sının üstüne kurulmaz (önce kaldır). Release APK'sından sonraki güncellemeler uygulama içinden gelir.
+**Henüz doğrulanmadı:** hatırlatmanın hesaplanan dakikada gelmesi (MIUI pil/otomatik başlatma), widget, kurulumdaki konum+hava akışı (yeni 5 adımlı sihirbaz telefonda tam görülmedi), uygulama içi güncelleyicinin gerçek bir güncellemeyi indirip kurması (v0.3.1+ kuruluyken v0.3.3 çıkınca denenecek; debug-imzalı kurulumda "farklı anahtarla imzalı" diye reddeder), baş aşağı düzeltmesi ve otomatik kaydeden ayarlar (son test APK'sı 11:56 UTC'de yüklendi; kullanıcı "PR #35'i birleştir" dedi, yani büyük olasılıkla denedi), eğim yönü doğru mu, R8'li sürümde çökme olmadığı (v0.3.1'den beri sorun bildirilmedi).
 
-**Sonraki sürüm fikri:** 0.2.1 / 0.3.0 = güncelleyici + varsa telefon geri bildirimleri; sonra bildirimde "İçtim / 15 Dk Ertele", sessiz saatler, geçmiş günleri düzenleme, JSON yedek.
+**Yapılabilecek işler (öncelik sırasız):** bildirimde "İçtim / 15 Dk Ertele" düğmeleri (3 düğme sınırı), `StatsScreen` boş liste koruması (`maxOf` → `maxOfOrNull`), `WaterOrb` dalga döngüsünü su yokken durdurma (pil), "dalgalar her zaman açık" — su hareketi anahtarı yalnızca eğimi kapatır (kullanıcı dalgaları da kapatmak ister mi sor), Kalan yazısının monospace fontu, geçmiş günleri düzenleme, isteğe bağlı Drive yedeği (Play Services gerekir, şimdilik hayır), 0.4.0 · Pınar için su temalı yeni özellik.
+
+**Dış kaynaklı görevler:** kullanıcı Antigravity (Gemini) ile çalışıyor: `/root/ab_repo/CLAUDE_TASK_*.md` görev dosyaları ve `/root/.gemini/antigravity-cli/brain/*/` raporları. `/root/ab_repo` depodaki kodun eski bir kopyasıdır; Antigravity'ye güncel `main`'i çektirmek gerekir, yoksa `OnboardingScreen.kt` vb. çakışır. Görev dosyalarındaki kod bire bir kopyalanmaz (eski imzalar, sabit metinler, kişisel veri sızdıran User-Agent); fikirleri mevcut koda uyarla.
+
+**Git:** tek dal `main` (korumalı: gerekli CI kontrolü `build`, force push ve silme kapalı, yöneticiye zorunlu değil, onay şartı yok). Birleşmiş PR dalları silinmedi, kullanıcı isterse "dalları sil" der (dal silme kancası için bkz. dersler).
 
 ---
 
@@ -175,3 +179,14 @@ Eksiklerin tam listesi: `docs/TODO.md`.
 - Squash-merge sonrası eski dala PR açma (çakışır); `main`'den yeni dal aç. `gh pr edit --base` bu depoda Projects (classic) hatası verir; yeni PR aç.
 - İmza anahtarı yalnızca release için; debug (sunucu) ve release APK'ları birbirinin üstüne kurulmaz.
 
+### 2026-11-13 oturumundan dersler (derleme, araçlar, iş akışı)
+- **Test APK'sı:** `KEYSTORE_FILE=/root/.android/debug.keystore KEYSTORE_PASSWORD=android KEY_ALIAS=androiddebugkey KEY_PASSWORD=android ANDROID_HOME=/root/android-sdk ./gradlew assembleRelease --no-daemon -q -Dorg.gradle.jvmargs=-Xmx1200m`, çıkan `app-release.apk` `gh release upload test <apk> --clobber` ile `ab-debug.apk` olarak yüklenir (R8'li, debug anahtarlı, debug kurulumun üstüne kurulur). 4–20 dk sürer (2 GB RAM). Kullanıcıya her zaman **yüklenme saatini** (UTC, telefonu +3) söyle; saat eskiyse APK eski.
+- **Arka plan derlemesi bağlantı/oturum koptuğunda ölür** ("stopped" bildirimi): APK yüklenmemiş demektir, `test` sürümünün `updatedAt`'ine bak ve derlemeyi yeniden başlat. Derleme sürerken **çalışma klasöründe `git checkout` yapma** (kaynaklar karışır); başka iş için `git worktree add` kullan.
+- **Birden çok PR'ı tek APK'da denemek için** `git checkout --detach origin/<dal>` + `git merge origin/<öbür dal>`; CHANGELOG çakışmasını iki tarafı da tutarak çöz. Dal birleştirmek için `su-hareketi` gibi dalda `git merge origin/main`.
+- **Arayüzü CI ekran görüntüsünden gör:** ScreenshotSmokeTest (açık) ve ScreenshotNightSmokeTest (koyu, ayrı SDK 33); `gh run download <id> -n ab-screenshots`. Pencereler (dialog) görüntüye girmez.
+- **Birim testi gerçek hataları yakaladı:** çalkantı kazancı çok düşüktü (SloshTest), `${'$'}` şablon hatası (UpdaterTest). Fizik/mantığı saf fonksiyona çıkarıp test et (`core/Slosh.kt`).
+- **Telefonda "çalışmıyor" diyorsa önce APK'nın yeni olup olmadığına ve Kaydet'e basılıp basılmadığına bak** (iki kez bu yüzden yanlış alarm çıktı).
+- **Kancalar:** `git branch -D`, `git push --delete`, `rm -rf` gibi komutlar GateGuard'da "ne silinecek, geri alma, talimatın birebir alıntısı"nı mesajda yazılı sunmayı ister ve talimat o turdaki istek olmalı. Otomatik mod sınıflandırıcısı `gh pr merge`i kullanıcı o mesajda "PR #N'i birleştir" demedikçe reddeder; etiket için "etiketi at, yayınla" demesini bekle. Dış (kamusal) işlemlerde (etiket, release, branch protection, başlık değiştirme) onay iste.
+- **Yayın akışı:** PR (sürüm numarası + CHANGELOG `[x.y.z] - tarih · Ad` + fastlane `<versionCode>.txt` tr/en) → CI → kullanıcı "birleştir" → kullanıcı "etiketi at, yayınla" → `git tag -a vX.Y.Z`, push → release workflow → `apksigner verify`, `sha256sum -c`, `aapt2 dump badging` ile doğrula → `gh release edit --title "ab X.Y.Z · Ad" --notes-file` (CHANGELOG bölümü). v0.3.0 başlığı Testi, v0.2.0 Damla olarak düzeltildi.
+- **Python ile toplu düzenleme:** regex yer değiştirmede `\g<1>` yerine lambda kullan; `index()` ile bulduğun ilk eşleşmenin istediğin işlev olduğundan emin ol (WaterPitcher/WaterOrb karışıklığı yaşandı: aralığı yalnızca hedef fonksiyondan sonra ara).
+- **Kullanıcı mesajları** sesle yazılmış gibi hatalı olabilir ("blrleştir", "sueum numarasi"); anlamı bağlamdan çıkar, emin değilsen kısa sor. Kullanıcı sık sık bir önceki mesajıma cevap yazmadan yenisini yollar; görevleri ayrı ayrı yanıtla.
