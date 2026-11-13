@@ -148,7 +148,7 @@ fun HomeScreen(
     Scaffold(snackbarHost = { SnackbarHost(snack) }, contentWindowInsets = WindowInsets.statusBars) { padding ->
         // tek sayfa: gösterge, kalan boşluğa göre büyür/küçülür; çok küçük ekranda içerik kayar
         BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
-            val orb = (maxHeight - 450.dp).coerceIn(160.dp, 320.dp)
+            val orb = (maxHeight - 450.dp).coerceIn(160.dp, 380.dp).coerceAtMost(maxWidth - 16.dp)
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -212,7 +212,7 @@ fun HomeScreen(
                     WaterOrb(
                         fraction,
                         stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
-                        Modifier.size(orb),
+                        Modifier.size(orb), motion = s.motionWater,
                     )
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Row(

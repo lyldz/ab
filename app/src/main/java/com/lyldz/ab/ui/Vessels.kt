@@ -1,5 +1,17 @@
 package com.lyldz.ab.ui
 
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import kotlin.math.atan2
+import kotlin.math.max
+import kotlin.math.sqrt
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
@@ -176,12 +188,14 @@ fun WaterOrb(
     fraction: Float,
     description: String,
     modifier: Modifier = Modifier,
+    motion: Boolean = true,
 ) {
     // Sistem "animasyon ölçeği" kapalıyken (pil tasarrufu, geliştirici seçeneği) Compose'un animate*
     // API'leri durur; gösterge canlı kalsın diye kare saatine bağlı kendi animasyonumuzu kullanıyoruz.
     val level by rememberSmoothed(fraction.coerceIn(0f, 1f))
     val phaseA by rememberPhase(3600)
     val phaseB by rememberPhase(5200, reverse = true)
+    val tilt = rememberTilt(motion)
 
     val card = Ab.card
     val lineC = Ab.line
@@ -189,7 +203,7 @@ fun WaterOrb(
     Canvas(modifier.semantics { contentDescription = description }) {
         val c = Offset(size.width / 2f, size.height / 2f)
         val outer = size.minDimension / 2f
-        val ring = outer * 0.74f
+        val ring = outer * 0.82f
         val inner = ring - 7.dp.toPx()
 
         // hale: doluluk arttıkça açık aquadan derin maviye döner, güçlenir ve dışa yayılır
@@ -222,24 +236,98 @@ fun WaterOrb(
         fun yOf(f: Float) = bottom - (bottom - top) * f.coerceIn(0f, 1f)
         clipPath(disc) {
             if (level > 0.001f) {
+                val m = tilt.value // x: eğim (derece), y: sallanma şiddeti 0..1 (yalnızca çizim aşamasında okunur)
                 val sy = yOf(level)
+                val wide = inner * 1.7f // döndürünce daireyi kaplasın diye geniş çizilir
                 fun wave(phase: Float, amp: Float, freq: Float, off: Float) = Path().apply {
-                    moveTo(c.x - inner, bottom)
-                    lineTo(c.x - inner, sy + off)
-                    var x = c.x - inner
-                    while (x <= c.x + inner) {
+                    moveTo(c.x - wide, c.y + inner * 2.4f)
+                    lineTo(c.x - wide, sy + off)
+                    var x = c.x - wide
+                    while (x <= c.x + wide) {
                         lineTo(x, sy + off + amp * sin((x - c.x + inner) / (inner * 2f) * 2f * PI.toFloat() * freq + phase))
                         x += 4f
                     }
-                    lineTo(c.x + inner, bottom)
+                    lineTo(c.x + wide, c.y + inner * 2.4f)
                     close()
                 }
-                // koyuda su biraz daha sönük: üstündeki beyaz yazı okunaklı kalsın
-                drawPath(wave(phaseB, 5.dp.toPx(), 1.1f, 5.dp.toPx()), AbColors.Aqua2.copy(alpha = if (dark) 0.35f else 0.65f))
-                drawPath(wave(phaseA, 4.dp.toPx(), 1.7f, 0f), AbColors.Aqua1.copy(alpha = if (dark) 0.55f else 0.85f))
+                val k = 1f + 2.2f * m.y // telefon sallanınca dalgalar büyür
+                // su yer çekimine göre yatay kalır: sahne eğimin tersine döner
+                rotate(m.x, c) {
+                    // koyuda su biraz daha sönük: üstündeki beyaz yazı okunaklı kalsın
+                    drawPath(wave(phaseB, 6.dp.toPx() * k, 1.1f, 6.dp.toPx()), AbColors.Aqua2.copy(alpha = if (dark) 0.35f else 0.65f))
+                    drawPath(wave(phaseA, 5.dp.toPx() * k, 1.7f, 0f), AbColors.Aqua1.copy(alpha = if (dark) 0.55f else 0.85f))
+                }
             }
         }
     }
+}
+
+/**
+ * Telefonun ivmeölçeri (izin gerekmez) suyu hareket ettirir: x = ekran düzlemindeki eğim (derece, suyun yatay
+ * kalması için çizim bu açıyla döner), y = sallanma şiddeti 0..1. Eğim yaylı sönümle yumuşatılır (sıvı gibi bir
+ * miktar sallanır). Yalnızca ekran açıkken dinler (RESUME/PAUSE); cihazda sensör yoksa ya da [enabled] kapalıysa 0.
+ * shortcut: yalnızca ivmeölçer; telefon yatayken (yüz yukarı) eğim belirsiz olduğu için 0 sayılır.
+ */
+@Composable
+private fun rememberTilt(enabled: Boolean): State<Offset> {
+    val ctx = LocalContext.current
+    val owner = LocalLifecycleOwner.current
+    val out = remember { mutableStateOf(Offset.Zero) }
+    val target = remember { floatArrayOf(0f, 0f) } // [hedef eğim, anlık sallanma]
+    if (enabled) {
+        DisposableEffect(owner) {
+            val sm = ctx.getSystemService(SensorManager::class.java)
+            val sensor = sm?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+            val listener = object : SensorEventListener {
+                override fun onSensorChanged(e: SensorEvent) {
+                    val ax = e.values[0]
+                    val ay = e.values[1]
+                    val az = e.values[2]
+                    target[0] = if (sqrt(ax * ax + ay * ay) < 2f) 0f
+                    else Math.toDegrees(atan2(ax.toDouble(), ay.toDouble())).toFloat().coerceIn(-75f, 75f)
+                    val dev = abs(sqrt(ax * ax + ay * ay + az * az) - 9.81f) / 5f
+                    target[1] = max(target[1], dev.coerceIn(0f, 1f))
+                }
+                override fun onAccuracyChanged(s: Sensor?, accuracy: Int) {}
+            }
+            val obs = LifecycleEventObserver { _, ev ->
+                if (sm != null && sensor != null) {
+                    when (ev) {
+                        Lifecycle.Event.ON_RESUME -> sm.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_UI)
+                        Lifecycle.Event.ON_PAUSE -> sm.unregisterListener(listener)
+                        else -> {}
+                    }
+                }
+            }
+            owner.lifecycle.addObserver(obs)
+            onDispose {
+                owner.lifecycle.removeObserver(obs)
+                sm?.unregisterListener(listener)
+            }
+        }
+    }
+    LaunchedEffect(enabled) {
+        if (!enabled) {
+            out.value = Offset.Zero
+            return@LaunchedEffect
+        }
+        var angle = 0f
+        var vel = 0f
+        var slosh = 0f
+        var last = 0L
+        while (true) {
+            infiniteFrame { now ->
+                val dt = if (last == 0L) 0f else ((now - last) / 1e9f).coerceAtMost(0.05f)
+                last = now
+                vel += (-60f * (angle - target[0]) - 7f * vel) * dt // yay + sönüm
+                angle += vel * dt
+                slosh = max(slosh * 0.94f, target[1])
+                target[1] = 0f
+                out.value = Offset(angle, slosh)
+            }
+        }
+    }
+    return out
 }
 
 /** Sonsuz kare döngüsü: testlerde InfiniteAnimationPolicy döngüyü sonlandırır, uygulama boşta kalabilir. */
