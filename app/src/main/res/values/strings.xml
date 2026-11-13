@@ -100,7 +100,7 @@
     <string name="stats_best">Best day</string>
     <string name="stats_none">No records in this period yet.</string>
     <string name="stats_chart_desc">Daily water intake chart</string>
-    <string name="stats_legend">Lines show each day\'s goal; solid bars reached it. Average and goal days count only days with records.</string>
+    <string name="stats_legend">The pale backdrop shows each day\'s goal; solid bars reached it. Average and goal days count only days with records.</string>
     <string name="pace_behind">%1$s ml behind</string>
     <string name="pace_ahead">%1$s ml ahead</string>
     <string name="pace_on">Right on pace</string>
@@ -178,4 +178,10 @@
     <string name="gi_total">Total</string>
     <string name="gi_manual">You set the goal manually; the parts above are not used.</string>
     <string name="ok">OK</string>
+    <string name="update_hash_failed">The downloaded file failed verification (SHA-256 mismatch). Installation cancelled.</string>
+    <string name="update_sig_failed">The downloaded version is signed with a different key and cannot be installed over this one. Uninstall first, then install it manually.</string>
+    <string name="battery_title">Reminders not arriving?</string>
+    <string name="battery_text">Some phones (Xiaomi, Samsung, Huawei…) stop background apps to save battery. Let ab run in the background and start automatically so reminders arrive on time.</string>
+    <string name="battery_open">Battery settings</string>
+    <string name="battery_app">App settings</string>
 </resources>

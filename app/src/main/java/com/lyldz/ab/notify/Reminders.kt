@@ -154,7 +154,8 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
             val now = ZonedDateTime.now(zone)
             val (t, plan) = planNow(now)
             // alarm erken/geç gelebilir; yalnızca zamanı gelmişse göster
-            if (plan != null && plan.nextAtMin <= now.hour * 60 + now.minute) {
+            // 1 dk tolerans: saat ayarı ya da alarm kayması yüzünden dakika erken denk gelirse bildirim yutulmasın
+            if (plan != null && plan.nextAtMin <= now.hour * 60 + now.minute + 1) {
                 val text = context.getString(R.string.notif_text, fmtMl(plan.amountMl), fmtMl(t.drankMl), fmtMl(t.goalMl))
                 Notifier.show(context, paceTitle(t, now.hour * 60 + now.minute), text, t.drankMl, t.goalMl, plan.amountMl)
                 repo.markNotified(System.currentTimeMillis())

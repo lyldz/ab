@@ -24,6 +24,7 @@ import com.lyldz.ab.R
 import com.lyldz.ab.core.DayStat
 import com.lyldz.ab.ui.theme.Ab
 import com.lyldz.ab.ui.theme.AbColors
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -37,7 +38,10 @@ fun HistoryScreen(stats: List<DayStat>, onBack: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(stringResource(R.string.nav_history), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        stats.asReversed().forEach { d ->
+        // yalnızca kayıt olan günler ve bugün; yeni kullanıcıya 29 boş kart gösterilmez
+        val shown = stats.filter { it.ml > 0 || it.day == LocalDate.now() }.asReversed()
+        if (shown.none { it.ml > 0 }) Text(stringResource(R.string.history_empty), color = Ab.muted)
+        shown.forEach { d ->
             Card(
                 Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
