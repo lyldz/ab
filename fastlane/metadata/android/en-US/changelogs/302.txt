@@ -1,0 +1,3 @@
+Simpler home screen: bigger water circle, long-press to pick an amount and add it right away, with a hint arrow.
+Water follows your phone tilt and shakes (can be turned off in Settings > Appearance).
+An amount picked from the glass menu is added immediately.
