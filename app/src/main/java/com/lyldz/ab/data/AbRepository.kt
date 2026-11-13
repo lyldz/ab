@@ -75,6 +75,34 @@ class AbRepository(
         }
     }
 
+    suspend fun exportData(): BackupData = BackupData(dao.all(), dao.allGoals(), store.flow.first())
+
+    /**
+     * Yedeği ekler: aynı an ve miktardaki kayıt yeniden eklenmez (iki kez geri yüklemek çoğaltmaz), günlük hedef
+     * anlık görüntüleri yedektekiyle güncellenir, ayarlar yedektekilerle değişir. Eklenen kayıt sayısını döndürür.
+     */
+    suspend fun importData(d: BackupData): Int {
+        val seen = dao.all().mapTo(HashSet()) { it.atMs to it.ml }
+        var added = 0
+        for (i in d.intakes) {
+            if (seen.add(i.atMs to i.ml)) {
+                dao.insert(i.copy(id = 0))
+                added++
+            }
+        }
+        d.goals.forEach { dao.upsertGoal(it) }
+        val cur = store.flow.first()
+        val samePlace = d.settings.lat == cur.lat && d.settings.lon == cur.lon
+        store.save(
+            d.settings.copy(
+                onboarded = true,
+                tempC = cur.tempC.takeIf { samePlace }, tempDay = cur.tempDay.takeIf { samePlace },
+                lastNotifiedMs = cur.lastNotifiedMs,
+            ),
+        )
+        return added
+    }
+
     suspend fun markNotified(ms: Long) = store.setLastNotified(ms)
 
     suspend fun settingsNow(): Settings = store.flow.first()

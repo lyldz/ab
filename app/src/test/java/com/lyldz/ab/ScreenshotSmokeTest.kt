@@ -48,16 +48,21 @@ abstract class ScreenshotBase(private val prefix: String) {
 
     @Test
     fun homeScreenshots() {
-        wait("Start")
+        wait("Let's start")
         shot("onb0-welcome")
-        tap("Start")
-        wait("Continue")
-        shot("onb1-profile")
+        tap("Let's start")
+        wait("Let's get to know you")
+        shot("onb1-bio")
         tap("Continue")
-        tap("Not now")
-        wait("Use my location")
-        shot("onb3-location")
-        tap("Not now")
+        wait("Your day and your glass")
+        shot("onb2-day")
+        tap("Continue")
+        wait("Permissions and privacy")
+        shot("onb3-perms")
+        tap("Continue")
+        wait("Your personal plan is ready")
+        shot("onb4-summary")
+        tap("Start with Āb")
         wait("TODAY'S TIMELINE")
         shot("home-empty")
         repeat(3) { compose.onNodeWithContentDescription("+200 ml").performScrollTo().performClick() }
@@ -69,6 +74,13 @@ abstract class ScreenshotBase(private val prefix: String) {
         compose.onNodeWithText("OK").performClick()
         repeat(6) { compose.onNodeWithContentDescription("+200 ml").performScrollTo().performClick() }
         shot("home-top-filled")
+        tap("Settings")
+        wait("Profile")
+        shot("settings-1")
+        compose.onNodeWithText("Permissions and notifications").performScrollTo()
+        shot("settings-2")
+        compose.onNodeWithText("About").performScrollTo()
+        shot("settings-3")
     }
 }
 

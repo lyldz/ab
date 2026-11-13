@@ -62,6 +62,12 @@ interface IntakeDao {
     @Query("SELECT * FROM intake WHERE atMs >= :from AND atMs < :to ORDER BY atMs DESC")
     fun observeRange(from: Long, to: Long): Flow<List<Intake>>
 
+    @Query("SELECT * FROM intake ORDER BY atMs")
+    suspend fun all(): List<Intake>
+
+    @Query("SELECT * FROM day_goal")
+    suspend fun allGoals(): List<DayGoal>
+
     /** Geri al için: en son eklenen kayıt (geçmişe eklenen de olabilir, bu yüzden id sırası). */
     @Query("SELECT id FROM intake ORDER BY id DESC LIMIT 1")
     suspend fun lastId(): Long?

@@ -10,6 +10,9 @@ const val MIN_GOAL_ML = 1500
 const val ML_PER_KG = 25
 const val GOAL_WARN_ML = 5000
 
+/** Uyku kalitesi için su içme, yatıştan bu kadar dakika önce biter: pencere = kalkış → yatış − 2 saat. */
+const val STOP_BEFORE_BED_MIN = 120
+
 /** Tempo farkı bu değerin altındaysa "tam tempodasın" denir (ana ekran ve bildirim ortak). */
 const val PACE_TOLERANCE_ML = 50
 

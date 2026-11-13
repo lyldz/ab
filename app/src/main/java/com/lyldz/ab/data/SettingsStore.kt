@@ -20,8 +20,10 @@ data class Settings(
     val weightKg: Int = 70,
     val activity: Activity = Activity.NONE,
     val cupMl: Int = 200,
-    val windowStartMin: Int = 6 * 60,
-    val windowEndMin: Int = 18 * 60,
+    /** Kalkış saati: hatırlatmalar bu dakikadan başlar. */
+    val windowStartMin: Int = 6 * 60 + 30,
+    /** Su içmenin sonu = yatış − 2 saat (bkz. STOP_BEFORE_BED_MIN); yatış arayüzde gösterilir. */
+    val windowEndMin: Int = 20 * 60,
     val useActivity: Boolean = true,
     val useWeather: Boolean = true,
     val goalOverrideMl: Int? = null,

@@ -3,6 +3,12 @@
 [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimi, [SemVer](https://semver.org/lang/tr/) sürümleme.
 
 ## [Unreleased]
+### Added
+- Yedek: Ayarlar > Yedek ile kayıtlar, günlük hedefler ve ayarlar tek JSON dosyasına yazılır ya da dosyadan geri yüklenir (dosya seçici, izin gerekmez, hiçbir yere gönderilmez). Geri yükleme kayıtları ekler (aynı an+miktar yeniden eklenmez), ayarları yedektekilerle değiştirir.
+### Changed
+- Kurulum sihirbazı yenilendi (5 adım): karşılama, kilo ve hareket (hazır kilo düğmeleri, 3 hareket kartı), gün düzeni (kalkış/yatış saat seçici + bardak boyutu), izinler (bildirim, konum + bugünün sıcaklığı sonucu, şehir arama, pil notu), sana özel hedef özeti (kırılım ve hatırlatma sıklığı). Adımlar arası geçiş animasyonu, ilerleme noktaları.
+- Ayarlar gruplandı: Profil, Günlük hedef, Gün düzeni, Hava ve konum, Görünüm, İzinler ve bildirimler (izin durumu + sistem ayarına kısayol + pil rehberi), Yedek, Güncelleme, Hakkında.
+- Gün düzeni: "Kalkış" ve "Yatış" saati girilir, su içme/hatırlatma penceresi otomatik kalkış → yatıştan 2 saat önce olur (örn. 06:30 / 22:00 → 06:30–20:00); altında not gösterilir. Yeni kurulum varsayılanı 06:30 / 22:00 (eskiden 06:00–18:00 su içme). Mevcut kullanıcıların hatırlatma pencerelerinin sonu değişmez, yatış saati ona göre (sonu + 2 saat) gösterilir.
 ### Changed
 - Hatırlatma aralığı sabit: geride kalınca bildirim sıklaşmaz (eskiden 46 dk'dan 19 dk'ya, akşama doğru birkaç dakikaya inebiliyordu). Aralık yalnızca kilo, hareket, rutin, bardak ya da elle hedef değişince değişir; her hatırlatmada içilecek miktar kalan toplama göre hesaplanır (50 ml adım, 100–500 ml).
 

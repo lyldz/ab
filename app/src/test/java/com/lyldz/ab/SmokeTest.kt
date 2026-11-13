@@ -44,11 +44,12 @@ class SmokeTest {
 
     @Test
     fun onboardingThenAllTabsOpenWithoutCrashing() {
-        // karşılama → bilgiler → bildirim izni → konum izni → ana ekran
-        tap("Start")
+        // karşılama → kilo/hareket → gün düzeni → izinler → özet → ana ekran
+        tap("Let's start")
         tap("Continue")
-        tap("Not now")
-        tap("Not now")
+        tap("Continue")
+        tap("Continue")
+        tap("Start with Āb")
 
         waitFor("TODAY'S TIMELINE") // ana ekran açıldı
         // büyük "+" düğmesi (varsayılan bardak) kayıt ekler; erişilebilirlik açıklamasıyla bulunur

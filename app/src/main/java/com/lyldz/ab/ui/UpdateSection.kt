@@ -51,7 +51,6 @@ fun UpdateSection() {
     var permHint by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.update_title), style = MaterialTheme.typography.titleMedium)
         Text(stringResource(R.string.update_current, current), color = MaterialTheme.colorScheme.onSurfaceVariant)
         when (val st = state) {
             UpdateState.Idle -> {}

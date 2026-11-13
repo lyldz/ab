@@ -23,7 +23,6 @@ Son güncelleme: 2026-11-12. Durum: uygulama telefonda yalnızca kısmen denendi
 
 ## 3. İlk spec'te olup yapılmayanlar
 - [ ] Geçmiş güne kayıt ekleme (U-04)
-- [ ] JSON dışa/içe aktarma yedeği (F-11)
 - [ ] Dil (tr/en elle seçim) ve tema ayarı; Material You (B-08)
 - [ ] "Hatırlatmalar gelmiyor mu?" pil rehberi: marka tespiti, dontkillmyapp (T-06)
 - [ ] "Tam zamanında" alarm seçeneği, SCHEDULE_EXACT_ALARM (T-03)
