@@ -6,6 +6,7 @@
 ### Fixed
 - "+ Su Ekle" düğmesine uzun basınca açılan bardak menüsünde bir ölçü seçince (ya da özel miktar yazınca) miktar hemen eklenir ve varsayılan bardak olur; eskiden seçtikten sonra düğmeye bir kez daha basmak gerekiyordu.
 ### Changed
+- Su hareketi: el titremesini süzen filtre, yan ivmeyle yüzeyin gidip gelmesi (yaylı sönüm), eğim üst sınırı 60°; sensör oyun hızında (yalnızca Bugün sekmesi açıkken) dinlenir. Eğim ve yay mantığı birim testli.
 - Gösterge büyüdü (su dairesi daha geniş, dalgalar belirgin). Su telefonun ivmeölçeriyle eğime göre yatay kalır ve sallayınca dalgalanır (Ayarlar > Görünüm'den kapatılır; izin gerekmez, yalnızca ekran açıkken dinler).
 
 ## [0.3.1] - 2026-11-13 · Testi

@@ -6,6 +6,8 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
+import com.lyldz.ab.core.SloshSpring
+import com.lyldz.ab.core.tiltDegrees
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -263,38 +265,43 @@ fun WaterOrb(
 }
 
 /**
- * Telefonun ivmeölçeri (izin gerekmez) suyu hareket ettirir: x = ekran düzlemindeki eğim (derece, suyun yatay
- * kalması için çizim bu açıyla döner), y = sallanma şiddeti 0..1. Eğim yaylı sönümle yumuşatılır (sıvı gibi bir
- * miktar sallanır). Yalnızca ekran açıkken dinler (RESUME/PAUSE); cihazda sensör yoksa ya da [enabled] kapalıysa 0.
- * shortcut: yalnızca ivmeölçer; telefon yatayken (yüz yukarı) eğim belirsiz olduğu için 0 sayılır.
+ * Telefonun ivmeölçeri (izin gerekmez) suyu hareket ettirir: x = suyun dönüş açısı (derece), y = sallanma şiddeti 0..1.
+ * İvmeölçer etkin yerçekimini verir (sallamayı da içerir), bu yüzden eğim ondan alınır: el titremesini süzmek için EMA
+ * (alfa 0,15), sonra yaylı sönümle (sıvı gibi bir miktar sallanır). Ayrıca ani yan ivme (ham değerin farkı) ikinci bir
+ * yayı iter: su dengeye gelirken yüzeyi birkaç kez gidip gelir. Yalnızca ekran açıkken (RESUME/PAUSE) ve Bugün sekmesi
+ * görünürken (bileşen çizilirken) dinler; sensör yoksa ya da [enabled] kapalıysa 0.
+ * shortcut: yalnızca ivmeölçer; telefon yüz yukarıyken eğim 0 sayılır.
  */
 @Composable
 private fun rememberTilt(enabled: Boolean): State<Offset> {
     val ctx = LocalContext.current
     val owner = LocalLifecycleOwner.current
     val out = remember { mutableStateOf(Offset.Zero) }
-    val target = remember { floatArrayOf(0f, 0f) } // [hedef eğim, anlık sallanma]
+    val shared = remember { floatArrayOf(0f, 9.8f, 0f) } // [süzülmüş ax, süzülmüş ay, kare başına biriken yan ivme farkı]
     if (enabled) {
         DisposableEffect(owner) {
             val sm = ctx.getSystemService(SensorManager::class.java)
             val sensor = sm?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+            var lastAx = Float.NaN
             val listener = object : SensorEventListener {
                 override fun onSensorChanged(e: SensorEvent) {
                     val ax = e.values[0]
                     val ay = e.values[1]
-                    val az = e.values[2]
-                    target[0] = if (sqrt(ax * ax + ay * ay) < 2f) 0f
-                    else Math.toDegrees(atan2(ax.toDouble(), ay.toDouble())).toFloat().coerceIn(-75f, 75f)
-                    val dev = abs(sqrt(ax * ax + ay * ay + az * az) - 9.81f) / 5f
-                    target[1] = max(target[1], dev.coerceIn(0f, 1f))
+                    shared[0] += 0.15f * (ax - shared[0])
+                    shared[1] += 0.15f * (ay - shared[1])
+                    if (!lastAx.isNaN()) shared[2] += ax - lastAx
+                    lastAx = ax
                 }
                 override fun onAccuracyChanged(s: Sensor?, accuracy: Int) {}
             }
             val obs = LifecycleEventObserver { _, ev ->
                 if (sm != null && sensor != null) {
                     when (ev) {
-                        Lifecycle.Event.ON_RESUME -> sm.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_UI)
-                        Lifecycle.Event.ON_PAUSE -> sm.unregisterListener(listener)
+                        Lifecycle.Event.ON_RESUME -> sm.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_GAME)
+                        Lifecycle.Event.ON_PAUSE -> {
+                            sm.unregisterListener(listener)
+                            lastAx = Float.NaN
+                        }
                         else -> {}
                     }
                 }
@@ -313,17 +320,18 @@ private fun rememberTilt(enabled: Boolean): State<Offset> {
         }
         var angle = 0f
         var vel = 0f
-        var slosh = 0f
+        val slosh = SloshSpring()
         var last = 0L
         while (true) {
             infiniteFrame { now ->
                 val dt = if (last == 0L) 0f else ((now - last) / 1e9f).coerceAtMost(0.05f)
                 last = now
-                vel += (-60f * (angle - target[0]) - 7f * vel) * dt // yay + sönüm
+                val target = tiltDegrees(shared[0], shared[1])
+                vel += (-70f * (angle - target) - 9f * vel) * dt // eğim yayı (hafif sönümsüz: biraz sallanır)
                 angle += vel * dt
-                slosh = max(slosh * 0.94f, target[1])
-                target[1] = 0f
-                out.value = Offset(angle, slosh)
+                slosh.step(-shared[2] * 40f, dt) // yan ivme: su ters yöne yığılır (5 m/s² fark ≈ 6° yüzey oynaması)
+                shared[2] = 0f
+                out.value = Offset(angle + slosh.pos * 18f, abs(slosh.pos))
             }
         }
     }
