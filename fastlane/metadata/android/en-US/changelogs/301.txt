@@ -1,0 +1,4 @@
+New setup wizard, grouped settings, JSON backup, wake/bed times.
+Fixed reminder interval, amounts follow what is left.
+Midnight day rollover and update verification fixes.
+Release name: Testi.

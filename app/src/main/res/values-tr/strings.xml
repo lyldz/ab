@@ -243,4 +243,5 @@
     <string name="onb_sum_foot">Hedefini ve bardak boyutunu istediğin zaman Ayarlar\'dan değiştirebilirsin.</string>
     <string name="onb_welcome_title">Āb ile su takibine başla</string>
     <string name="set_motion">Su, telefonun eğimine ve hareketine göre oynasın</string>
+    <string name="about_version">Sürüm %1$s · %2$s</string>
 </resources>

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import com.lyldz.ab.core.seriesName
 import com.lyldz.ab.data.Updater
 import com.lyldz.ab.ui.theme.Ab
 import androidx.compose.foundation.layout.Arrangement
@@ -245,7 +246,9 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
         SettingsGroup(stringResource(R.string.update_title)) { UpdateSection() }
 
         SettingsGroup(stringResource(R.string.grp_about)) {
-            Text(stringResource(R.string.update_current, Updater.currentVersion(ctx)))
+            val version = Updater.currentVersion(ctx)
+            val series = seriesName(version)
+            Text(if (series.isEmpty()) stringResource(R.string.update_current, version) else stringResource(R.string.about_version, version, series))
             Text(stringResource(R.string.about_license), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(stringResource(R.string.about_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
