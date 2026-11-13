@@ -1,0 +1,4 @@
+Yeni kurulum sihirbazı, gruplu ayarlar, JSON yedek, kalkış/yatış saati.
+Hatırlatma aralığı sabit, miktar kalan toplama göre.
+Gece yarısı gün değişimi ve güncelleme doğrulaması düzeltmeleri.
+Sürüm adı: Testi.
