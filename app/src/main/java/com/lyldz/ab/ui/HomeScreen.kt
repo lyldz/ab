@@ -19,7 +19,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import com.lyldz.ab.ui.theme.Ab
 import com.lyldz.ab.ui.theme.AbColors
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.ButtonDefaults
@@ -34,6 +36,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -85,6 +88,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
 import com.lyldz.ab.core.PACE_TOLERANCE_ML
+import com.lyldz.ab.core.baseGoalMl
 import com.lyldz.ab.core.nextPlan
 import com.lyldz.ab.core.paceMl
 import com.lyldz.ab.core.roundTo10
@@ -99,7 +103,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     today: AbRepository.Today,
@@ -121,6 +125,7 @@ fun HomeScreen(
     var custom by rememberSaveable { mutableStateOf(openCustom) }
     var editing by remember { mutableStateOf<Intake?>(null) }
     var cupDialog by remember { mutableStateOf(false) }
+    var goalInfo by remember { mutableStateOf(false) }
 
     fun showUndo(message: String, undo: () -> Unit) {
         scope.launch {
@@ -140,150 +145,139 @@ fun HomeScreen(
     val pace = paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, nowMin)
     val plan = nextPlan(nowMin, s.windowStartMin, s.windowEndMin, today.goalMl, today.drankMl, s.cupMl, today.anchorMin)
 
+    val temp = s.tempToday(LocalDate.now())
     Scaffold(snackbarHost = { SnackbarHost(snack) }, contentWindowInsets = WindowInsets.statusBars) { padding ->
-        Column(
-            Modifier.padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            // üst çubuk: büyük wordmark + bildirim çanı, altında selamlama
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painterResource(if (Ab.isDark) R.drawable.ic_wordmark_light else R.drawable.ic_wordmark),
-                    contentDescription = stringResource(R.string.app_name), modifier = Modifier.height(60.dp),
-                )
-                Spacer(Modifier.weight(1f))
-                val bellDesc = stringResource(R.string.bell_desc)
-                Box(
-                    Modifier.size(44.dp).clip(CircleShape).background(Ab.card).border(1.dp, Ab.line, CircleShape)
-                        .clickable(role = Role.Button, onClick = onOpenSettings).semantics { contentDescription = bellDesc },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    BellIcon(Ab.strong)
-                    Box(Modifier.align(Alignment.TopEnd).padding(10.dp).size(9.dp).clip(CircleShape).background(AbColors.Aqua1))
-                }
-            }
-            Text(
-                if (s.name.isBlank()) stringResource(R.string.greet_great) else stringResource(R.string.greet_hello, s.name),
-                color = Ab.muted, style = MaterialTheme.typography.bodyLarge,
-            )
-
-            val fraction = (today.drankMl.toFloat() / today.goalMl).coerceIn(0f, 1f)
-            Column(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    stringResource(R.string.gauge_title), color = Ab.faint,
-                    style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
-                )
-                Text(
-                    when {
-                        remaining <= 0 -> stringResource(R.string.home_plan_done)
-                        plan == null -> stringResource(R.string.home_plan_none)
-                        pace - today.drankMl >= PACE_TOLERANCE_ML -> stringResource(R.string.pace_behind, fmtMl(roundTo10(pace - today.drankMl)))
-                        today.drankMl - pace >= PACE_TOLERANCE_ML -> stringResource(R.string.pace_ahead, fmtMl(roundTo10(today.drankMl - pace)))
-                        else -> stringResource(R.string.pace_on)
-                    },
-                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
-                )
-            }
-
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                WaterOrb(
-                    fraction,
-                    if (showPace) pace.toFloat() / today.goalMl else null,
-                    stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
-                    Modifier.size(272.dp),
-                )
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Row(
-                        Modifier.clip(RoundedCornerShape(999.dp)).background(Ab.card).padding(horizontal = 12.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Canvas(Modifier.size(width = 10.dp, height = 13.dp)) { drawPath(dropPath(size.width, size.height), AbColors.Teal) }
-                        Text("${(fraction * 100).roundToInt()}%", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-                    }
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(fmtMl(today.drankMl), fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, color = Ab.strong)
-                        Text(" ml", color = Ab.muted, modifier = Modifier.padding(bottom = 7.dp))
-                    }
-                    Text(stringResource(R.string.goal_label, fmtMl(today.goalMl)), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+        // tek sayfa: gösterge, kalan boşluğa göre büyür/küçülür; çok küçük ekranda içerik kayar
+        BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
+            val orb = (maxHeight - 450.dp).coerceIn(160.dp, 320.dp)
+            Column(
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                // üst çubuk: wordmark, (isim varsa) selamlama, bildirim çanı
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painterResource(if (Ab.isDark) R.drawable.ic_wordmark_light else R.drawable.ic_wordmark),
+                        contentDescription = stringResource(R.string.app_name), modifier = Modifier.height(52.dp),
+                    )
                     Text(
-                        stringResource(R.string.left_label, fmtMl(remaining.coerceAtLeast(0))),
-                        style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = Ab.muted,
+                        if (s.name.isBlank()) "" else stringResource(R.string.greet_hello, s.name),
+                        color = Ab.muted, style = MaterialTheme.typography.bodyMedium, maxLines = 1,
+                        modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+                    )
+                    val bellDesc = stringResource(R.string.bell_desc)
+                    Box(
+                        Modifier.size(44.dp).clip(CircleShape).background(Ab.card).border(1.dp, Ab.line, CircleShape)
+                            .clickable(role = Role.Button, onClick = onOpenSettings).semantics { contentDescription = bellDesc },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        BellIcon(Ab.strong)
+                        Box(Modifier.align(Alignment.TopEnd).padding(10.dp).size(9.dp).clip(CircleShape).background(AbColors.Aqua1))
+                    }
+                }
+
+                // hedef (i: nasıl hesaplandı), altında bugünün sıcaklığı, altında tempo
+                val fraction = (today.drankMl.toFloat() / today.goalMl).coerceIn(0f, 1f)
+                val infoDesc = stringResource(R.string.info_desc)
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Row(
+                        Modifier.clip(RoundedCornerShape(999.dp)).clickable(role = Role.Button) { goalInfo = true }
+                            .semantics { contentDescription = infoDesc }.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(stringResource(R.string.goal_label, fmtMl(today.goalMl)), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        InfoBadge()
+                    }
+                    if (s.useWeather && temp != null) {
+                        val extra = tempExtraMl(temp)
+                        val degrees = temp.roundToInt().toString()
+                        Text(
+                            if (extra > 0 && s.goalOverrideMl == null) stringResource(R.string.home_weather, degrees, fmtMl(extra))
+                            else stringResource(R.string.home_weather_none, degrees),
+                            style = MaterialTheme.typography.bodySmall, color = Ab.muted,
+                        )
+                    }
+                    Text(
+                        when {
+                            remaining <= 0 -> stringResource(R.string.home_plan_done)
+                            plan == null -> stringResource(R.string.home_plan_none)
+                            pace - today.drankMl >= PACE_TOLERANCE_ML -> stringResource(R.string.pace_behind, fmtMl(roundTo10(pace - today.drankMl)))
+                            today.drankMl - pace >= PACE_TOLERANCE_ML -> stringResource(R.string.pace_ahead, fmtMl(roundTo10(today.drankMl - pace)))
+                            else -> stringResource(R.string.pace_on)
+                        },
+                        style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center,
                     )
                 }
-            }
 
-            val nextAt = plan?.nextAtMin
-            val nextNeed = if (plan != null) paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, plan.nextAtMin) - today.drankMl else 0
-            TimelineCard(today.entries, nextAt, nextNeed, streak)
-
-            val pill = RoundedCornerShape(999.dp)
-            val addDesc = stringResource(R.string.add_ml, fmtMl(s.cupMl))
-            Box(
-                Modifier.fillMaxWidth().height(60.dp)
-                    .shadow(10.dp, pill, ambientColor = AbColors.Aqua1, spotColor = AbColors.Aqua1)
-                    .clip(pill).background(Brush.horizontalGradient(listOf(AbColors.Aqua1, AbColors.Aqua2)))
-                    .clickable(role = Role.Button) { add(s.cupMl) }
-                    .semantics { contentDescription = addDesc },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    "${stringResource(R.string.add_water)} (${fmtMl(s.cupMl)} ml)",
-                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = AbColors.Navy,
-                )
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                QuickCard(stringResource(R.string.quick_glass), 250, Modifier.weight(1f)) { add(250) }
-                QuickCard(stringResource(R.string.quick_mug), 350, Modifier.weight(1f)) { add(350) }
-                QuickCard(stringResource(R.string.quick_bottle), 500, Modifier.weight(1f)) { add(500) }
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                TextButton(
-                    onClick = onUndo,
-                    enabled = today.entries.isNotEmpty(), modifier = Modifier.heightIn(min = 48.dp),
-                    colors = ButtonDefaults.textButtonColors(contentColor = Ab.muted),
-                ) { Text(stringResource(R.string.undo)) }
-                Row {
-                    TextButton(onClick = { custom = true }, modifier = Modifier.heightIn(min = 48.dp), colors = ButtonDefaults.textButtonColors(contentColor = Ab.muted)) {
-                        Text(stringResource(R.string.add_custom))
-                    }
-                    TextButton(onClick = { cupDialog = true }, modifier = Modifier.heightIn(min = 48.dp), colors = ButtonDefaults.textButtonColors(contentColor = Ab.muted)) {
-                        Text(stringResource(R.string.cup_button, fmtMl(s.cupMl)))
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    WaterOrb(
+                        fraction,
+                        if (showPace) pace.toFloat() / today.goalMl else null,
+                        stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
+                        Modifier.size(orb),
+                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Row(
+                            Modifier.clip(RoundedCornerShape(999.dp)).background(Ab.card).padding(horizontal = 12.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Canvas(Modifier.size(width = 10.dp, height = 13.dp)) { drawPath(dropPath(size.width, size.height), AbColors.Teal) }
+                            Text("${(fraction * 100).roundToInt()}%", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        }
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(fmtMl(today.drankMl), fontSize = (orb.value * 0.15f).coerceIn(28f, 40f).sp, fontWeight = FontWeight.ExtraBold, color = Ab.strong)
+                            Text(" ml", color = Ab.muted, modifier = Modifier.padding(bottom = 6.dp))
+                        }
+                        Text(
+                            stringResource(R.string.left_label, fmtMl(remaining.coerceAtLeast(0))),
+                            style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = Ab.muted,
+                        )
                     }
                 }
-            }
 
-            val temp = s.tempToday(LocalDate.now())
-            if (s.useWeather && temp != null) {
-                val extra = tempExtraMl(temp)
-                val degrees = temp.roundToInt().toString()
-                Text(
-                    if (extra > 0 && s.goalOverrideMl == null) stringResource(R.string.home_weather, degrees, fmtMl(extra))
-                    else stringResource(R.string.home_weather_none, degrees),
-                    color = Ab.muted,
-                )
-            }
+                val nextAt = plan?.nextAtMin
+                val nextNeed = if (plan != null) paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, plan.nextAtMin) - today.drankMl else 0
+                TimelineCard(today.entries, nextAt, nextNeed, streak) { editing = it }
 
-            Text(stringResource(R.string.records_title), style = MaterialTheme.typography.titleLarge)
-            if (today.entries.isEmpty()) {
-                Text(stringResource(R.string.records_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            today.entries.forEach { e ->
-                EntryRow(
-                    e,
-                    onEdit = { editing = e },
-                    onDelete = {
-                        onDelete(e)
-                        showUndo(context.getString(R.string.deleted, fmtMl(e.ml))) { onRestore(e) }
-                    },
-                )
+                val pill = RoundedCornerShape(999.dp)
+                val addDesc = stringResource(R.string.add_ml, fmtMl(s.cupMl))
+                Box(
+                    Modifier.fillMaxWidth().height(56.dp)
+                        .shadow(10.dp, pill, ambientColor = AbColors.Aqua1, spotColor = AbColors.Aqua1)
+                        .clip(pill).background(Brush.horizontalGradient(listOf(AbColors.Aqua1, AbColors.Aqua2)))
+                        // basınca bardak boyutu kadar ekler, uzun basınca bardak boyutunu seçtirir
+                        .combinedClickable(role = Role.Button, onLongClick = { cupDialog = true }) { add(s.cupMl) }
+                        .semantics { contentDescription = addDesc },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "${stringResource(R.string.add_water)} (${fmtMl(s.cupMl)} ml)",
+                        style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = AbColors.Navy,
+                    )
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    QuickCard(stringResource(R.string.quick_glass), "+250 ml", Modifier.weight(1f)) { add(250) }
+                    QuickCard(stringResource(R.string.quick_mug), "+350 ml", Modifier.weight(1f)) { add(350) }
+                    QuickCard(stringResource(R.string.quick_bottle), "+500 ml", Modifier.weight(1f)) { add(500) }
+                    QuickCard(stringResource(R.string.add_custom), "+", Modifier.weight(1f)) { custom = true }
+                }
             }
         }
     }
 
+    if (goalInfo) GoalInfoDialog(today, temp, onDismiss = { goalInfo = false }, onSettings = { goalInfo = false; onOpenSettings() })
     if (cupDialog) CupDialog(s.cupMl, onDismiss = { cupDialog = false }, onPick = { cupDialog = false; onSetCup(it) })
     if (custom) CustomDialog(onDismiss = { custom = false }, onAdd = { custom = false; add(it) })
     editing?.let { e ->
-        EditDialog(e, onDismiss = { editing = null }, onSave = { ml, minute -> editing = null; onEdit(e, ml, minute) })
+        EditDialog(
+            e, onDismiss = { editing = null },
+            onSave = { ml, minute -> editing = null; onEdit(e, ml, minute) },
+            onDelete = {
+                editing = null
+                onDelete(e)
+                showUndo(context.getString(R.string.deleted, fmtMl(e.ml))) { onRestore(e) }
+            },
+        )
     }
 }
 
@@ -291,41 +285,7 @@ private fun minuteOfDay(atMs: Long): Int =
     Instant.ofEpochMilli(atMs).atZone(ZoneId.systemDefault()).let { it.hour * 60 + it.minute }
 
 @Composable
-private fun EntryRow(e: Intake, onEdit: () -> Unit, onDelete: () -> Unit) {
-    var menu by remember { mutableStateOf(false) }
-    val more = stringResource(R.string.more_options)
-    val source = stringResource(
-        when (e.source) {
-            SOURCE_NOTIFICATION -> R.string.src_notification
-            SOURCE_WIDGET -> R.string.src_widget
-            else -> R.string.src_app
-        },
-    )
-    Card(
-        Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-    ) {
-        Row(Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text("${fmtTime(minuteOfDay(e.atMs))}  ·  ${fmtMl(e.ml)} ml", style = MaterialTheme.typography.titleMedium)
-                Text(source, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-            }
-            Box {
-                TextButton(
-                    onClick = { menu = true },
-                    modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = more },
-                ) { Text("⋮") }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.menu_edit)) }, onClick = { menu = false; onEdit() })
-                    DropdownMenuItem(text = { Text(stringResource(R.string.menu_delete)) }, onClick = { menu = false; onDelete() })
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun EditDialog(e: Intake, onDismiss: () -> Unit, onSave: (Int, Int) -> Unit) {
+private fun EditDialog(e: Intake, onDismiss: () -> Unit, onSave: (Int, Int) -> Unit, onDelete: () -> Unit) {
     var text by remember { mutableStateOf(e.ml.toString()) }
     var minute by remember { mutableIntStateOf(minuteOfDay(e.atMs)) }
     val ml = text.toIntOrNull()?.takeIf { it in 1..5000 }
@@ -347,6 +307,9 @@ private fun EditDialog(e: Intake, onDismiss: () -> Unit, onSave: (Int, Int) -> U
                     stringResource(R.string.earlier), stringResource(R.string.later),
                     { minute = (minute - 5).coerceIn(0, 1439) }, { minute = (minute + 5).coerceIn(0, 1439) },
                 )
+                TextButton(onClick = onDelete, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
+                    Text(stringResource(R.string.menu_delete))
+                }
             }
         },
         confirmButton = { TextButton(onClick = { ml?.let { onSave(it, minute) } }, enabled = ml != null) { Text(stringResource(R.string.save)) } },
@@ -385,22 +348,22 @@ private fun dropPath(w: Float, h: Float) = Path().apply {
 }
 
 @Composable
-private fun QuickCard(label: String, ml: Int, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun QuickCard(label: String, value: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val shape = RoundedCornerShape(20.dp)
     Column(
         modifier.shadow(6.dp, shape, ambientColor = AbColors.Navy.copy(alpha = 0.12f), spotColor = AbColors.Navy.copy(alpha = 0.12f))
             .clip(shape).background(Ab.card).border(1.dp, Ab.line, shape)
-            .clickable(role = Role.Button, onClick = onClick).padding(vertical = 12.dp),
+            .clickable(role = Role.Button, onClick = onClick).padding(vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(label, style = MaterialTheme.typography.labelMedium, color = Ab.muted)
-        Text("+${fmtMl(ml)} ml", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Ab.strong)
+        Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Ab.strong)
     }
 }
 
 /** Bugünün kayıtları: çizgi üzerinde onay işaretli düğümler, son düğüm sıradaki hatırlatma; çoksa yatay kayar. */
 @Composable
-private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int, streak: Int) {
+private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int, streak: Int, onEntry: (Intake) -> Unit) {
     val shape = RoundedCornerShape(24.dp)
     val context = LocalContext.current
     val sorted = entries.sortedBy { it.atMs }
@@ -435,7 +398,7 @@ private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     sorted.forEach { e ->
-                        TimelineNode(done = true, time = fmtTime(minuteOfDay(e.atMs)), detail = "${fmtMl(e.ml)} ml")
+                        TimelineNode(done = true, time = fmtTime(minuteOfDay(e.atMs)), detail = "${fmtMl(e.ml)} ml", onClick = { onEntry(e) })
                     }
                     if (nextAtMin != null) {
                         TimelineNode(
@@ -450,10 +413,13 @@ private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int
 }
 
 @Composable
-private fun TimelineNode(done: Boolean, time: String, detail: String) {
+private fun TimelineNode(done: Boolean, time: String, detail: String, onClick: (() -> Unit)? = null) {
     val faint = Ab.faint
     val cardC = Ab.card
-    Column(Modifier.width(76.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Column(
+        Modifier.width(76.dp).let { if (onClick != null) it.clip(RoundedCornerShape(12.dp)).clickable(role = Role.Button, onClick = onClick) else it },
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
         Canvas(Modifier.size(32.dp)) {
             val r = size.minDimension / 2f
             if (done) {
@@ -534,4 +500,61 @@ private fun CupDialog(current: Int, onDismiss: () -> Unit, onPick: (Int) -> Unit
         confirmButton = { TextButton(onClick = { customMl?.let(onPick) }, enabled = customMl != null) { Text(stringResource(R.string.cup_set)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
+}
+
+/** Hedefin yanındaki "i" simgesi. */
+@Composable
+private fun InfoBadge() {
+    val c = MaterialTheme.colorScheme.primary
+    Box(
+        Modifier.size(22.dp).border(1.5.dp, c, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) { Text("i", color = c, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold) }
+}
+
+/** Hedefin parçaları: kilo, hareket, bugünün sıcaklığı ve konum. */
+@Composable
+private fun GoalInfoDialog(today: AbRepository.Today, temp: Double?, onDismiss: () -> Unit, onSettings: () -> Unit) {
+    val s = today.settings
+    val tempExtra = if (s.useWeather && temp != null) tempExtraMl(temp) else 0
+    val off = stringResource(R.string.gi_off)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.goal_info_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                InfoRow(stringResource(R.string.gi_weight, s.weightKg.toString()), "${fmtMl(baseGoalMl(s.weightKg))} ml")
+                Text(stringResource(R.string.gi_formula), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
+                InfoRow(
+                    stringResource(R.string.gi_activity, stringResource(activityLabel(s.activity))),
+                    if (s.useActivity) "+${fmtMl(s.activity.extraMl)} ml" else off,
+                )
+                InfoRow(
+                    stringResource(R.string.gi_temp),
+                    when {
+                        !s.useWeather -> off
+                        temp == null -> stringResource(R.string.gi_no_temp)
+                        else -> stringResource(R.string.gi_temp_value, temp.roundToInt().toString(), fmtMl(tempExtra))
+                    },
+                )
+                InfoRow(
+                    stringResource(R.string.gi_location),
+                    s.city ?: if (s.lat != null) stringResource(R.string.weather_city_location) else stringResource(R.string.weather_city_none),
+                )
+                Box(Modifier.fillMaxWidth().height(1.dp).background(Ab.line))
+                if (s.goalOverrideMl != null) Text(stringResource(R.string.gi_manual), color = MaterialTheme.colorScheme.tertiary)
+                InfoRow(stringResource(R.string.gi_total), "${fmtMl(today.goalMl)} ml", bold = true)
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.ok)) } },
+        dismissButton = { TextButton(onClick = onSettings) { Text(stringResource(R.string.settings)) } },
+    )
+}
+
+@Composable
+private fun InfoRow(label: String, value: String, bold: Boolean = false) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+        Text(label, Modifier.weight(1f), fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal)
+        Text(value, fontWeight = if (bold) FontWeight.Bold else FontWeight.SemiBold, textAlign = TextAlign.End)
+    }
 }

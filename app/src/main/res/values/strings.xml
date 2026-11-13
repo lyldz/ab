@@ -165,4 +165,17 @@
     <string name="update_download_failed">Download failed. Try again.</string>
     <string name="update_perm">Allow installing apps from ab in the settings that just opened, then tap Download again.</string>
     <string name="update_privacy">Only contacts GitHub when you tap; nothing personal is sent.</string>
+    <string name="info_desc">Goal details</string>
+    <string name="goal_info_title">How your goal is calculated</string>
+    <string name="gi_weight">Weight: %1$s kg</string>
+    <string name="gi_formula">25 ml × weight, at least 1,500 ml</string>
+    <string name="gi_activity">Activity: %1$s</string>
+    <string name="gi_temp">Temperature</string>
+    <string name="gi_temp_value">%1$s°C → +%2$s ml</string>
+    <string name="gi_no_temp">not fetched today</string>
+    <string name="gi_location">Location</string>
+    <string name="gi_off">off</string>
+    <string name="gi_total">Total</string>
+    <string name="gi_manual">You set the goal manually; the parts above are not used.</string>
+    <string name="ok">OK</string>
 </resources>
