@@ -3,6 +3,8 @@
 [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimi, [SemVer](https://semver.org/lang/tr/) sürümleme.
 
 ## [Unreleased]
+### Fixed
+- "+ Su Ekle" düğmesine uzun basınca açılan bardak menüsünde bir ölçü seçince (ya da özel miktar yazınca) miktar hemen eklenir ve varsayılan bardak olur; eskiden seçtikten sonra düğmeye bir kez daha basmak gerekiyordu.
 ### Added
 - Yedek: Ayarlar > Yedek ile kayıtlar, günlük hedefler ve ayarlar tek JSON dosyasına yazılır ya da dosyadan geri yüklenir (dosya seçici, izin gerekmez, hiçbir yere gönderilmez). Geri yükleme kayıtları ekler (aynı an+miktar yeniden eklenmez), ayarları yedektekilerle değiştirir.
 ### Changed
