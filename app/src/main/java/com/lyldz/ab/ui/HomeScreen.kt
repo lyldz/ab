@@ -141,7 +141,6 @@ fun HomeScreen(
     }
 
     val remaining = today.goalMl - today.drankMl
-    val showPace = remaining > 0 && nowMin in s.windowStartMin..s.windowEndMin
     val pace = paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, nowMin)
     val plan = nextPlan(nowMin, s.windowStartMin, s.windowEndMin, today.goalMl, today.drankMl, s.reminderIntervalMin(), today.anchorMin)
 
@@ -212,7 +211,6 @@ fun HomeScreen(
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     WaterOrb(
                         fraction,
-                        if (showPace) pace.toFloat() / today.goalMl else null,
                         stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
                         Modifier.size(orb),
                     )

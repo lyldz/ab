@@ -29,6 +29,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
@@ -167,13 +168,12 @@ fun WaterPitcher(
 /**
  * Günlük ilerleme göstergesi (tasarım sistemi): yumuşak aqua ışıltı halkası, inci iç yüzey ve iki
  * katmanlı su (arka #A0E7E5 %65, ön #88D9E6 %85) farklı faz ve hızda dalgalanır. Kapasite günlük
- * hedeftir; [paceFraction] varsa şu an olman gereken seviye ince kesik çizgiyle gösterilir.
+ * hedeftir. Çevredeki hale su doldukça koyulaşır, güçlenir ve rengini çevreye yayar.
  * Ortadaki yazıyı çağıran koyar.
  */
 @Composable
 fun WaterOrb(
     fraction: Float,
-    paceFraction: Float?,
     description: String,
     modifier: Modifier = Modifier,
 ) {
@@ -185,17 +185,28 @@ fun WaterOrb(
 
     val card = Ab.card
     val lineC = Ab.line
-    val paceC = Ab.strong
     val dark = Ab.isDark
     Canvas(modifier.semantics { contentDescription = description }) {
         val c = Offset(size.width / 2f, size.height / 2f)
         val outer = size.minDimension / 2f
-        val ring = outer * 0.80f
+        val ring = outer * 0.74f
         val inner = ring - 7.dp.toPx()
 
-        // ışıltı + halka
+        // hale: doluluk arttıkça açık aquadan derin maviye döner, güçlenir ve dışa yayılır
+        val f = level.coerceIn(0f, 1f)
+        val haloColor = lerp(AbColors.Aqua1, Color(0xFF0A7FA8), f)
+        val haloAlpha = 0.20f + 0.55f * f
+        val solid = ring / outer
         drawCircle(
-            Brush.radialGradient(listOf(AbColors.Aqua1.copy(alpha = 0.40f), Color.Transparent), c, outer),
+            Brush.radialGradient(
+                colorStops = arrayOf(
+                    0f to haloColor.copy(alpha = haloAlpha),
+                    solid to haloColor.copy(alpha = haloAlpha),
+                    solid + (1f - solid) * 0.45f to haloColor.copy(alpha = haloAlpha * 0.45f),
+                    1f to Color.Transparent,
+                ),
+                center = c, radius = outer,
+            ),
             outer, c,
         )
         drawCircle(card, ring, c)
@@ -226,13 +237,6 @@ fun WaterOrb(
                 // koyuda su biraz daha sönük: üstündeki beyaz yazı okunaklı kalsın
                 drawPath(wave(phaseB, 5.dp.toPx(), 1.1f, 5.dp.toPx()), AbColors.Aqua2.copy(alpha = if (dark) 0.35f else 0.65f))
                 drawPath(wave(phaseA, 4.dp.toPx(), 1.7f, 0f), AbColors.Aqua1.copy(alpha = if (dark) 0.55f else 0.85f))
-            }
-            paceFraction?.let {
-                val y = yOf(it)
-                drawLine(
-                    paceC.copy(alpha = 0.55f), Offset(c.x - inner, y), Offset(c.x + inner, y), 1.5.dp.toPx(),
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f)),
-                )
             }
         }
     }
