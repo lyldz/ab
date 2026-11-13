@@ -8,7 +8,7 @@ lifecycle = "2.7.0"
 junit = "4.13.2"
 robolectric = "4.13"
 androidxTestJunit = "1.2.1"
-ksp = "2.0.21-1.0.28"
+ksp = "2.3.13"
 room = "2.8.5"
 datastore = "1.1.1"
 
