@@ -50,8 +50,7 @@ class SmokeTest {
         tap("Not now")
         tap("Not now")
 
-        waitFor("Glass: 200 ml") // ana ekran açıldı
-        waitFor("Today's records")
+        waitFor("TODAY'S TIMELINE") // ana ekran açıldı
         // büyük "+" düğmesi (varsayılan bardak) kayıt ekler; erişilebilirlik açıklamasıyla bulunur
         compose.onNodeWithContentDescription("+200 ml").performScrollTo().performClick()
         waitFor("Added 200 ml")
@@ -63,6 +62,6 @@ class SmokeTest {
         tap("Settings") // alt gezinme: Ayarlar
         waitFor("Weight (kg)")
         tap("Today")
-        waitFor("Glass: 200 ml")
+        waitFor("TODAY'S TIMELINE")
     }
 }

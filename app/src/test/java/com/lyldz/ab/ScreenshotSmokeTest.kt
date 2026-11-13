@@ -58,15 +58,16 @@ abstract class ScreenshotBase(private val prefix: String) {
         wait("Use my location")
         shot("onb3-location")
         tap("Not now")
-        wait("Today's records")
+        wait("TODAY'S TIMELINE")
         shot("home-empty")
         repeat(3) { compose.onNodeWithContentDescription("+200 ml").performScrollTo().performClick() }
-        compose.onNodeWithText("Today's records").performScrollTo()
         shot("home-records")
-        compose.onNodeWithContentDescription("+200 ml").performScrollTo()
         shot("home-actions")
+        compose.onNodeWithContentDescription("Goal details").performClick()
+        wait("How your goal is calculated")
+        shot("goal-info")
+        compose.onNodeWithText("OK").performClick()
         repeat(6) { compose.onNodeWithContentDescription("+200 ml").performScrollTo().performClick() }
-        compose.onNodeWithText("DAILY WATER INTAKE").performScrollTo()
         shot("home-top-filled")
     }
 }
