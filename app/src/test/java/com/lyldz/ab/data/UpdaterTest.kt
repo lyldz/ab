@@ -30,9 +30,9 @@ class UpdaterTest {
     @Test fun picksShaAssetAndRejectsUntrustedHosts() {
         val base = "https://github.com/lyldz/ab/releases/download/v0.3.1/"
         val json = """{"tag_name":"v0.3.1","assets":[
-            {"name":"app-release.apk","browser_download_url":"${'$'}{base}app-release.apk","size":1},
-            {"name":"app-release.apk.sha256","browser_download_url":"${'$'}{base}app-release.apk.sha256","size":90}]}"""
-        assertEquals("${'$'}{base}app-release.apk.sha256", Updater.parseRelease(json)!!.sha256Url)
+            {"name":"app-release.apk","browser_download_url":"${base}app-release.apk","size":1},
+            {"name":"app-release.apk.sha256","browser_download_url":"${base}app-release.apk.sha256","size":90}]}"""
+        assertEquals("${base}app-release.apk.sha256", Updater.parseRelease(json)!!.sha256Url)
         val evil = """{"tag_name":"v9","assets":[{"name":"x.apk","browser_download_url":"https://evil.example/x.apk","size":1}]}"""
         assertNull(Updater.parseRelease(evil))
         assertTrue(Updater.isTrustedUrl(base + "a.apk"))
@@ -42,7 +42,7 @@ class UpdaterTest {
 
     @Test fun parsesSha256Sum() {
         val h = "a".repeat(64)
-        assertEquals(h, Updater.parseSha256("${'$'}h  app-release.apk\n"))
+        assertEquals(h, Updater.parseSha256("$h  app-release.apk\n"))
         assertEquals(h, Updater.parseSha256(h.uppercase()))
         assertNull(Updater.parseSha256("not a hash"))
         assertNull(Updater.parseSha256("abc  file"))
