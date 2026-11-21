@@ -104,6 +104,11 @@ object Notifier {
         )
     }
 
+    /** Aktif hatırlatma bildirimini kaldırır (ör. hatırlatmalar kapatıldığında). */
+    fun cancel(ctx: Context) {
+        runCatching { NotificationManagerCompat.from(ctx).cancel(NOTIF_ID) }
+    }
+
     /** Bildirim şu an gösteriliyor mu (kaydırılıp kapatılmadıysa). */
     fun isShowing(ctx: Context): Boolean = runCatching {
         ctx.getSystemService(NotificationManager::class.java)?.activeNotifications?.any { it.id == NOTIF_ID } == true

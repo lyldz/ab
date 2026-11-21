@@ -29,6 +29,7 @@ object Backup {
             .put("name", s.name)
             .put("themeMode", s.themeMode)
             .put("motionWater", s.motionWater)
+            .put("remindersEnabled", s.remindersEnabled)
         s.goalOverrideMl?.let { settings.put("goalOverrideMl", it) }
         s.city?.let { settings.put("city", it) }
         s.lat?.let { settings.put("lat", it) }
@@ -71,6 +72,7 @@ object Backup {
             name = so.optString("name", "").take(30),
             themeMode = so.optInt("themeMode", def.themeMode).takeIf { it in 0..2 } ?: def.themeMode,
             motionWater = so.optBoolean("motionWater", def.motionWater),
+            remindersEnabled = so.optBoolean("remindersEnabled", def.remindersEnabled),
             onboarded = true,
         )
         val intakes = mutableListOf<Intake>()
