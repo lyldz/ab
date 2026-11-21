@@ -10,8 +10,11 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.lyldz.ab.core.Activity
+import com.lyldz.ab.core.MAX_WEIGHT_KG
+import com.lyldz.ab.core.MIN_WEIGHT_KG
 import com.lyldz.ab.core.baseIntervalMin
 import com.lyldz.ab.core.dailyGoalMl
+import com.lyldz.ab.core.isValidIntakeMl
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
@@ -41,16 +44,19 @@ data class Settings(
     /** "Uzun bas" ipucunun kaç kez gösterildiği (3'te durur); ayar kaydı yazmaz, yalnızca [SettingsStore.setHintCount]. */
     val longPressHints: Int = 0,
 ) {
-    /** Sıcaklık yalnızca bugün alındıysa geçerli; eski gün değeri hedefi etkilemez. */
-    fun tempToday(today: LocalDate): Double? = tempC.takeIf { tempDay == today.toString() }
+    /** Sıcaklık yalnızca bugün alındıysa ve sonlu bir sayıysa geçerli; eski gün değeri hedefi etkilemez. */
+    fun tempToday(today: LocalDate): Double? = tempC?.takeIf { it.isFinite() && tempDay == today.toString() }
+
+    /** Geçerli (pozitif) elle hedef değeri; 0 veya negatif değerler yok sayılır. */
+    fun validGoalOverrideMl(): Int? = goalOverrideMl?.takeIf { it > 0 }
 
     /** Hatırlatma aralığı için hava eki olmayan hedef: yalnızca kilo, hareket ya da elle hedef değişince değişir. */
-    fun planGoalMl(): Int = goalOverrideMl ?: dailyGoalMl(weightKg, activity, null, useActivity, false)
+    fun planGoalMl(): Int = validGoalOverrideMl() ?: dailyGoalMl(weightKg, activity, null, useActivity, false)
 
     /** Günün sabit hatırlatma aralığı (dk). */
     fun reminderIntervalMin(): Int = baseIntervalMin(windowStartMin, windowEndMin, cupMl, planGoalMl())
 
-    fun goalMl(today: LocalDate): Int = goalOverrideMl ?: dailyGoalMl(
+    fun goalMl(today: LocalDate): Int = validGoalOverrideMl() ?: dailyGoalMl(
         weightKg, activity, tempToday(today), useActivity, useWeather,
     )
 }
@@ -92,6 +98,7 @@ class SettingsStore(private val context: Context) {
     }
 
     suspend fun setTemperature(tempC: Double, day: String) {
+        if (!tempC.isFinite()) return
         context.store.edit {
             it[TEMP] = tempC
             it[TEMP_DAY] = day
@@ -108,23 +115,23 @@ class SettingsStore(private val context: Context) {
     private fun Preferences.toSettings(): Settings {
         val d = Settings()
         return Settings(
-            weightKg = this[WEIGHT] ?: d.weightKg,
+            weightKg = this[WEIGHT]?.takeIf { it in MIN_WEIGHT_KG..MAX_WEIGHT_KG } ?: d.weightKg,
             activity = this[ACTIVITY]?.let { runCatching { Activity.valueOf(it) }.getOrNull() } ?: d.activity,
-            cupMl = this[CUP] ?: d.cupMl,
+            cupMl = this[CUP]?.takeIf(::isValidIntakeMl) ?: d.cupMl,
             windowStartMin = this[START] ?: d.windowStartMin,
             windowEndMin = this[END] ?: d.windowEndMin,
             useActivity = this[USE_ACTIVITY] ?: d.useActivity,
             useWeather = this[USE_WEATHER] ?: d.useWeather,
-            goalOverrideMl = this[GOAL],
+            goalOverrideMl = this[GOAL]?.takeIf { it > 0 },
             city = this[CITY],
             lat = this[LAT],
             lon = this[LON],
-            tempC = this[TEMP],
+            tempC = this[TEMP]?.takeIf { it.isFinite() },
             tempDay = this[TEMP_DAY],
             onboarded = this[ONBOARDED] ?: d.onboarded,
             lastNotifiedMs = this[LAST_NOTIFIED],
             name = this[NAME] ?: d.name,
-            themeMode = this[THEME] ?: d.themeMode,
+            themeMode = this[THEME]?.takeIf { it in 0..2 } ?: d.themeMode,
             motionWater = this[MOTION] ?: d.motionWater,
             longPressHints = this[HINTS] ?: d.longPressHints,
         )

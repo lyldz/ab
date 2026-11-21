@@ -210,17 +210,17 @@ fun WaterOrb(
         val ring = outer * 0.82f
         val inner = ring - 7.dp.toPx()
 
-        // hale: doluluk arttıkça açık aquadan derin maviye döner, güçlenir ve dışa yayılır
+        // hale: doluluk arttıkça açık aquadan derin okyanus mavisine döner, güçlenir ve dışa yayılır
         val f = level.coerceIn(0f, 1f)
-        val haloColor = lerp(AbColors.Aqua1, Color(0xFF0A7FA8), f)
-        val haloAlpha = 0.20f + 0.55f * f
+        val haloColor = lerp(AbColors.Aqua1, AbColors.Ocean, f)
+        val haloAlpha = (if (dark) 0.16f else 0.22f) + (if (dark) 0.42f else 0.50f) * f
         val solid = ring / outer
         drawCircle(
             Brush.radialGradient(
                 colorStops = arrayOf(
                     0f to haloColor.copy(alpha = haloAlpha),
                     solid to haloColor.copy(alpha = haloAlpha),
-                    solid + (1f - solid) * 0.45f to haloColor.copy(alpha = haloAlpha * 0.45f),
+                    solid + (1f - solid) * 0.48f to haloColor.copy(alpha = haloAlpha * 0.42f),
                     1f to Color.Transparent,
                 ),
                 center = c, radius = outer,
@@ -230,8 +230,15 @@ fun WaterOrb(
         drawCircle(card, ring, c)
         drawCircle(lineC, ring, c, style = Stroke(1.5.dp.toPx()))
         drawCircle(
-            Brush.verticalGradient(listOf(card, lineC), c.y - ring, c.y + ring),
-            ring - 2.dp.toPx(), c, style = Stroke(6.dp.toPx()),
+            Brush.verticalGradient(
+                listOf(
+                    if (dark) AbColors.Aqua1.copy(alpha = 0.18f) else Color.White,
+                    lineC,
+                ),
+                c.y - ring,
+                c.y + ring,
+            ),
+            ring - 2.dp.toPx(), c, style = Stroke(5.5.dp.toPx()),
         )
 
         val disc = Path().apply { addOval(androidx.compose.ui.geometry.Rect(c, inner)) }
@@ -242,26 +249,86 @@ fun WaterOrb(
             if (level > 0.001f) {
                 val m = tilt.value // x: eğim (derece), y: sallanma şiddeti 0..1 (yalnızca çizim aşamasında okunur)
                 val sy = yOf(level)
-                val wide = inner * 1.7f // döndürünce daireyi kaplasın diye geniş çizilir
+                val wide = inner * 1.75f // döndürünce daireyi kaplasın diye geniş çizilir
+                val span = inner * 2f
+                fun waveY(x: Float, phase: Float, amp: Float, freq: Float, off: Float): Float {
+                    val t = (x - c.x + inner) / span * 2f * PI.toFloat() * freq + phase
+                    return sy + off + amp * (sin(t) + 0.22f * sin(2f * t + 1.1f))
+                }
                 fun wave(phase: Float, amp: Float, freq: Float, off: Float) = Path().apply {
                     moveTo(c.x - wide, c.y + inner * 2.4f)
-                    lineTo(c.x - wide, sy + off)
+                    lineTo(c.x - wide, waveY(c.x - wide, phase, amp, freq, off))
                     var x = c.x - wide
                     while (x <= c.x + wide) {
-                        lineTo(x, sy + off + amp * sin((x - c.x + inner) / (inner * 2f) * 2f * PI.toFloat() * freq + phase))
-                        x += 4f
+                        lineTo(x, waveY(x, phase, amp, freq, off))
+                        x += 3f
                     }
                     lineTo(c.x + wide, c.y + inner * 2.4f)
                     close()
                 }
+                fun crest(phase: Float, amp: Float, freq: Float) = Path().apply {
+                    var x = c.x - wide
+                    moveTo(x, waveY(x, phase, amp, freq, 0f))
+                    while (x <= c.x + wide) {
+                        lineTo(x, waveY(x, phase, amp, freq, 0f))
+                        x += 3f
+                    }
+                }
                 val k = 1f + 2.2f * m.y // telefon sallanınca dalgalar büyür
+                val gradTop = (sy - 12.dp.toPx()).coerceAtLeast(top)
+                val gradBottom = (bottom + inner * 0.35f).coerceAtLeast(gradTop + 1f)
+                val backBrush = Brush.verticalGradient(
+                    colors = listOf(
+                        AbColors.Aqua2.copy(alpha = if (dark) 0.32f else 0.62f),
+                        AbColors.Teal.copy(alpha = if (dark) 0.42f else 0.72f),
+                    ),
+                    startY = gradTop,
+                    endY = gradBottom,
+                )
+                val frontBrush = Brush.verticalGradient(
+                    colors = listOf(
+                        AbColors.Aqua1.copy(alpha = if (dark) 0.50f else 0.84f),
+                        AbColors.Teal.copy(alpha = if (dark) 0.56f else 0.88f),
+                        AbColors.DeepTeal.copy(alpha = if (dark) 0.64f else 0.90f),
+                    ),
+                    startY = gradTop,
+                    endY = gradBottom,
+                )
                 // su yer çekimine göre yatay kalır: sahne eğimin tersine döner
                 rotate(m.x, c) {
-                    // koyuda su biraz daha sönük: üstündeki beyaz yazı okunaklı kalsın
-                    drawPath(wave(phaseB, 6.dp.toPx() * k, 1.1f, 6.dp.toPx()), AbColors.Aqua2.copy(alpha = if (dark) 0.35f else 0.65f))
-                    drawPath(wave(phaseA, 5.dp.toPx() * k, 1.7f, 0f), AbColors.Aqua1.copy(alpha = if (dark) 0.55f else 0.85f))
+                    // koyuda su biraz daha dengeli saydamlıkta: üstündeki açık yazı okunaklı kalsın
+                    drawPath(wave(phaseB, 5.5.dp.toPx() * k, 1.05f, 5.dp.toPx()), backBrush)
+                    val frontAmp = 4.8.dp.toPx() * k
+                    drawPath(wave(phaseA, frontAmp, 1.55f, 0f), frontBrush)
+                    // su yüzeyinde ince ışık kırılması / parıltı çizgisi
+                    if (level in 0.03f..0.97f) {
+                        drawPath(
+                            crest(phaseA, frontAmp, 1.55f),
+                            Brush.horizontalGradient(
+                                listOf(
+                                    Color.White.copy(alpha = 0.08f),
+                                    Color.White.copy(alpha = if (dark) 0.42f else 0.72f),
+                                    Color.White.copy(alpha = 0.08f),
+                                ),
+                                startX = c.x - inner,
+                                endX = c.x + inner,
+                            ),
+                            style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round),
+                        )
+                    }
                 }
             }
+            // sol üstte yumuşak cam yansıması (minimalist derinlik)
+            val arcInset = inner * 0.14f
+            drawArc(
+                color = Color.White.copy(alpha = if (dark) 0.10f else 0.42f),
+                startAngle = 205f,
+                sweepAngle = 52f,
+                useCenter = false,
+                topLeft = Offset(c.x - inner + arcInset, c.y - inner + arcInset),
+                size = Size((inner - arcInset) * 2f, (inner - arcInset) * 2f),
+                style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round),
+            )
         }
     }
 }

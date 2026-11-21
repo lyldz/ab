@@ -2,6 +2,7 @@ package com.lyldz.ab
 
 import android.app.Application
 import androidx.room.Room
+import com.lyldz.ab.core.isValidIntakeMl
 import com.lyldz.ab.data.AbDb
 import com.lyldz.ab.data.BackupData
 import com.lyldz.ab.data.Intake
@@ -22,13 +23,15 @@ class AbApp : Application() {
 
     /** Uygulama, bildirim ve widget aynı yolu kullanır: değişiklikten sonra alarmı ve widget'ı tazele, bildirim duruyorsa güncelle. */
     suspend fun addWater(ml: Int, source: Int = SOURCE_APP) {
+        if (!isValidIntakeMl(ml)) return
         repo.addIntake(ml, source)
         afterChange()
     }
 
-    suspend fun undoWater() {
-        repo.undoLast()
-        afterChange()
+    suspend fun undoWater(): Intake? {
+        val removed = repo.undoLast()
+        if (removed != null) afterChange()
+        return removed
     }
 
     suspend fun deleteEntry(e: Intake) {
@@ -42,6 +45,7 @@ class AbApp : Application() {
     }
 
     suspend fun editEntry(e: Intake, ml: Int, atMs: Long) {
+        if (!isValidIntakeMl(ml)) return
         repo.updateIntake(e.id, ml, atMs)
         afterChange()
     }

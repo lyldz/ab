@@ -25,7 +25,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.offset
-import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -172,7 +171,7 @@ fun HomeScreen(
     Scaffold(snackbarHost = { SnackbarHost(snack) }, contentWindowInsets = WindowInsets.statusBars) { padding ->
         // tek sayfa: gösterge, kalan boşluğa göre büyür/küçülür; çok küçük ekranda içerik kayar
         BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
-            val orb = (maxHeight - 380.dp).coerceIn(160.dp, 400.dp).coerceAtMost(maxWidth - 16.dp)
+            val orb = (maxHeight - 436.dp).coerceIn(160.dp, 360.dp).coerceAtMost(maxWidth - 16.dp)
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -190,22 +189,23 @@ fun HomeScreen(
                     )
                     val bellDesc = stringResource(R.string.bell_desc)
                     Box(
-                        Modifier.size(44.dp).clip(CircleShape).background(Ab.card).border(1.dp, Ab.line, CircleShape)
+                        Modifier.size(48.dp).clip(CircleShape).background(Ab.card).border(1.dp, Ab.line, CircleShape)
                             .clickable(role = Role.Button, onClick = onOpenSettings).semantics { contentDescription = bellDesc },
                         contentAlignment = Alignment.Center,
                     ) {
                         BellIcon(Ab.strong)
-                        Box(Modifier.align(Alignment.TopEnd).padding(10.dp).size(9.dp).clip(CircleShape).background(AbColors.Aqua1))
+                        Box(Modifier.align(Alignment.TopEnd).padding(11.dp).size(9.dp).clip(CircleShape).background(AbColors.Aqua1))
                     }
                 }
 
                 // hedef (i: nasıl hesaplandı), altında bugünün sıcaklığı, altında tempo
-                val fraction = (today.drankMl.toFloat() / today.goalMl).coerceIn(0f, 1f)
+                val fraction = (today.drankMl.toFloat() / today.goalMl.coerceAtLeast(1)).coerceIn(0f, 1f)
                 val infoDesc = stringResource(R.string.info_desc)
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Row(
-                        Modifier.clip(RoundedCornerShape(999.dp)).clickable(role = Role.Button) { goalInfo = true }
-                            .semantics { contentDescription = infoDesc }.padding(horizontal = 8.dp, vertical = 4.dp),
+                        Modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(999.dp))
+                            .clickable(role = Role.Button) { goalInfo = true }
+                            .semantics { contentDescription = infoDesc }.padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(stringResource(R.string.goal_label, fmtMl(today.goalMl)), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -260,6 +260,9 @@ fun HomeScreen(
                 val nextAt = plan?.nextAtMin
                 val nextNeed = if (plan != null) paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, plan.nextAtMin) - today.drankMl else 0
                 TimelineCard(today.entries, nextAt, nextNeed, streak) { editing = it }
+
+                // tek dokunuşla hızlı bardak/şişe ekleme çipleri (undo snackbar'ını da tetikler)
+                QuickAddChips(onAdd = ::add)
 
                 val pill = RoundedCornerShape(999.dp)
                 val addDesc = stringResource(R.string.add_ml, fmtMl(s.cupMl))
@@ -444,11 +447,102 @@ private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int
 }
 
 @Composable
+private fun QuickAddChips(onAdd: (Int) -> Unit) {
+    val chips = listOf(
+        Triple(200, R.string.quick_glass, false),
+        Triple(330, R.string.quick_small_bottle, true),
+        Triple(500, R.string.quick_bottle, true),
+    )
+    val shape = RoundedCornerShape(16.dp)
+    val chipBg = MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (Ab.isDark) 0.55f else 0.72f)
+    val chipBorder = AbColors.Aqua1.copy(alpha = if (Ab.isDark) 0.35f else 0.60f)
+    val iconColor = MaterialTheme.colorScheme.primary
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        chips.forEach { (ml, labelRes, isBottle) ->
+            val vessel = stringResource(labelRes)
+            val desc = stringResource(R.string.quick_add_desc, vessel, fmtMl(ml))
+            Row(
+                Modifier.weight(1f).heightIn(min = 48.dp).clip(shape)
+                    .background(chipBg).border(1.dp, chipBorder, shape)
+                    .clickable(role = Role.Button) { onAdd(ml) }
+                    .semantics(mergeDescendants = true) { contentDescription = desc }
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                QuickVesselIcon(isBottle = isBottle, tall = ml >= 500, color = iconColor)
+                Spacer(Modifier.width(6.dp))
+                Column(horizontalAlignment = Alignment.Start) {
+                    Text(
+                        stringResource(R.string.add_ml, fmtMl(ml)),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Ab.strong,
+                        maxLines = 1,
+                    )
+                    Text(
+                        vessel,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Ab.muted,
+                        maxLines = 1,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickVesselIcon(isBottle: Boolean, tall: Boolean, color: Color) {
+    Canvas(Modifier.size(18.dp)) {
+        val w = size.width
+        val h = size.height
+        val stroke = Stroke(1.6.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+        if (!isBottle) {
+            // minimalist bardak
+            val p = Path().apply {
+                moveTo(w * 0.22f, h * 0.20f)
+                lineTo(w * 0.78f, h * 0.20f)
+                lineTo(w * 0.68f, h * 0.88f)
+                lineTo(w * 0.32f, h * 0.88f)
+                close()
+            }
+            drawPath(p, color, style = stroke)
+        } else {
+            // minimalist şişe (500 ml biraz daha uzun)
+            val topY = if (tall) h * 0.08f else h * 0.16f
+            val shoulderY = if (tall) h * 0.30f else h * 0.36f
+            val p = Path().apply {
+                moveTo(w * 0.38f, topY)
+                lineTo(w * 0.62f, topY)
+                lineTo(w * 0.62f, shoulderY - h * 0.06f)
+                lineTo(w * 0.74f, shoulderY + h * 0.04f)
+                lineTo(w * 0.74f, h * 0.90f)
+                lineTo(w * 0.26f, h * 0.90f)
+                lineTo(w * 0.26f, shoulderY + h * 0.04f)
+                lineTo(w * 0.38f, shoulderY - h * 0.06f)
+                close()
+            }
+            drawPath(p, color, style = stroke)
+        }
+    }
+}
+
+@Composable
 private fun TimelineNode(done: Boolean, time: String, detail: String, onClick: (() -> Unit)? = null) {
     val faint = Ab.faint
     val cardC = Ab.card
+    val entryDesc = if (onClick != null) stringResource(R.string.tl_entry_desc, time, detail) else null
     Column(
-        Modifier.width(76.dp).let { if (onClick != null) it.clip(RoundedCornerShape(12.dp)).clickable(role = Role.Button, onClick = onClick) else it },
+        Modifier.width(76.dp).heightIn(min = 48.dp).let {
+            if (onClick != null) {
+                it.clip(RoundedCornerShape(12.dp))
+                    .clickable(role = Role.Button, onClick = onClick)
+                    .semantics(mergeDescendants = true) { entryDesc?.let { d -> contentDescription = d } }
+            } else {
+                it
+            }
+        }.padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Canvas(Modifier.size(32.dp)) {
@@ -504,8 +598,12 @@ private fun CupDialog(current: Int, onDismiss: () -> Unit, onPick: (Int) -> Unit
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     listOf(100, 150, 200, 250, 300, 400, 500).forEach { ml ->
                         val selected = ml == current
+                        val cupDesc = stringResource(R.string.add_ml, fmtMl(ml))
                         Column(
-                            Modifier.selectable(selected = selected, role = Role.RadioButton, onClick = { onPick(ml) }).padding(4.dp),
+                            Modifier.heightIn(min = 48.dp)
+                                .selectable(selected = selected, role = Role.RadioButton, onClick = { onPick(ml) })
+                                .semantics(mergeDescendants = true) { contentDescription = cupDesc }
+                                .padding(4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             Box(

@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lyldz.ab.AbApp
 import com.lyldz.ab.core.DayStat
+import com.lyldz.ab.core.isValidIntakeMl
+import com.lyldz.ab.core.msUntilNextMidnight
 import com.lyldz.ab.core.streakDays
 import com.lyldz.ab.core.withMinuteOfDay
 import com.lyldz.ab.data.AbRepository
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -23,40 +26,57 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZonedDateTime
 
 class MainViewModel(private val app: AbApp) : ViewModel() {
+    private val manualDate = MutableStateFlow(LocalDate.now())
+
     /**
-     * Bugünün tarihi (30 sn'de bir denetlenir). Depo akışları abone olunduğu andaki güne sabitlendiği için,
-     * uygulama gece yarısını açık geçerse akışlar yeni güne yeniden kurulur; yoksa ekran dünü izlemeye devam eder.
+     * Bugünün tarihi: bir sonraki gece yarısına kalan süreyi hesaplayarak en fazla 30 sn bekler,
+     * böylece gece yarısı geçişinde beklemeden yeni güne döner. [refreshDate] ile de anında tetiklenebilir.
      */
-    private val date = flow {
+    private val tickerDate = flow {
         while (true) {
-            emit(LocalDate.now())
-            delay(30_000)
+            val now = ZonedDateTime.now()
+            emit(now.toLocalDate())
+            val waitMs = minOf(30_000L, msUntilNextMidnight(now) + 50L)
+            delay(waitMs)
         }
-    }.distinctUntilChanged()
+    }
+
+    private val date = merge(manualDate, tickerDate).distinctUntilChanged()
+
+    /** Günü anında yeniden denetler (ör. ekran öne gelince veya gece yarısı geçişinde). */
+    fun refreshDate() {
+        manualDate.value = LocalDate.now()
+    }
 
     /** null: veri henüz okunmadı. */
     @OptIn(ExperimentalCoroutinesApi::class)
     val today: StateFlow<AbRepository.Today?> =
-        date.flatMapLatest { app.repo.today() }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        date.flatMapLatest { d ->
+            viewModelScope.launch { app.repo.ensureGoalRecorded(d) }
+            app.repo.today(d)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val period = MutableStateFlow(7)
     val periodDays: StateFlow<Int> = period
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val stats: StateFlow<List<DayStat>> =
-        combine(period, date) { p, _ -> p }.flatMapLatest { app.repo.stats(it) }
+        combine(period, date) { p, d -> p to d }.flatMapLatest { (p, d) -> app.repo.stats(p, d) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val streak: StateFlow<Int> =
-        date.flatMapLatest { app.repo.stats(60) }.map(::streakDays).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+        date.flatMapLatest { d -> app.repo.stats(60, d) }.map(::streakDays)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     /** Geçmiş sekmesi: son 30 günün günlük toplamları. */
     @OptIn(ExperimentalCoroutinesApi::class)
     val history: StateFlow<List<DayStat>> =
-        date.flatMapLatest { app.repo.stats(30) }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        date.flatMapLatest { d -> app.repo.stats(30, d) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setHintCount(n: Int) {
         viewModelScope.launch { app.repo.setHintCount(n) }
@@ -84,6 +104,7 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
     }
 
     fun add(ml: Int) {
+        if (!isValidIntakeMl(ml)) return
         viewModelScope.launch { app.addWater(ml) }
     }
 
@@ -96,6 +117,7 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
     }
 
     fun edit(e: Intake, ml: Int, minute: Int) {
+        if (!isValidIntakeMl(ml)) return
         viewModelScope.launch { app.editEntry(e, ml, withMinuteOfDay(e.atMs, minute, ZoneId.systemDefault())) }
     }
 

@@ -5,7 +5,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 data class DayStat(val day: LocalDate, val ml: Int, val goalMl: Int) {
-    val reached: Boolean get() = ml >= goalMl
+    val reached: Boolean get() = goalMl > 0 && ml >= goalMl
 }
 
 data class StatSummary(val avgMl: Int, val reachedDays: Int, val recordedDays: Int, val best: DayStat?)
@@ -27,7 +27,8 @@ fun buildDayStats(
         .mapValues { it.value.sum() }
     return (0 until days).map { i ->
         val d = start.plusDays(i.toLong())
-        DayStat(d, byDay[d] ?: 0, goals[d.toString()] ?: fallbackGoal(d))
+        val goal = goals[d.toString()]?.takeIf { it > 0 } ?: fallbackGoal(d)
+        DayStat(d, byDay[d] ?: 0, goal)
     }
 }
 

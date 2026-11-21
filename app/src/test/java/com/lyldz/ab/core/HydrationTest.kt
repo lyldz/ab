@@ -109,6 +109,61 @@ class HydrationTest {
         assertEquals(450, roundTo10(450))
         assertEquals(460, roundTo10(455))
         assertEquals(0, roundTo10(4))
+        assertEquals(0, roundTo10(0))
+        assertEquals(10, roundTo10(5))
+    }
+
+    @Test fun baseGoalEdgeCases() {
+        assertEquals(MIN_GOAL_ML, baseGoalMl(0))
+        assertEquals(MIN_GOAL_ML, baseGoalMl(-20))
+        assertEquals(MIN_GOAL_ML, baseGoalMl(60))
+        assertEquals(1525, baseGoalMl(61))
+        assertEquals(6250, baseGoalMl(250))
+    }
+
+    @Test fun tempTierRoundingBoundaries() {
+        assertEquals(0, tempExtraMl(Double.NaN))
+        assertEquals(0, tempExtraMl(Double.POSITIVE_INFINITY))
+        assertEquals(0, tempExtraMl(Double.NEGATIVE_INFINITY))
+        assertEquals(0, tempExtraMl(-30.0))
+        assertEquals(0, tempExtraMl(20.49))
+        assertEquals(250, tempExtraMl(20.5))
+        assertEquals(250, tempExtraMl(25.49))
+        assertEquals(500, tempExtraMl(25.5))
+        assertEquals(500, tempExtraMl(30.49))
+        assertEquals(750, tempExtraMl(30.5))
+        assertEquals(750, tempExtraMl(35.49))
+        assertEquals(1000, tempExtraMl(35.5))
+        assertEquals(1000, tempExtraMl(50.0))
+    }
+
+    @Test fun intakeValidationAndQuickVessels() {
+        assertEquals(false, isValidIntakeMl(0))
+        assertEquals(false, isValidIntakeMl(-100))
+        assertEquals(true, isValidIntakeMl(1))
+        assertEquals(true, isValidIntakeMl(5000))
+        assertEquals(false, isValidIntakeMl(5001))
+        assertEquals(listOf(150, 200, 250, 330, 500), QUICK_VESSEL_ML)
+        assertEquals(1, coerceIntakeMl(-5))
+        assertEquals(5000, coerceIntakeMl(9999))
+    }
+
+    @Test fun baseIntervalEdgeCases() {
+        assertEquals(60, baseIntervalMin(360, 1080, 0, 2400))
+        assertEquals(60, baseIntervalMin(360, 1080, -200, 2400))
+        assertEquals(60, baseIntervalMin(360, 1080, 200, 0))
+        assertEquals(60, baseIntervalMin(1080, 360, 200, 2400))
+        assertEquals(1, baseIntervalMin(360, 365, 50, 5000)) // en az 1 dk
+    }
+
+    @Test fun nextPlanEdgeCases() {
+        assertNull(nextPlan(600, 360, 1080, 2000, 2500, 60, 500)) // hedeften fazla içilmiş
+        assertNull(nextPlan(600, 360, 1080, 2000, 0, 0, 500)) // sıfır aralık
+        assertNull(nextPlan(600, 360, 1080, 2000, 0, -10, 500)) // negatif aralık
+        assertNull(nextPlan(600, 1080, 360, 2000, 0, 60, 500)) // ters pencere
+        // çıpa pencere başından önceyse pencere başı esas alınır
+        val p = nextPlan(360, 360, 1080, 2400, 0, 60, 120)!!
+        assertEquals(420, p.nextAtMin)
     }
 
 }

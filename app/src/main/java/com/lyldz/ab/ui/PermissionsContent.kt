@@ -4,7 +4,10 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings as AndroidSettings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,15 +28,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.lyldz.ab.R
+import com.lyldz.ab.notify.Notifier
 
 /**
- * "İzinler ve bildirimler" grubu: bildirim ve yaklaşık konum izninin şu anki durumu (ayardan dönünce yenilenir),
- * ilgili sistem ayar sayfasına kısayol ve pil rehberi. İzinler yalnızca sistem ayarlarından değiştirilir.
+ * "İzinler ve bildirimler" grubu: bildirim (Android 13+ POST_NOTIFICATIONS dahil) ve yaklaşık konum izninin
+ * şu anki durumu (ayardan dönünce yenilenir), ilgili sistem ayar sayfasına kısayol ve pil rehberi.
  */
 @Composable
 fun PermissionsContent() {
@@ -45,17 +48,28 @@ fun PermissionsContent() {
         owner.lifecycle.addObserver(obs)
         onDispose { owner.lifecycle.removeObserver(obs) }
     }
-    val notifOn = remember(tick) { NotificationManagerCompat.from(ctx).areNotificationsEnabled() }
+    val notifOn = remember(tick) { Notifier.hasPermission(ctx) }
     val locOn = remember(tick) {
         ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
-    fun open(intent: Intent) {
-        runCatching { ctx.startActivity(intent) }
-    }
     val appDetails = Intent(AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${ctx.packageName}"))
     val notifSettings = Intent(AndroidSettings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(AndroidSettings.EXTRA_APP_PACKAGE, ctx.packageName)
+    fun open(intent: Intent) {
+        runCatching { ctx.startActivity(intent) }
+            .onFailure { runCatching { ctx.startActivity(appDetails) } }
+    }
+    val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        tick++
+        if (!granted) open(notifSettings)
+    }
 
-    PermissionRow(stringResource(R.string.perm_notifications), notifOn) { open(notifSettings) }
+    PermissionRow(stringResource(R.string.perm_notifications), notifOn) {
+        if (!notifOn && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            open(notifSettings)
+        }
+    }
     PermissionRow(stringResource(R.string.perm_location), locOn) { open(appDetails) }
     BatteryTipSection()
 }

@@ -4,6 +4,8 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import com.lyldz.ab.R
 import com.lyldz.ab.core.PACE_TOLERANCE_ML
 import com.lyldz.ab.core.Plan
@@ -49,6 +51,14 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at.toInstant().toEpochMilli(), morningPending())
     }
 
+    /** Çevrimdışı durumda hava durumu isteğini zaman aşımı beklemeden atlamak için aktif ağ kontrolü. */
+    private fun isNetworkAvailable(): Boolean = runCatching {
+        val cm = context.getSystemService(ConnectivityManager::class.java) ?: return true
+        val net = cm.activeNetwork ?: return false
+        val caps = cm.getNetworkCapabilities(net) ?: return false
+        caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }.getOrDefault(true)
+
     /**
      * Günde bir kez bugünün en yüksek sıcaklığını çeker (gün içinde tekrar çekmez). Çekildiyse
      * hava ekini (ml) döndürür; ayar kapalı, yer yok, bugün zaten alınmış ya da ağ yoksa null.
@@ -60,7 +70,8 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         val lon = s.lon
         val today = LocalDate.now(zone).toString()
         if (!s.useWeather || lat == null || lon == null || s.tempDay == today) return null
-        val t = WeatherApi.fetchMaxTemp(lat, lon) ?: return null
+        if (!isNetworkAvailable()) return null
+        val t = runCatching { WeatherApi.fetchMaxTemp(lat, lon) }.getOrNull() ?: return null
         repo.saveTemperature(t, today)
         return tempExtraMl(t)
     }
@@ -88,7 +99,7 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
     /** Alarmı kurar ve widget'ı tazeler; her veri değişiminden sonra bu çağrılır. */
     suspend fun reschedule(zone: ZoneId = ZoneId.systemDefault()) {
         scheduleAlarm(zone)
-        AbWidget().updateAll(context)
+        runCatching { AbWidget().updateAll(context) }
     }
 
     private suspend fun scheduleAlarm(zone: ZoneId) {

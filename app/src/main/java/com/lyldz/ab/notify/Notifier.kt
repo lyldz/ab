@@ -1,14 +1,18 @@
 package com.lyldz.ab.notify
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.RemoteInput
+import androidx.core.content.ContextCompat
 import com.lyldz.ab.MainActivity
 import com.lyldz.ab.R
 import com.lyldz.ab.ui.fmtMl
@@ -38,14 +42,21 @@ object Notifier {
         )
     }
 
+    /** Android 13+ POST_NOTIFICATIONS izni ve sistem bildirim anahtarı birlikte açık mı? */
+    fun hasPermission(ctx: Context): Boolean {
+        val runtimeOk = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        return runtimeOk && NotificationManagerCompat.from(ctx).areNotificationsEnabled()
+    }
+
     /**
      * Android bir bildirimde en fazla 3 düğme gösterir: önerilen miktar (plan yoksa bardak), 500 (ilki 500 ise 1000) ve
      * uygulamayı açmadan miktar yazılan "Özel" satır içi giriş.
      */
-    @SuppressLint("MissingPermission") // areNotificationsEnabled() izni kapsar
+    @SuppressLint("MissingPermission") // hasPermission() Android 13+ izni ve bildirim anahtarını kapsar
     fun show(ctx: Context, title: String, text: String, drankMl: Int, goalMl: Int, firstMl: Int, quiet: Boolean = false) {
+        if (!hasPermission(ctx)) return
         val nm = NotificationManagerCompat.from(ctx)
-        if (!nm.areNotificationsEnabled()) return
 
         val open = PendingIntent.getActivity(
             ctx, 0, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE,
@@ -55,13 +66,14 @@ object Notifier {
         val customPi = PendingIntent.getBroadcast(
             ctx, 3, addIntent(ctx), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE, // RemoteInput mutable ister
         )
+        val safeGoal = goalMl.coerceAtLeast(1)
 
         val n = NotificationCompat.Builder(ctx, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_ab)
             .setContentTitle(title)
             .setContentText(text)
             .setOnlyAlertOnce(quiet) // güncellemede ses/titreşim tekrar etmez
-            .setProgress(goalMl, drankMl.coerceAtMost(goalMl), false)
+            .setProgress(safeGoal, drankMl.coerceIn(0, safeGoal), false)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setContentIntent(open)
             .setAutoCancel(true)
@@ -77,10 +89,10 @@ object Notifier {
     }
 
     /** Sabah sıcaklığı hedefi yükselttiyse bir kez haber verir. */
-    @SuppressLint("MissingPermission") // areNotificationsEnabled() izni kapsar
+    @SuppressLint("MissingPermission") // hasPermission() Android 13+ izni ve bildirim anahtarını kapsar
     fun showWeather(ctx: Context, tempC: Int, goalMl: Int, extraMl: Int) {
+        if (!hasPermission(ctx)) return
         val nm = NotificationManagerCompat.from(ctx)
-        if (!nm.areNotificationsEnabled()) return
         val open = PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         nm.notify(
             GOAL_NOTIF_ID,
@@ -95,8 +107,9 @@ object Notifier {
     }
 
     /** Bildirim şu an gösteriliyor mu (kaydırılıp kapatılmadıysa). */
-    fun isShowing(ctx: Context): Boolean =
-        ctx.getSystemService(NotificationManager::class.java).activeNotifications.any { it.id == NOTIF_ID }
+    fun isShowing(ctx: Context): Boolean = runCatching {
+        ctx.getSystemService(NotificationManager::class.java)?.activeNotifications?.any { it.id == NOTIF_ID } == true
+    }.getOrDefault(false)
 
     private fun addIntent(ctx: Context) =
         Intent(ctx, ReminderReceiver::class.java).setAction(ACTION_ADD)

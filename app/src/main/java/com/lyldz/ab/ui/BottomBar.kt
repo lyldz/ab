@@ -1,7 +1,9 @@
 package com.lyldz.ab.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -13,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -27,17 +28,20 @@ import com.lyldz.ab.ui.theme.AbColors
 @Composable
 fun BottomBar(tab: Int, onTab: (Int) -> Unit) {
     val colors = NavigationBarItemDefaults.colors(
-        selectedIconColor = Ab.strong,
+        selectedIconColor = MaterialTheme.colorScheme.primary,
         selectedTextColor = MaterialTheme.colorScheme.primary,
-        indicatorColor = AbColors.Aqua1.copy(alpha = 0.30f),
-        unselectedIconColor = Ab.faint,
-        unselectedTextColor = Ab.faint,
+        indicatorColor = AbColors.Aqua1.copy(alpha = if (Ab.isDark) 0.18f else 0.28f),
+        unselectedIconColor = Ab.muted,
+        unselectedTextColor = Ab.muted,
     )
-    NavigationBar(containerColor = Ab.card.copy(alpha = 0.94f), tonalElevation = 0.dp) {
-        NavigationBarItem(tab == 0, { onTab(0) }, { DropIcon() }, label = { Text(stringResource(R.string.nav_home)) }, colors = colors)
-        NavigationBarItem(tab == 1, { onTab(1) }, { ChartIcon() }, label = { Text(stringResource(R.string.nav_stats)) }, colors = colors)
-        NavigationBarItem(tab == 2, { onTab(2) }, { ClockIcon() }, label = { Text(stringResource(R.string.nav_history)) }, colors = colors)
-        NavigationBarItem(tab == 3, { onTab(3) }, { PersonIcon() }, label = { Text(stringResource(R.string.settings)) }, colors = colors)
+    Column {
+        HorizontalDivider(color = Ab.line, thickness = 1.dp)
+        NavigationBar(containerColor = Ab.card.copy(alpha = 0.96f), tonalElevation = 0.dp) {
+            NavigationBarItem(tab == 0, { onTab(0) }, { DropIcon() }, label = { Text(stringResource(R.string.nav_home)) }, colors = colors)
+            NavigationBarItem(tab == 1, { onTab(1) }, { ChartIcon() }, label = { Text(stringResource(R.string.nav_stats)) }, colors = colors)
+            NavigationBarItem(tab == 2, { onTab(2) }, { ClockIcon() }, label = { Text(stringResource(R.string.nav_history)) }, colors = colors)
+            NavigationBarItem(tab == 3, { onTab(3) }, { PersonIcon() }, label = { Text(stringResource(R.string.settings)) }, colors = colors)
+        }
     }
 }
 

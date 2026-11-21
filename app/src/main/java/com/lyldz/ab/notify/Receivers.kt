@@ -12,8 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 private fun BroadcastReceiver.async(context: Context, block: suspend (AbApp) -> Unit) {
+    val app = context.applicationContext as? AbApp ?: return
     val result = goAsync()
-    val app = context.applicationContext as AbApp
     CoroutineScope(Dispatchers.Default).launch {
         try {
             block(app)
@@ -51,9 +51,25 @@ class ReminderReceiver : BroadcastReceiver() {
     }
 }
 
-/** Yeniden başlatma, saat/saat dilimi değişimi ve uygulama güncellemesinde alarmı yeniden kurar. */
+/** Yeniden başlatma, gece yarısı gün değişimi, saat/saat dilimi değişimi ve uygulama güncellemesinde alarmı ve widget'ı çevrimdışı yeniden kurar. */
 class SystemEventsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        async(context) { it.reminders.reschedule() }
+        val action = intent.action ?: return
+        if (action in SUPPORTED_SYSTEM_ACTIONS) {
+            async(context) { app ->
+                app.reminders.reschedule()
+                app.reminders.refreshNotification()
+            }
+        }
+    }
+
+    companion object {
+        val SUPPORTED_SYSTEM_ACTIONS = setOf(
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_DATE_CHANGED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_TIMEZONE_CHANGED,
+            Intent.ACTION_MY_PACKAGE_REPLACED,
+        )
     }
 }

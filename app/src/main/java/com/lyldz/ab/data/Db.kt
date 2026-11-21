@@ -50,6 +50,9 @@ interface IntakeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertGoal(g: DayGoal)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertGoalIfAbsent(g: DayGoal)
+
     @Query("SELECT * FROM day_goal WHERE day >= :from")
     fun observeGoals(from: String): Flow<List<DayGoal>>
 
@@ -71,6 +74,10 @@ interface IntakeDao {
     /** Geri al için: en son eklenen kayıt (geçmişe eklenen de olabilir, bu yüzden id sırası). */
     @Query("SELECT id FROM intake ORDER BY id DESC LIMIT 1")
     suspend fun lastId(): Long?
+
+    /** Belirli gün aralığındaki en son eklenen kayıt (gece yarısı sonrası dünün kaydını silmez). */
+    @Query("SELECT * FROM intake WHERE atMs >= :from AND atMs < :to ORDER BY id DESC LIMIT 1")
+    suspend fun lastInRange(from: Long, to: Long): Intake?
 }
 
 // shortcut: şema dışa aktarımı yok (exportSchema=false), uygulama yayınlanmadı; ilk sürümden önce açılır.
