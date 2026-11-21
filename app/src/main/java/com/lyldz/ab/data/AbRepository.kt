@@ -3,6 +3,7 @@ package com.lyldz.ab.data
 import com.lyldz.ab.core.DayStat
 import com.lyldz.ab.core.buildDayStats
 import com.lyldz.ab.core.dayBoundsMs
+import com.lyldz.ab.core.isValidIntakeMl
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -28,11 +29,16 @@ class AbRepository(
 
     val settings: Flow<Settings> = store.flow
 
-    suspend fun saveSettings(s: Settings) = store.save(s)
+    suspend fun saveSettings(s: Settings) {
+        store.save(s)
+        if (s.onboarded) {
+            val today = LocalDate.now(zone)
+            recordGoal(today, s.goalMl(today))
+        }
+    }
 
-    /** Gün sınırı abone olunduğu andaki güne sabittir; gün dönünce arayüz yeniden abone olmalı. */
-    fun today(): Flow<Today> {
-        val day = LocalDate.now(zone)
+    /** Gün sınırı verilen güne (varsayılan: abone olunduğu an) sabittir; gün dönünce arayüz yeniden abone olmalı. */
+    fun today(day: LocalDate = LocalDate.now(zone)): Flow<Today> {
         val (from, to) = dayBoundsMs(day, zone)
         return combine(store.flow, dao.observeRange(from, to)) { s, list ->
             Today(
@@ -52,21 +58,44 @@ class AbRepository(
     /** Widget ve bildirim aksiyonları için tek seferlik güncel durum. */
     suspend fun todayNow(): Today = today().first()
 
-    suspend fun addIntake(ml: Int, source: Int = SOURCE_APP, atMs: Long = System.currentTimeMillis()): Long =
-        dao.insert(Intake(atMs = atMs, ml = ml, source = source))
+    /** Geçersiz (1..5000 ml dışı) miktarlar reddedilir (-1L döner); geçerli kayıtta günün hedef anlık görüntüsü de güncellenir. */
+    suspend fun addIntake(ml: Int, source: Int = SOURCE_APP, atMs: Long = System.currentTimeMillis()): Long {
+        if (!isValidIntakeMl(ml)) return -1L
+        val id = dao.insert(Intake(atMs = atMs, ml = ml, source = source))
+        val entryDay = Instant.ofEpochMilli(atMs).atZone(zone).toLocalDate()
+        val today = LocalDate.now(zone)
+        val goal = store.flow.first().goalMl(entryDay)
+        if (entryDay == today) {
+            recordGoal(entryDay, goal)
+        } else if (goal > 0) {
+            dao.insertGoalIfAbsent(DayGoal(entryDay.toString(), goal))
+        }
+        return id
+    }
 
     suspend fun deleteIntake(id: Long) = dao.delete(id)
 
     /** Silinen kaydı aynı kimlikle geri koyar (geri al). */
     suspend fun restoreIntake(e: Intake) = dao.insert(e)
 
-    suspend fun updateIntake(id: Long, ml: Int, atMs: Long) = dao.update(id, ml, atMs)
+    suspend fun updateIntake(id: Long, ml: Int, atMs: Long) {
+        if (!isValidIntakeMl(ml)) return
+        dao.update(id, ml, atMs)
+    }
 
-    suspend fun recordGoal(day: LocalDate, goalMl: Int) = dao.upsertGoal(DayGoal(day.toString(), goalMl))
+    suspend fun recordGoal(day: LocalDate, goalMl: Int) {
+        if (goalMl <= 0) return
+        dao.upsertGoal(DayGoal(day.toString(), goalMl))
+    }
 
-    /** Son [days] günün günlük toplamları, eskiden yeniye. Gün sınırı abone olunduğu andaki güne sabittir. */
-    fun stats(days: Int): Flow<List<DayStat>> {
-        val end = LocalDate.now(zone)
+    /** Gece yarısı geçişi ve açılışta günün hedef anlık görüntüsünün geçmiş/istatistik için kaydedilmesini sağlar. */
+    suspend fun ensureGoalRecorded(day: LocalDate = LocalDate.now(zone)) {
+        val s = store.flow.first()
+        if (s.onboarded) recordGoal(day, s.goalMl(day))
+    }
+
+    /** Son [days] günün günlük toplamları, eskiden yeniye. Gün sınırı [end]'e (varsayılan bugün) sabittir. */
+    fun stats(days: Int, end: LocalDate = LocalDate.now(zone)): Flow<List<DayStat>> {
         val start = end.minusDays(days - 1L)
         val from = dayBoundsMs(start, zone).first
         val to = dayBoundsMs(end, zone).second
@@ -85,12 +114,12 @@ class AbRepository(
         val seen = dao.all().mapTo(HashSet()) { it.atMs to it.ml }
         var added = 0
         for (i in d.intakes) {
-            if (seen.add(i.atMs to i.ml)) {
+            if (isValidIntakeMl(i.ml) && seen.add(i.atMs to i.ml)) {
                 dao.insert(i.copy(id = 0))
                 added++
             }
         }
-        d.goals.forEach { dao.upsertGoal(it) }
+        d.goals.filter { it.goalMl > 0 }.forEach { dao.upsertGoal(it) }
         val cur = store.flow.first()
         val samePlace = d.settings.lat == cur.lat && d.settings.lon == cur.lon
         store.save(
@@ -109,12 +138,25 @@ class AbRepository(
 
     suspend fun settingsNow(): Settings = store.flow.first()
 
-    suspend fun saveTemperature(tempC: Double, day: String) = store.setTemperature(tempC, day)
+    suspend fun saveTemperature(tempC: Double, day: String) {
+        if (!tempC.isFinite()) return
+        store.setTemperature(tempC, day)
+        val parsedDay = runCatching { LocalDate.parse(day) }.getOrNull() ?: return
+        val s = store.flow.first()
+        if (s.onboarded) recordGoal(parsedDay, s.goalMl(parsedDay))
+    }
 
     private fun minuteOfDay(ms: Long): Int =
         Instant.ofEpochMilli(ms).atZone(zone).let { it.hour * 60 + it.minute }
 
-    suspend fun undoLast() {
-        dao.lastId()?.let { dao.delete(it) }
+    /**
+     * Yalnızca [day] (varsayılan bugün) sınırları içindeki en son kaydı geri alır.
+     * Gece yarısından sonra dünün kaydını silmez; geri alınan kaydı (yoksa null) döndürür.
+     */
+    suspend fun undoLast(day: LocalDate = LocalDate.now(zone)): Intake? {
+        val (from, to) = dayBoundsMs(day, zone)
+        val last = dao.lastInRange(from, to) ?: return null
+        dao.delete(last.id)
+        return last
     }
 }

@@ -57,5 +57,27 @@ class StatsTest {
         assertEquals(2, streakDays(st(500, 2000, 2500)))
         assertEquals(2, streakDays(st(500, 2000, 2500, 300))) // bugün bitmedi, seri durur
         assertEquals(0, streakDays(st(2000, 100, 100)))
+        assertEquals(1, streakDays(st(2000)))
+        assertEquals(0, streakDays(st(1999)))
+        assertEquals(3, streakDays(st(2000, 2000, 2000)))
+    }
+
+    @Test
+    fun buildDayStatsAcrossDstUsesSnapshotsAndFallback() {
+        val ny = ZoneId.of("America/New_York")
+        val d1 = LocalDate.of(2026, 3, 7)
+        val dstDay = LocalDate.of(2026, 3, 8)
+        val e1 = d1.atTime(23, 30).atZone(ny).toInstant().toEpochMilli()
+        val e2 = dstDay.atTime(0, 30).atZone(ny).toInstant().toEpochMilli()
+        val e3 = dstDay.atTime(22, 0).atZone(ny).toInstant().toEpochMilli()
+        val stats = buildDayStats(
+            entries = listOf(e1 to 200, e2 to 300, e3 to 500),
+            goals = mapOf(d1.toString() to 2500),
+            start = d1,
+            days = 2,
+            zone = ny,
+        ) { 2000 }
+        assertEquals(listOf(200, 800), stats.map { it.ml })
+        assertEquals(listOf(2500, 2000), stats.map { it.goalMl })
     }
 }

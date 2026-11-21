@@ -20,52 +20,57 @@ import com.lyldz.ab.R
 object AbColors {
     val Aqua1 = Color(0xFF88D9E6)
     val Aqua2 = Color(0xFFA0E7E5)
+    val Teal = Color(0xFF5BC0BE)
+    val DeepTeal = Color(0xFF1F7F92)
+    val Ocean = Color(0xFF0A7FA8)
     val Navy = Color(0xFF0F203C)
     val Pearl = Color(0xFFF8FAFC)
-    val Slate = Color(0xFF64748B)
-    val SlateLight = Color(0xFF94A3B8)
-    val Mist = Color(0xFFE2E8F0)
-    val Teal = Color(0xFF5BC0BE)
+    val Ice = Color(0xFFF3FAFC)
+    val Slate = Color(0xFF475B70)
+    val SlateLight = Color(0xFF7B93A4)
+    val Mist = Color(0xFFD6E9EF)
 }
 
 // Açık tema (tasarım kılavuzu). Etkileşimli metinler (düğme yazısı, anahtar) okunaklı olsun
-// diye Material "primary" biraz koyu teal; saf aqua/mint görsellerde (gösterge, düğme gradyanı) kullanılır.
+// diye Material "primary" derin turkuaz (#1F7F92); saf aqua/mint görsellerde (gösterge, düğme gradyanı) kullanılır.
 private val Light = lightColorScheme(
-    primary = Color(0xFF1F7F92),
+    primary = AbColors.DeepTeal,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFE3F6F9),
+    primaryContainer = Color(0xFFE0F5F8),
     onPrimaryContainer = AbColors.Navy,
     secondary = AbColors.Teal,
-    secondaryContainer = Color(0xFFE3F6F9),
+    onSecondary = AbColors.Navy,
+    secondaryContainer = Color(0xFFE6F8F8),
     onSecondaryContainer = AbColors.Navy,
-    background = AbColors.Pearl,
+    background = AbColors.Ice,
     onBackground = AbColors.Navy,
     surface = Color.White,
     onSurface = AbColors.Navy,
-    surfaceVariant = Color(0xFFEEF2F6),
+    surfaceVariant = Color(0xFFEBF4F7),
     onSurfaceVariant = AbColors.Slate,
     outline = AbColors.SlateLight,
     outlineVariant = AbColors.Mist,
     tertiary = Color(0xFFB08A3E),
 )
 
-// Siyah-beyaz koyu tema (OLED): saf siyah zemin, beyaz yazı, aqua vurgu.
+// Koyu tema: derin okyanus-siyah zemin, yüksek kontrastlı açık metin, parlak turkuaz/aqua vurgular.
 private val Dark = darkColorScheme(
     primary = AbColors.Aqua1,
     onPrimary = AbColors.Navy,
-    primaryContainer = Color(0xFF16282D),
-    onPrimaryContainer = Color.White,
+    primaryContainer = Color(0xFF132D35),
+    onPrimaryContainer = Color(0xFFE8FAFD),
     secondary = AbColors.Aqua2,
-    secondaryContainer = Color(0xFF16282D),
-    onSecondaryContainer = Color.White,
-    background = Color.Black,
-    onBackground = Color.White,
-    surface = Color(0xFF111316),
-    onSurface = Color.White,
-    surfaceVariant = Color(0xFF1B1E22),
-    onSurfaceVariant = Color(0xFFA9B2BD),
-    outline = Color(0xFF6E7681),
-    outlineVariant = Color(0xFF2A2F36),
+    onSecondary = AbColors.Navy,
+    secondaryContainer = Color(0xFF142E33),
+    onSecondaryContainer = Color(0xFFE8FAFD),
+    background = Color(0xFF070C10),
+    onBackground = Color(0xFFF1F7FA),
+    surface = Color(0xFF101920),
+    onSurface = Color(0xFFF1F7FA),
+    surfaceVariant = Color(0xFF18252E),
+    onSurfaceVariant = Color(0xFFA6BDCB),
+    outline = Color(0xFF6A8392),
+    outlineVariant = Color(0xFF213440),
     tertiary = Color(0xFFD9B96A),
 )
 

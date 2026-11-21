@@ -247,4 +247,9 @@
     <string name="hint_long_press">Basılı tut: istediğin miktarı seç</string>
     <string name="settings_autosave">Değişiklikler otomatik kaydedilir.</string>
     <string name="settings_invalid">Kırmızı alanları düzelt; geçersiz değişiklikler kaydedilmez.</string>
+    <string name="quick_small_bottle">Küçük şişe</string>
+    <string name="quick_add_desc">Hızlı ekle: %1$s, %2$s ml</string>
+    <string name="tl_entry_desc">%1$s, %2$s, düzenlemek için dokun</string>
+    <string name="history_day_reached">%1$s, %2$s / %3$s ml, hedefe ulaşıldı</string>
+    <string name="history_day_progress">%1$s, %2$s / %3$s ml</string>
 </resources>
