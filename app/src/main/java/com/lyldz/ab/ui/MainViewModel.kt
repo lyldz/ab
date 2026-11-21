@@ -108,6 +108,11 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
         viewModelScope.launch { app.addWater(ml) }
     }
 
+    fun addForDay(day: LocalDate, ml: Int, minuteOfDay: Int = 12 * 60) {
+        if (!isValidIntakeMl(ml)) return
+        viewModelScope.launch { app.addWaterForDay(day, ml, minuteOfDay) }
+    }
+
     fun delete(e: Intake) {
         viewModelScope.launch { app.deleteEntry(e) }
     }

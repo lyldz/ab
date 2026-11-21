@@ -264,4 +264,12 @@
     <string name="onb_loc_denied">Konum izni verilmedi. İstersen aşağıdan şehrini elle seçebilirsin.</string>
     <string name="expand_section">Bölümü aç</string>
     <string name="collapse_section">Bölümü kapat</string>
+    <string name="set_language">Dil</string>
+    <string name="lang_system">Sistem</string>
+    <string name="lang_tr">Türkçe</string>
+    <string name="lang_en">English</string>
+    <string name="history_add_past">+ Geçmişe ekle</string>
+    <string name="history_add_title">Geçmiş güne kayıt ekle</string>
+    <string name="history_pick_day">Gün</string>
+    <string name="history_card_add_hint">Kayıt eklemek için dokun</string>
 </resources>

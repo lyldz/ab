@@ -13,6 +13,7 @@ import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.SettingsStore
 import com.lyldz.ab.notify.Notifier
 import com.lyldz.ab.notify.Reminders
+import java.time.LocalDate
 
 class AbApp : Application() {
     val repo: AbRepository by lazy {
@@ -26,6 +27,15 @@ class AbApp : Application() {
         if (!isValidIntakeMl(ml)) return
         repo.addIntake(ml, source)
         afterChange()
+    }
+
+    /** Geçmiş (veya bugünkü) bir güne kayıt ekler; yalnızca bugünse bildirim/alarmı tazeler. */
+    suspend fun addWaterForDay(day: LocalDate, ml: Int, minuteOfDay: Int = 12 * 60, source: Int = SOURCE_APP) {
+        if (!isValidIntakeMl(ml)) return
+        val id = repo.addIntakeForDay(day, ml, minuteOfDay, source)
+        if (id > 0L && day == LocalDate.now()) {
+            afterChange()
+        }
     }
 
     suspend fun undoWater(): Intake? {
