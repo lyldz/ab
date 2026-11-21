@@ -34,7 +34,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -181,8 +180,8 @@ fun HomeScreen(
     Scaffold(contentWindowInsets = WindowInsets.statusBars) { padding ->
         // tek sayfa: gösterge, kalan boşluğa göre büyür/küçülür; çok küçük ekranda içerik kayar
         BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
-            val reserved = if (hasWeather) 456.dp else 438.dp
-            val orb = (maxHeight - reserved).coerceIn(148.dp, 320.dp).coerceAtMost(maxWidth - 24.dp)
+            val reserved = if (hasWeather) 398.dp else 380.dp
+            val orb = (maxHeight - reserved).coerceIn(148.dp, 360.dp).coerceAtMost(maxWidth - 24.dp)
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 6.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -278,28 +277,47 @@ fun HomeScreen(
                 val nextNeed = if (plan != null) paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, plan.nextAtMin) - today.drankMl else 0
                 TimelineCard(today.entries, nextAt, nextNeed, streak) { editing = it }
 
-                // tek dokunuşla hızlı bardak/şişe ekleme çipleri (undo snackbar'ını da tetikler)
-                QuickAddChips(onAdd = ::add)
-
                 val pill = RoundedCornerShape(999.dp)
                 val addDesc = stringResource(R.string.add_ml, fmtMl(s.cupMl))
+                val pickCupDesc = stringResource(R.string.pick_cup_desc)
                 Box(Modifier.fillMaxWidth()) {
-                    Box(
-                        Modifier.fillMaxWidth().height(56.dp)
+                    Row(
+                        Modifier.fillMaxWidth().height(54.dp)
                             .shadow(10.dp, pill, ambientColor = AbColors.Aqua1, spotColor = AbColors.Aqua1)
-                            .clip(pill).background(Brush.horizontalGradient(listOf(AbColors.Aqua1, AbColors.Aqua2)))
-                            // basınca bardak boyutu kadar ekler, uzun basınca ölçü seçtirir ve seçileni hemen ekler
-                            .combinedClickable(
-                                role = Role.Button,
-                                onLongClick = { hintVisible = false; onHintCount(MAX_HINTS); cupDialog = true },
-                            ) { add(s.cupMl) }
-                            .semantics { contentDescription = addDesc },
-                        contentAlignment = Alignment.Center,
+                            .clip(pill).background(Brush.horizontalGradient(listOf(AbColors.Aqua1, AbColors.Aqua2))),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(
-                            "${stringResource(R.string.add_water)} (${fmtMl(s.cupMl)} ml)",
-                            style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = AbColors.Navy,
-                        )
+                        Box(
+                            Modifier.weight(1f).height(54.dp)
+                                // basınca bardak boyutu kadar ekler, uzun basınca ölçü seçtirir
+                                .combinedClickable(
+                                    role = Role.Button,
+                                    onLongClick = { hintVisible = false; onHintCount(MAX_HINTS); cupDialog = true },
+                                ) { add(s.cupMl) }
+                                .semantics { contentDescription = addDesc }
+                                .padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                "${stringResource(R.string.add_water)} (${fmtMl(s.cupMl)} ml)",
+                                style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = AbColors.Navy,
+                                maxLines = 1,
+                            )
+                        }
+                        Box(Modifier.width(1.dp).height(28.dp).background(AbColors.Navy.copy(alpha = 0.18f)))
+                        Box(
+                            Modifier.widthIn(min = 56.dp).height(54.dp)
+                                .clickable(role = Role.Button) {
+                                    hintVisible = false
+                                    onHintCount(MAX_HINTS)
+                                    cupDialog = true
+                                }
+                                .semantics { contentDescription = pickCupDesc }
+                                .padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CupPickerIcon(AbColors.Navy)
+                        }
                     }
                     // uzun basmayı keşfettirmek için geçici ok işaretli ipucu (ilk birkaç açılışta, bir kez uzun basınca kalkar)
                     HintHost(hintVisible, stringResource(R.string.hint_long_press), Modifier.align(Alignment.TopCenter).offset(y = (-54).dp))
@@ -501,85 +519,29 @@ private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int
     }
 }
 
+/** Bölünmüş ana düğmenin sağ tarafındaki minimalist bardak + aşağı ok simgesi. */
 @Composable
-private fun QuickAddChips(onAdd: (Int) -> Unit) {
-    val chips = listOf(
-        Triple(200, R.string.quick_glass, false),
-        Triple(330, R.string.quick_small_bottle, true),
-        Triple(500, R.string.quick_bottle, true),
-    )
-    val shape = RoundedCornerShape(16.dp)
-    val chipBg = MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (Ab.isDark) 0.55f else 0.72f)
-    val chipBorder = AbColors.Aqua1.copy(alpha = if (Ab.isDark) 0.35f else 0.60f)
-    val iconColor = MaterialTheme.colorScheme.primary
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        chips.forEach { (ml, labelRes, isBottle) ->
-            val vessel = stringResource(labelRes)
-            val desc = stringResource(R.string.quick_add_desc, vessel, fmtMl(ml))
-            Row(
-                Modifier.weight(1f).heightIn(min = 48.dp).clip(shape)
-                    .background(chipBg).border(1.dp, chipBorder, shape)
-                    .clickable(role = Role.Button) { onAdd(ml) }
-                    .semantics(mergeDescendants = true) { contentDescription = desc }
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                QuickVesselIcon(isBottle = isBottle, tall = ml >= 500, color = iconColor)
-                Spacer(Modifier.width(6.dp))
-                Column(horizontalAlignment = Alignment.Start) {
-                    Text(
-                        stringResource(R.string.add_ml, fmtMl(ml)),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Ab.strong,
-                        maxLines = 1,
-                    )
-                    Text(
-                        vessel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Ab.muted,
-                        maxLines = 1,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun QuickVesselIcon(isBottle: Boolean, tall: Boolean, color: Color) {
-    Canvas(Modifier.size(18.dp)) {
+private fun CupPickerIcon(color: Color) {
+    Canvas(Modifier.size(width = 26.dp, height = 18.dp)) {
         val w = size.width
         val h = size.height
-        val stroke = Stroke(1.6.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-        if (!isBottle) {
-            // minimalist bardak
-            val p = Path().apply {
-                moveTo(w * 0.22f, h * 0.20f)
-                lineTo(w * 0.78f, h * 0.20f)
-                lineTo(w * 0.68f, h * 0.88f)
-                lineTo(w * 0.32f, h * 0.88f)
-                close()
-            }
-            drawPath(p, color, style = stroke)
-        } else {
-            // minimalist şişe (500 ml biraz daha uzun)
-            val topY = if (tall) h * 0.08f else h * 0.16f
-            val shoulderY = if (tall) h * 0.30f else h * 0.36f
-            val p = Path().apply {
-                moveTo(w * 0.38f, topY)
-                lineTo(w * 0.62f, topY)
-                lineTo(w * 0.62f, shoulderY - h * 0.06f)
-                lineTo(w * 0.74f, shoulderY + h * 0.04f)
-                lineTo(w * 0.74f, h * 0.90f)
-                lineTo(w * 0.26f, h * 0.90f)
-                lineTo(w * 0.26f, shoulderY + h * 0.04f)
-                lineTo(w * 0.38f, shoulderY - h * 0.06f)
-                close()
-            }
-            drawPath(p, color, style = stroke)
+        val stroke = Stroke(1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // sol tarafta minimalist bardak
+        val glass = Path().apply {
+            moveTo(w * 0.08f, h * 0.16f)
+            lineTo(w * 0.50f, h * 0.16f)
+            lineTo(w * 0.43f, h * 0.86f)
+            lineTo(w * 0.15f, h * 0.86f)
+            close()
         }
+        drawPath(glass, color, style = stroke)
+        // sağ tarafta aşağı açılır ok (chevron)
+        val chevron = Path().apply {
+            moveTo(w * 0.64f, h * 0.40f)
+            lineTo(w * 0.78f, h * 0.62f)
+            lineTo(w * 0.92f, h * 0.40f)
+        }
+        drawPath(chevron, color, style = stroke)
     }
 }
 
