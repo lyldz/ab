@@ -61,10 +61,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -72,7 +68,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -99,7 +94,6 @@ import com.lyldz.ab.core.tempExtraMl
 import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.Intake
 import com.lyldz.ab.notify.Notifier
-import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -127,12 +121,17 @@ fun HomeScreen(
     onHintCount: (Int) -> Unit = {},
 ) {
     val s = today.settings
-    val snack = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    var undoBanner by remember { mutableStateOf<Triple<Long, String, () -> Unit>?>(null) }
     var custom by rememberSaveable { mutableStateOf(openCustom) }
     var notifAllowed by remember { mutableStateOf(Notifier.hasPermission(context)) }
+    LaunchedEffect(undoBanner?.first) {
+        if (undoBanner != null) {
+            delay(1800)
+            undoBanner = null
+        }
+    }
     LaunchedEffect(openCustom) {
         if (openCustom) {
             custom = true
@@ -165,11 +164,7 @@ fun HomeScreen(
     }
 
     fun showUndo(message: String, undo: () -> Unit) {
-        scope.launch {
-            snack.currentSnackbarData?.dismiss()
-            val r = snack.showSnackbar(message, context.getString(R.string.undo), duration = SnackbarDuration.Short)
-            if (r == SnackbarResult.ActionPerformed) undo()
-        }
+        undoBanner = Triple(System.nanoTime(), message, undo)
     }
 
     fun add(ml: Int) {
@@ -182,19 +177,21 @@ fun HomeScreen(
     val plan = nextPlan(nowMin, s.windowStartMin, s.windowEndMin, today.goalMl, today.drankMl, s.reminderIntervalMin(), today.anchorMin)
 
     val temp = s.tempToday(LocalDate.now())
-    Scaffold(snackbarHost = { SnackbarHost(snack) }, contentWindowInsets = WindowInsets.statusBars) { padding ->
+    val hasWeather = s.useWeather && temp != null
+    Scaffold(contentWindowInsets = WindowInsets.statusBars) { padding ->
         // tek sayfa: gösterge, kalan boşluğa göre büyür/küçülür; çok küçük ekranda içerik kayar
         BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
-            val orb = (maxHeight - 436.dp).coerceIn(160.dp, 360.dp).coerceAtMost(maxWidth - 16.dp)
+            val reserved = if (hasWeather) 456.dp else 438.dp
+            val orb = (maxHeight - reserved).coerceIn(148.dp, 320.dp).coerceAtMost(maxWidth - 24.dp)
             Column(
-                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 6.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 // üst çubuk: wordmark, (isim varsa) selamlama, bildirim çanı
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Image(
                         painterResource(if (Ab.isDark) R.drawable.ic_wordmark_light else R.drawable.ic_wordmark),
-                        contentDescription = stringResource(R.string.app_name), modifier = Modifier.height(52.dp),
+                        contentDescription = stringResource(R.string.app_name), modifier = Modifier.height(46.dp),
                     )
                     Text(
                         if (s.name.isBlank()) "" else stringResource(R.string.greet_hello, s.name),
@@ -215,13 +212,13 @@ fun HomeScreen(
                 }
 
                 // hedef (i: nasıl hesaplandı), altında bugünün sıcaklığı, altında tempo
-                val fraction = (today.drankMl.toFloat() / today.goalMl.coerceAtLeast(1)).coerceIn(0f, 1f)
+                val rawFraction = (today.drankMl.toFloat() / today.goalMl.coerceAtLeast(1)).coerceAtLeast(0f)
                 val infoDesc = stringResource(R.string.info_desc)
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Row(
                         Modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(999.dp))
                             .clickable(role = Role.Button) { goalInfo = true }
-                            .semantics { contentDescription = infoDesc }.padding(horizontal = 12.dp, vertical = 8.dp),
+                            .semantics { contentDescription = infoDesc }.padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(stringResource(R.string.goal_label, fmtMl(today.goalMl)), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -250,7 +247,7 @@ fun HomeScreen(
 
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     WaterOrb(
-                        fraction,
+                        rawFraction,
                         stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
                         Modifier.size(orb), motion = s.motionWater,
                     )
@@ -260,15 +257,19 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             Canvas(Modifier.size(width = 10.dp, height = 13.dp)) { drawPath(dropPath(size.width, size.height), AbColors.Teal) }
-                            Text("${(fraction * 100).roundToInt()}%", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            Text("${(rawFraction * 100).roundToInt()}%", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                         }
                         Row(verticalAlignment = Alignment.Bottom) {
-                            Text(fmtMl(today.drankMl), fontSize = (orb.value * 0.15f).coerceIn(28f, 40f).sp, fontWeight = FontWeight.ExtraBold, color = Ab.strong)
-                            Text(" ml", color = Ab.muted, modifier = Modifier.padding(bottom = 6.dp))
+                            Text(fmtMl(today.drankMl), fontSize = (orb.value * 0.15f).coerceIn(26f, 40f).sp, fontWeight = FontWeight.ExtraBold, color = Ab.strong)
+                            Text(" ml", color = Ab.muted, modifier = Modifier.padding(bottom = 5.dp))
                         }
                         Text(
-                            stringResource(R.string.left_label, fmtMl(remaining.coerceAtLeast(0))),
-                            style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = Ab.muted,
+                            if (remaining < 0) stringResource(R.string.over_label, fmtMl(-remaining))
+                            else stringResource(R.string.left_label, fmtMl(remaining)),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = if (remaining < 0) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (remaining < 0) (if (Ab.isDark) AbColors.Aqua1 else MaterialTheme.colorScheme.primary) else Ab.muted,
                         )
                     }
                 }
@@ -302,6 +303,41 @@ fun HomeScreen(
                     }
                     // uzun basmayı keşfettirmek için geçici ok işaretli ipucu (ilk birkaç açılışta, bir kez uzun basınca kalkar)
                     HintHost(hintVisible, stringResource(R.string.hint_long_press), Modifier.align(Alignment.TopCenter).offset(y = (-54).dp))
+                }
+            }
+            // düğmeleri kapatmayan, 1.8 sn'de kaybolan ince üst geri-al hapı
+            val currentUndo = undoBanner
+            AnimatedVisibility(
+                visible = currentUndo != null,
+                enter = fadeIn() + slideInVertically { -it / 2 },
+                exit = fadeOut(),
+                modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp),
+            ) {
+                currentUndo?.let { (_, msg, action) ->
+                    val pillShape = RoundedCornerShape(999.dp)
+                    Row(
+                        Modifier.shadow(8.dp, pillShape, ambientColor = AbColors.Aqua1, spotColor = AbColors.Aqua1)
+                            .clip(pillShape)
+                            .background(Ab.card.copy(alpha = 0.96f))
+                            .border(1.dp, AbColors.Aqua1.copy(alpha = 0.65f), pillShape)
+                            .padding(start = 14.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(msg, style = MaterialTheme.typography.labelLarge, color = Ab.strong)
+                        Text(
+                            stringResource(R.string.undo),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clip(pillShape)
+                                .clickable(role = Role.Button) {
+                                    undoBanner = null
+                                    action()
+                                }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                        )
+                    }
                 }
             }
         }
@@ -422,8 +458,8 @@ private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int
     LaunchedEffect(sorted.size) { scroll.animateScrollTo(scroll.maxValue) }
     Column(
         Modifier.fillMaxWidth().shadow(6.dp, shape, ambientColor = AbColors.Navy.copy(alpha = 0.08f), spotColor = AbColors.Navy.copy(alpha = 0.08f))
-            .clip(shape).background(Ab.card).border(1.dp, Ab.line, shape).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+            .clip(shape).background(Ab.card).border(1.dp, Ab.line, shape).padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(

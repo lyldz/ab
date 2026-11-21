@@ -260,7 +260,6 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
                     FilterChip(selected = themeMode == i, onClick = { themeMode = i }, label = { Text(stringResource(label)) })
                 }
             }
-            SwitchRow(stringResource(R.string.set_motion), motionWater) { motionWater = it }
         }
 
         SettingsGroup(stringResource(R.string.grp_perms)) { PermissionsContent() }

@@ -1,0 +1,3 @@
+Ana ekran tek ekrana tam sığacak şekilde düzenlendi; "+ Su Ekle" düğmesi artık kesilmiyor.
+Hedef aşıldığında kaptan dışarı taşan dalgalı su/damlacık efekti ve "Taşan: +X ml" göstergesi eklendi.
+Sallanma efekti kaldırılıp sakin dalga + kısa dolum çalkantısına geçildi; geri-al bildirimi düğmeleri kapatmayan ince üst hapa taşındı.

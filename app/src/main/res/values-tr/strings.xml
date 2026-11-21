@@ -252,4 +252,5 @@
     <string name="tl_entry_desc">%1$s, %2$s, düzenlemek için dokun</string>
     <string name="history_day_reached">%1$s, %2$s / %3$s ml, hedefe ulaşıldı</string>
     <string name="history_day_progress">%1$s, %2$s / %3$s ml</string>
+    <string name="over_label">Taşan: +%1$s ml</string>
 </resources>

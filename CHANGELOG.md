@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-11-21 · Testi
+### Changed
+- Ana ekran dikey yerleşimi sıkılaştırıldı: "+ Su Ekle" düğmesi artık kaydırmaya gerek kalmadan tek ekrana tam sığıyor.
+- Günlük hedef aşıldığında kabın dışına dalgalı su taşması ve dışa süzülen damlacık efekti eklendi; yüzde gerçek oranı (`%112` gibi) ve `Taşan: +X ml` bilgisini gösterir.
+- İvmeölçerle sallanma efekti kaldırıldı; yerine pil dostu sakin çift katmanlı dalga ve su eklenince kısa, zarif bir dolum dalgalanması eklendi.
+- Alt düğmeleri kapatan büyük beyaz Snackbar yerine, üstte açılıp 1,8 saniyede kaybolan temaya uyumlu ince "eklendi · Geri al" hapı eklendi.
+
 ## [0.3.4] - 2026-11-21 · Testi
 ### Added
 - Ana ekrana tek dokunuşla hızlı bardak/şişe ekleme çipleri (`200 ml`, `330 ml`, `500 ml`, geri al snackbar'ı ile entegre) eklendi.
