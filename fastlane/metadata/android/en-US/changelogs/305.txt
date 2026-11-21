@@ -1,0 +1,3 @@
+Home screen now fits cleanly on a single screen without clipping the Add Water button.
+Exceeding the daily goal now shows an animated water overflow rim with droplets and "Overflow: +X ml".
+Replaced accelerometer sloshing with calm waves + gentle fill ripple; replaced the bottom Snackbar with a compact, non-blocking 1.8s top undo pill.

@@ -1,18 +1,5 @@
 package com.lyldz.ab.ui
 
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.platform.LocalContext
-import com.lyldz.ab.core.SloshSpring
-import com.lyldz.ab.core.tiltDegrees
-import com.lyldz.ab.core.unwrapNear
-import com.lyldz.ab.core.wrap180
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +26,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.rotate
 import com.lyldz.ab.ui.theme.Ab
 import com.lyldz.ab.ui.theme.AbColors
 import androidx.compose.ui.graphics.drawscope.translate
@@ -48,6 +34,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.sin
 
@@ -85,9 +72,10 @@ fun WaterOrb(
     // Sistem "animasyon ölçeği" kapalıyken (pil tasarrufu, geliştirici seçeneği) Compose'un animate*
     // API'leri durur; gösterge canlı kalsın diye kare saatine bağlı kendi animasyonumuzu kullanıyoruz.
     val level by rememberSmoothed(fraction.coerceIn(0f, 1f))
-    val phaseA by rememberPhase(3600)
-    val phaseB by rememberPhase(5200, reverse = true)
-    val tilt = rememberTilt(motion)
+    val overflow by rememberSmoothed(((fraction - 1f) / 0.5f).coerceIn(0f, 1f))
+    val phaseA by rememberPhase(4600)
+    val phaseB by rememberPhase(6400, reverse = true)
+    val ripple by rememberFillRipple(fraction, enabled = motion)
 
     val card = Ab.card
     val lineC = Ab.line
@@ -100,8 +88,9 @@ fun WaterOrb(
 
         // hale: doluluk arttıkça açık aquadan derin okyanus mavisine döner, güçlenir ve dışa yayılır
         val f = level.coerceIn(0f, 1f)
+        val ov = overflow.coerceIn(0f, 1f)
         val haloColor = lerp(AbColors.Aqua1, AbColors.Ocean, f)
-        val haloAlpha = (if (dark) 0.16f else 0.22f) + (if (dark) 0.42f else 0.50f) * f
+        val haloAlpha = ((if (dark) 0.16f else 0.22f) + (if (dark) 0.42f else 0.50f) * f + 0.14f * ov).coerceAtMost(0.88f)
         val solid = ring / outer
         drawCircle(
             Brush.radialGradient(
@@ -115,6 +104,48 @@ fun WaterOrb(
             ),
             outer, c,
         )
+        // hedef aşıldığında kabın kenarından dışarı taşan dalgalı su halkası ve damlacıklar
+        if (ov > 0.01f) {
+            val maxSpill = (outer - ring) * (0.42f + 0.48f * ov)
+            val spillPath = Path().apply {
+                val steps = 72
+                for (i in 0..steps) {
+                    val ang = i.toFloat() / steps * 2f * PI.toFloat()
+                    val wave = 0.5f + 0.5f * sin(ang * 5f + phaseA) * 0.65f + 0.35f * cos(ang * 3f - phaseB)
+                    val r = ring + maxSpill * (0.35f + 0.65f * wave)
+                    val x = c.x + r * cos(ang)
+                    val y = c.y + r * sin(ang)
+                    if (i == 0) moveTo(x, y) else lineTo(x, y)
+                }
+                close()
+            }
+            drawPath(
+                spillPath,
+                Brush.radialGradient(
+                    colorStops = arrayOf(
+                        (ring / outer).coerceIn(0f, 0.9f) to AbColors.Aqua1.copy(alpha = (if (dark) 0.42f else 0.58f) * ov),
+                        1f to AbColors.Aqua2.copy(alpha = 0.06f * ov),
+                    ),
+                    center = c,
+                    radius = outer,
+                ),
+            )
+            // kenardan dışarı süzülen küçük taşma damlacıkları
+            val twoPi = (2 * PI).toFloat()
+            val dropCount = 6
+            for (i in 0 until dropCount) {
+                val progress = ((phaseA / twoPi) + i.toFloat() / dropCount) % 1f
+                val ang = i * (twoPi / dropCount) + 0.35f * sin(phaseB + i)
+                val dist = ring + (outer - ring) * (0.18f + 0.78f * progress)
+                val dropR = (2.2f + 2.4f * ov).dp.toPx() * (1f - 0.35f * progress)
+                val dropAlpha = sin(progress * PI.toFloat()) * (if (dark) 0.78f else 0.88f) * (0.45f + 0.55f * ov)
+                drawCircle(
+                    color = if (i % 2 == 0) AbColors.Aqua1.copy(alpha = dropAlpha) else AbColors.Aqua2.copy(alpha = dropAlpha),
+                    radius = dropR,
+                    center = Offset(c.x + dist * cos(ang), c.y + dist * sin(ang)),
+                )
+            }
+        }
         drawCircle(card, ring, c)
         drawCircle(lineC, ring, c, style = Stroke(1.5.dp.toPx()))
         drawCircle(
@@ -135,23 +166,22 @@ fun WaterOrb(
         fun yOf(f: Float) = bottom - (bottom - top) * f.coerceIn(0f, 1f)
         clipPath(disc) {
             if (level > 0.001f) {
-                val m = tilt.value // x: eğim (derece), y: sallanma şiddeti 0..1 (yalnızca çizim aşamasında okunur)
                 val sy = yOf(level)
-                val wide = inner * 1.75f // döndürünce daireyi kaplasın diye geniş çizilir
+                val wide = inner * 1.15f
                 val span = inner * 2f
                 fun waveY(x: Float, phase: Float, amp: Float, freq: Float, off: Float): Float {
                     val t = (x - c.x + inner) / span * 2f * PI.toFloat() * freq + phase
-                    return sy + off + amp * (sin(t) + 0.22f * sin(2f * t + 1.1f))
+                    return sy + off + amp * (sin(t) + 0.18f * sin(2f * t + 1.1f))
                 }
                 fun wave(phase: Float, amp: Float, freq: Float, off: Float) = Path().apply {
-                    moveTo(c.x - wide, c.y + inner * 2.4f)
+                    moveTo(c.x - wide, c.y + inner * 1.5f)
                     lineTo(c.x - wide, waveY(c.x - wide, phase, amp, freq, off))
                     var x = c.x - wide
                     while (x <= c.x + wide) {
                         lineTo(x, waveY(x, phase, amp, freq, off))
                         x += 3f
                     }
-                    lineTo(c.x + wide, c.y + inner * 2.4f)
+                    lineTo(c.x + wide, c.y + inner * 1.5f)
                     close()
                 }
                 fun crest(phase: Float, amp: Float, freq: Float) = Path().apply {
@@ -162,9 +192,9 @@ fun WaterOrb(
                         x += 3f
                     }
                 }
-                val k = 1f + 2.2f * m.y // telefon sallanınca dalgalar büyür
+                val k = 1f + 0.85f * ripple // su eklenince kısa, sakin dolum dalgalanması
                 val gradTop = (sy - 12.dp.toPx()).coerceAtLeast(top)
-                val gradBottom = (bottom + inner * 0.35f).coerceAtLeast(gradTop + 1f)
+                val gradBottom = (bottom + inner * 0.25f).coerceAtLeast(gradTop + 1f)
                 val backBrush = Brush.verticalGradient(
                     colors = listOf(
                         AbColors.Aqua2.copy(alpha = if (dark) 0.32f else 0.62f),
@@ -182,28 +212,25 @@ fun WaterOrb(
                     startY = gradTop,
                     endY = gradBottom,
                 )
-                // su yer çekimine göre yatay kalır: sahne eğimin tersine döner
-                rotate(m.x, c) {
-                    // koyuda su biraz daha dengeli saydamlıkta: üstündeki açık yazı okunaklı kalsın
-                    drawPath(wave(phaseB, 5.5.dp.toPx() * k, 1.05f, 5.dp.toPx()), backBrush)
-                    val frontAmp = 4.8.dp.toPx() * k
-                    drawPath(wave(phaseA, frontAmp, 1.55f, 0f), frontBrush)
-                    // su yüzeyinde ince ışık kırılması / parıltı çizgisi
-                    if (level in 0.03f..0.97f) {
-                        drawPath(
-                            crest(phaseA, frontAmp, 1.55f),
-                            Brush.horizontalGradient(
-                                listOf(
-                                    Color.White.copy(alpha = 0.08f),
-                                    Color.White.copy(alpha = if (dark) 0.42f else 0.72f),
-                                    Color.White.copy(alpha = 0.08f),
-                                ),
-                                startX = c.x - inner,
-                                endX = c.x + inner,
+                // sakin, akışkan çift katmanlı dalga (ivmeölçer sallanması yok)
+                drawPath(wave(phaseB, 4.2.dp.toPx() * k, 1.0f, 4.dp.toPx()), backBrush)
+                val frontAmp = 3.6.dp.toPx() * k
+                drawPath(wave(phaseA, frontAmp, 1.4f, 0f), frontBrush)
+                // su yüzeyinde ince ışık kırılması / parıltı çizgisi
+                if (level in 0.03f..0.97f) {
+                    drawPath(
+                        crest(phaseA, frontAmp, 1.4f),
+                        Brush.horizontalGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.08f),
+                                Color.White.copy(alpha = if (dark) 0.42f else 0.72f),
+                                Color.White.copy(alpha = 0.08f),
                             ),
-                            style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round),
-                        )
-                    }
+                            startX = c.x - inner,
+                            endX = c.x + inner,
+                        ),
+                        style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round),
+                    )
                 }
             }
             // sol üstte yumuşak cam yansıması (minimalist derinlik)
@@ -221,79 +248,32 @@ fun WaterOrb(
     }
 }
 
-/**
- * Telefonun ivmeölçeri (izin gerekmez) suyu hareket ettirir: x = suyun dönüş açısı (derece), y = sallanma şiddeti 0..1.
- * İvmeölçer etkin yerçekimini verir (sallamayı da içerir), bu yüzden eğim ondan alınır: el titremesini süzmek için EMA
- * (alfa 0,15), sonra yaylı sönümle (sıvı gibi bir miktar sallanır). Ayrıca ani yan ivme (ham değerin farkı) ikinci bir
- * yayı iter: su dengeye gelirken yüzeyi birkaç kez gidip gelir. Yalnızca ekran açıkken (RESUME/PAUSE) ve Bugün sekmesi
- * görünürken (bileşen çizilirken) dinler; sensör yoksa ya da [enabled] kapalıysa 0.
- * shortcut: yalnızca ivmeölçer; telefon yüz yukarı/aşağı yatıkken son açı korunur.
- */
+/** Su eklendiğinde (~1,4 sn) sönümlenen zarif dolum dalgalanması; ivmeölçer kullanmaz. */
 @Composable
-private fun rememberTilt(enabled: Boolean): State<Offset> {
-    val ctx = LocalContext.current
-    val owner = LocalLifecycleOwner.current
-    val out = remember { mutableStateOf(Offset.Zero) }
-    val shared = remember { floatArrayOf(0f, 9.8f, 0f) } // [süzülmüş ax, süzülmüş ay, kare başına biriken yan ivme farkı]
-    if (enabled) {
-        DisposableEffect(owner) {
-            val sm = ctx.getSystemService(SensorManager::class.java)
-            val sensor = sm?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-            var lastAx = Float.NaN
-            val listener = object : SensorEventListener {
-                override fun onSensorChanged(e: SensorEvent) {
-                    val ax = e.values[0]
-                    val ay = e.values[1]
-                    shared[0] += 0.15f * (ax - shared[0])
-                    shared[1] += 0.15f * (ay - shared[1])
-                    if (!lastAx.isNaN()) shared[2] += ax - lastAx
-                    lastAx = ax
-                }
-                override fun onAccuracyChanged(s: Sensor?, accuracy: Int) {}
-            }
-            val obs = LifecycleEventObserver { _, ev ->
-                if (sm != null && sensor != null) {
-                    when (ev) {
-                        Lifecycle.Event.ON_RESUME -> sm.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_GAME)
-                        Lifecycle.Event.ON_PAUSE -> {
-                            sm.unregisterListener(listener)
-                            lastAx = Float.NaN
-                        }
-                        else -> {}
-                    }
-                }
-            }
-            owner.lifecycle.addObserver(obs)
-            onDispose {
-                owner.lifecycle.removeObserver(obs)
-                sm?.unregisterListener(listener)
-            }
-        }
-    }
-    LaunchedEffect(enabled) {
+private fun rememberFillRipple(fraction: Float, enabled: Boolean): State<Float> {
+    val ripple = remember { mutableFloatStateOf(0f) }
+    val prev = remember { mutableFloatStateOf(fraction) }
+    LaunchedEffect(fraction, enabled) {
         if (!enabled) {
-            out.value = Offset.Zero
+            ripple.floatValue = 0f
+            prev.floatValue = fraction
             return@LaunchedEffect
         }
-        var angle = 0f
-        var vel = 0f
-        var goal = 0f // son geçerli hedef açı (telefon yatıkken korunur)
-        val slosh = SloshSpring()
-        var last = 0L
-        while (true) {
-            infiniteFrame { now ->
-                val dt = if (last == 0L) 0f else ((now - last) / 1e9f).coerceAtMost(0.05f)
-                last = now
-                goal = unwrapNear(tiltDegrees(shared[0], shared[1], goal), angle) // en kısa yoldan, baş aşağıda da yer çekimini izler
-                vel += (-70f * (angle - goal) - 9f * vel) * dt // eğim yayı (hafif sönümsüz: biraz sallanır)
-                angle = wrap180(angle + vel * dt)
-                slosh.step(-shared[2] * 40f, dt) // yan ivme: su ters yöne yığılır (5 m/s² fark ≈ 6° yüzey oynaması)
-                shared[2] = 0f
-                out.value = Offset(angle + slosh.pos * 18f, abs(slosh.pos))
+        val delta = fraction - prev.floatValue
+        prev.floatValue = fraction
+        if (delta > 0.005f) {
+            ripple.floatValue = (ripple.floatValue + (delta * 4f).coerceIn(0.4f, 1f)).coerceAtMost(1f)
+            var last = 0L
+            while (ripple.floatValue > 0.01f) {
+                infiniteFrame { now ->
+                    val dt = if (last == 0L) 0f else ((now - last) / 1e9f).coerceAtMost(0.05f)
+                    last = now
+                    ripple.floatValue = (ripple.floatValue * exp(-dt / 0.55f)).let { if (it < 0.01f) 0f else it }
+                }
             }
         }
     }
-    return out
+    return ripple
 }
 
 /** Sonsuz kare döngüsü: testlerde InfiniteAnimationPolicy döngüyü sonlandırır, uygulama boşta kalabilir. */
