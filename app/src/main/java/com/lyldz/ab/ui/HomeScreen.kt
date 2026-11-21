@@ -3,13 +3,13 @@ package com.lyldz.ab.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
@@ -58,13 +58,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -85,6 +79,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -92,6 +87,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.lyldz.ab.R
 import com.lyldz.ab.core.PACE_TOLERANCE_ML
 import com.lyldz.ab.core.baseGoalMl
@@ -101,8 +98,7 @@ import com.lyldz.ab.core.roundTo10
 import com.lyldz.ab.core.tempExtraMl
 import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.Intake
-import com.lyldz.ab.data.SOURCE_NOTIFICATION
-import com.lyldz.ab.data.SOURCE_WIDGET
+import com.lyldz.ab.notify.Notifier
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -124,6 +120,7 @@ fun HomeScreen(
     onEdit: (Intake, Int, Int) -> Unit,
     onSetCup: (Int) -> Unit,
     openCustom: Boolean = false,
+    onCustomConsumed: () -> Unit = {},
     streak: Int = 0,
     onOpenSettings: () -> Unit = {},
     hintsShown: Int = MAX_HINTS,
@@ -133,7 +130,24 @@ fun HomeScreen(
     val snack = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     var custom by rememberSaveable { mutableStateOf(openCustom) }
+    var notifAllowed by remember { mutableStateOf(Notifier.hasPermission(context)) }
+    LaunchedEffect(openCustom) {
+        if (openCustom) {
+            custom = true
+            onCustomConsumed()
+        }
+    }
+    DisposableEffect(lifecycleOwner, context) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                notifAllowed = Notifier.hasPermission(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     var editing by remember { mutableStateOf<Intake?>(null) }
     var cupDialog by remember { mutableStateOf(false) }
     var goalInfo by remember { mutableStateOf(false) }
@@ -194,7 +208,9 @@ fun HomeScreen(
                         contentAlignment = Alignment.Center,
                     ) {
                         BellIcon(Ab.strong)
-                        Box(Modifier.align(Alignment.TopEnd).padding(11.dp).size(9.dp).clip(CircleShape).background(AbColors.Aqua1))
+                        if (!notifAllowed) {
+                            Box(Modifier.align(Alignment.TopEnd).padding(11.dp).size(9.dp).clip(CircleShape).background(AbColors.Aqua1))
+                        }
                     }
                 }
 
@@ -423,11 +439,14 @@ private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int
         if (sorted.isEmpty() && nextAtMin == null) {
             Text(stringResource(R.string.history_empty), color = Ab.faint)
         } else {
+            val itemCount = sorted.size + if (nextAtMin != null) 1 else 0
             BoxWithConstraints(Modifier.fillMaxWidth()) {
                 Row(
                     Modifier.horizontalScroll(scroll).widthIn(min = maxWidth).drawBehind {
-                        val y = 16.dp.toPx()
-                        drawLine(lineC, Offset(38.dp.toPx(), y), Offset(size.width - 38.dp.toPx(), y), 2.dp.toPx(), StrokeCap.Round)
+                        if (itemCount >= 2) {
+                            val y = 16.dp.toPx()
+                            drawLine(lineC, Offset(38.dp.toPx(), y), Offset(size.width - 38.dp.toPx(), y), 2.dp.toPx(), StrokeCap.Round)
+                        }
                     },
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
