@@ -21,6 +21,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,8 +32,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.lyldz.ab.AbApp
 import com.lyldz.ab.R
 import com.lyldz.ab.notify.Notifier
+import kotlinx.coroutines.launch
 
 /**
  * "İzinler ve bildirimler" grubu: bildirim (Android 13+ POST_NOTIFICATIONS dahil) ve yaklaşık konum izninin
@@ -42,6 +45,7 @@ import com.lyldz.ab.notify.Notifier
 fun PermissionsContent() {
     val ctx = LocalContext.current
     val owner = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
     var tick by remember { mutableIntStateOf(0) }
     DisposableEffect(owner) {
         val obs = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) tick++ }
@@ -60,7 +64,16 @@ fun PermissionsContent() {
     }
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         tick++
-        if (!granted) open(notifSettings)
+        if (granted) {
+            scope.launch {
+                (ctx.applicationContext as? AbApp)?.reminders?.let {
+                    it.reschedule()
+                    it.refreshNotification(force = true)
+                }
+            }
+        } else {
+            open(notifSettings)
+        }
     }
 
     PermissionRow(stringResource(R.string.perm_notifications), notifOn) {
