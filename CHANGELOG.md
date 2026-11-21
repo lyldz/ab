@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+## [0.3.6] - 2026-11-21 · Testi
+### Added
+- Geçmiş güne kayıt ekleme (U-04): Geçmiş ekranında "+ Geçmişe ekle" ve gün kartına dokunarak son 7 gün içindeki unutulan su kayıtlarını miktar ve saatle ekleyebilme.
+- Uygulama içi dil seçimi: *Ayarlar → Görünüm* altından Sistem / Türkçe / English seçimi (ek bağımlılık olmadan).
+- Uygulama içi hatırlatma aç/kapat anahtarı (*Ayarlar → Gün düzeni ve hatırlatmalar*).
+- Pil optimizasyonu durum rozeti (*Kısıtsız* / *Kısıtlı*).
+### Changed
+- Ana ekran sadeleştirildi (Seçenek A): Ortadaki 3 hızlı ekleme kutusu kaldırılıp altta tek bir bölünmüş ana düğme (`+ Su Ekle` | tek dokunuşla bardak/şişe seçici) eklendi; `WaterOrb` büyüyüp ferahladı.
+- Ayarlar menüsü 9 karttan 5 sade gruba indirildi (Hava & Konum birleşti, kalkış/yatış için `TimePicker` eklendi, *Veri ve yedekleme* ile *Uygulama ve hakkında* katlanabilir yapıldı, tekrarlı bardak stepperi ve çift sürüm satırı kaldırıldı).
+### Fixed
+- Başlangıç (Onboarding) özet ekranına tıbbi uyarı notu eklendi, izin ekranına `ON_RESUME` yenilemesi ve konum izni reddi mesaj ayrımı getirildi, bardak ön ayarları `200 / 250 / 330 / 500 ml` olarak hizalandı.
+
 ## [0.3.5] - 2026-11-21 · Testi
 ### Changed
 - Ana ekran dikey yerleşimi sıkılaştırıldı: "+ Su Ekle" düğmesi artık kaydırmaya gerek kalmadan tek ekrana tam sığıyor.
