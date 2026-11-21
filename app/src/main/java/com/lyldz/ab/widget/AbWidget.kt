@@ -43,7 +43,7 @@ import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.SOURCE_WIDGET
 import com.lyldz.ab.ui.fmtMl
 
-private val BG = ColorProvider(Color(0xFFF8FAFC), Color(0xFF0B0D10))
+private val BG = ColorProvider(Color(0xFFF3FAFC), Color(0xFF070C10))
 private val TEXT = ColorProvider(Color(0xFF0F203C), Color(0xFFFFFFFF))
 private val PRIMARY = ColorProvider(Color(0xFF88D9E6), Color(0xFF88D9E6))
 private val ON_PRIMARY = ColorProvider(Color(0xFF0F203C), Color(0xFF0F203C))
@@ -72,8 +72,15 @@ class AddWaterAction : ActionCallback {
 
 @Composable
 private fun Content(ctx: Context, t: AbRepository.Today) {
-    val open = actionStartActivity(Intent(ctx, MainActivity::class.java))
-    val custom = actionStartActivity(Intent(ctx, MainActivity::class.java).putExtra(EXTRA_CUSTOM, true))
+    val open = actionStartActivity(
+        Intent(ctx, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+    )
+    val custom = actionStartActivity(
+        Intent(ctx, MainActivity::class.java)
+            .putExtra(EXTRA_CUSTOM, true)
+            .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+    )
     val amounts = listOf(t.settings.cupMl, 500, 1000).distinct()
 
     Column(
@@ -86,7 +93,7 @@ private fun Content(ctx: Context, t: AbRepository.Today) {
         )
         Spacer(GlanceModifier.height(8.dp))
         LinearProgressIndicator(
-            progress = (t.drankMl.toFloat() / t.goalMl).coerceIn(0f, 1f),
+            progress = (t.drankMl.toFloat() / t.goalMl.coerceAtLeast(1)).coerceIn(0f, 1f),
             modifier = GlanceModifier.fillMaxWidth(),
             color = PRIMARY,
             backgroundColor = TRACK,

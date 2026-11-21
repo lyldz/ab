@@ -58,9 +58,7 @@ object Notifier {
         if (!hasPermission(ctx)) return
         val nm = NotificationManagerCompat.from(ctx)
 
-        val open = PendingIntent.getActivity(
-            ctx, 0, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE,
-        )
+        val open = openMainPendingIntent(ctx)
         val second = if (firstMl == 500) 1000 else 500
         val custom = RemoteInput.Builder(KEY_TEXT).setLabel(ctx.getString(R.string.notif_custom_hint)).build()
         val customPi = PendingIntent.getBroadcast(
@@ -93,7 +91,7 @@ object Notifier {
     fun showWeather(ctx: Context, tempC: Int, goalMl: Int, extraMl: Int) {
         if (!hasPermission(ctx)) return
         val nm = NotificationManagerCompat.from(ctx)
-        val open = PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+        val open = openMainPendingIntent(ctx)
         nm.notify(
             GOAL_NOTIF_ID,
             NotificationCompat.Builder(ctx, GOAL_CHANNEL_ID)
@@ -110,6 +108,14 @@ object Notifier {
     fun isShowing(ctx: Context): Boolean = runCatching {
         ctx.getSystemService(NotificationManager::class.java)?.activeNotifications?.any { it.id == NOTIF_ID } == true
     }.getOrDefault(false)
+
+    private fun openMainPendingIntent(ctx: Context): PendingIntent = PendingIntent.getActivity(
+        ctx,
+        0,
+        Intent(ctx, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
 
     private fun addIntent(ctx: Context) =
         Intent(ctx, ReminderReceiver::class.java).setAction(ACTION_ADD)
