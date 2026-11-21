@@ -1,5 +1,6 @@
 package com.lyldz.ab
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -30,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.lyldz.ab.ui.AppLocale
 import com.lyldz.ab.ui.BottomBar
 import com.lyldz.ab.ui.HistoryScreen
 import com.lyldz.ab.ui.HomeScreen
@@ -46,6 +48,10 @@ const val EXTRA_CUSTOM = "open_custom"
 
 class MainActivity : ComponentActivity() {
     private var openCustomRequest by mutableStateOf(false)
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLocale.wrapContext(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -152,7 +158,12 @@ private fun AbContent(
                         val days by vm.periodDays.collectAsStateWithLifecycle()
                         StatsScreen(stats, days, vm::setPeriod, onBack = { tab = 0 })
                     }
-                    2 -> HistoryScreen(vm.history.collectAsStateWithLifecycle().value, onBack = { tab = 0 })
+                    2 -> HistoryScreen(
+                        stats = vm.history.collectAsStateWithLifecycle().value,
+                        onBack = { tab = 0 },
+                        defaultCupMl = t.settings.cupMl,
+                        onAddForDay = vm::addForDay,
+                    )
                     else -> SettingsScreen(t.settings, onSave = vm::saveSettings, onBack = { tab = 0 })
                 }
             }

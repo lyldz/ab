@@ -264,4 +264,12 @@
     <string name="onb_loc_denied">Location permission denied. You can search your city manually below.</string>
     <string name="expand_section">Expand section</string>
     <string name="collapse_section">Collapse section</string>
+    <string name="set_language">Language</string>
+    <string name="lang_system">System</string>
+    <string name="lang_tr">Türkçe</string>
+    <string name="lang_en">English</string>
+    <string name="history_add_past">+ Add past day</string>
+    <string name="history_add_title">Add past water entry</string>
+    <string name="history_pick_day">Day</string>
+    <string name="history_card_add_hint">Tap to add water</string>
 </resources>

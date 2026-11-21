@@ -81,6 +81,7 @@ private const val SETTINGS_MAX_BED_MIN = SETTINGS_LAST_END_MIN + STOP_BEFORE_BED
 fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
     var name by rememberSaveable { mutableStateOf(s.name) }
     var themeMode by rememberSaveable { mutableIntStateOf(s.themeMode) }
+    var language by rememberSaveable { mutableStateOf(s.language) }
     var remindersEnabled by rememberSaveable { mutableStateOf(s.remindersEnabled) }
     var weight by rememberSaveable { mutableStateOf(s.weightKg.toString()) }
     var activityIdx by rememberSaveable { mutableIntStateOf(s.activity.ordinal) }
@@ -123,6 +124,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     val draft = s.copy(
         name = name.trim(),
         themeMode = themeMode,
+        language = language,
         remindersEnabled = remindersEnabled,
         weightKg = kg ?: s.weightKg,
         activity = Activity.entries[activityIdx],
@@ -268,6 +270,25 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(R.string.theme_system, R.string.theme_light, R.string.theme_dark).forEachIndexed { i, label ->
                     FilterChip(selected = themeMode == i, onClick = { themeMode = i }, label = { Text(stringResource(label)) })
+                }
+            }
+            Text(stringResource(R.string.set_language), style = MaterialTheme.typography.titleSmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("" to R.string.lang_system, "tr" to R.string.lang_tr, "en" to R.string.lang_en).forEach { (tag, label) ->
+                    FilterChip(
+                        selected = language == tag,
+                        onClick = {
+                            if (language != tag) {
+                                language = tag
+                                val next = draft.copy(language = tag)
+                                if (valid) onSave(next)
+                                if (AppLocale.apply(ctx, tag)) {
+                                    (ctx as? android.app.Activity)?.recreate()
+                                }
+                            }
+                        },
+                        label = { Text(stringResource(label)) },
+                    )
                 }
             }
         }

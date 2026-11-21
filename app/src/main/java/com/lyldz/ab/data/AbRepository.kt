@@ -73,6 +73,22 @@ class AbRepository(
         return id
     }
 
+    /** Geçmiş (veya bugünkü) bir güne su kaydı ekler; gelecek günler ve geçersiz miktarlar reddedilir (-1L). */
+    suspend fun addIntakeForDay(
+        day: LocalDate,
+        ml: Int,
+        minuteOfDay: Int = 12 * 60,
+        source: Int = SOURCE_APP,
+        nowMs: Long = System.currentTimeMillis(),
+    ): Long {
+        if (!isValidIntakeMl(ml)) return -1L
+        val today = Instant.ofEpochMilli(nowMs).atZone(zone).toLocalDate()
+        if (day.isAfter(today)) return -1L
+        val rawMs = day.atStartOfDay(zone).plusMinutes(minuteOfDay.coerceIn(0, 1439).toLong()).toInstant().toEpochMilli()
+        val atMs = if (day == today) minOf(rawMs, nowMs) else rawMs
+        return addIntake(ml, source, atMs)
+    }
+
     suspend fun deleteIntake(id: Long) = dao.delete(id)
 
     /** Silinen kaydı aynı kimlikle geri koyar (geri al). */

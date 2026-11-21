@@ -156,4 +156,21 @@ class AbRepositoryTest {
         assertEquals(0, repo.importData(backup))
         assertEquals(1, db.intake().all().size)
     }
+
+    @Test
+    fun addIntakeForDayRecordsPastDayAndRejectsFuture() = runBlocking {
+        repo.saveSettings(Settings(weightKg = 80, onboarded = true))
+        val today = LocalDate.now(zone)
+        val yesterday = today.minusDays(1)
+        val tomorrow = today.plusDays(1)
+        val nowMs = dayBoundsMs(today, zone).first + 14 * 3600_000L
+
+        assertEquals(-1L, repo.addIntakeForDay(tomorrow, 300, 10 * 60, nowMs = nowMs))
+        val id = repo.addIntakeForDay(yesterday, 400, 15 * 60, nowMs = nowMs)
+        assertTrue(id > 0L)
+
+        val stats = repo.stats(2, today).first()
+        assertEquals(400, stats[0].ml)
+        assertEquals(0, stats[1].ml)
+    }
 }
