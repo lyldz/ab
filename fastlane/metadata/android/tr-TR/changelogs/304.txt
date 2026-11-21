@@ -1,0 +1,2 @@
+Ana ekrana tek dokunuşla 200/330/500 ml hızlı ekleme çipleri eklendi; su göstergesi dalga görünümü ve 48 dp dokunma alanları iyileştirildi.
+Geri al artık yalnızca bugünün son kaydını siler; gece yarısı gün geçişi, widget Özel akışı, bildirim izin yenileme ve ayarların anında kaydı düzeltildi.

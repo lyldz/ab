@@ -4,6 +4,20 @@
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-11-21 · Testi
+### Added
+- Ana ekrana tek dokunuşla hızlı bardak/şişe ekleme çipleri (`200 ml`, `330 ml`, `500 ml`, geri al snackbar'ı ile entegre) eklendi.
+- Gece yarısı gün değişiminde alarmları ve widget'ı çevrimdışı yeniden kuran `ACTION_DATE_CHANGED` sistem alıcısı eklendi.
+- Veri katmanı, gece yarısı geçişi, geri alma (undo) ve çevrimdışı/bildirim akışları için yeni birim testleri (`AbRepositoryTest`, `NotifyAndOfflineTest`) eklendi.
+### Changed
+- Açık turkuaz ve mavi tonlarında tema kontrastı, `WaterOrb` dalga derinliği/yüzey parıltısı ve tüm etkileşimli öğelerde minimum `48 dp` dokunma alanları ile erişilebilirlik açıklamaları iyileştirildi.
+- Kullanılmayan eski `WaterPitcher` kodu temizlendi; `StatsScreen` kartları tema çizgisiyle uyumlu hale getirildi.
+### Fixed
+- Geri al (`undoLast`) artık yalnızca bugünün son kaydını siler (gece yarısından sonra dünün kaydını yanlışlıkla silmez).
+- Uygulamaya arka plandan dönünce tarih/saat anında yenilenir; widget "Özel" düğmesi ve bildirim tıklaması tekil aktivite (`onNewIntent`) ile doğru pencereyi açar.
+- Bildirim çanı üzerindeki nokta yalnızca bildirim izni eksikse görünür; izin yeni verildiğinde durum bildirimi anında güncellenir.
+- Zaman çizelgesinde tek düğüm varken boşluğa çizilen yatay çizgi, ayarlarda 500 ms dolmadan sekme değiştirince değişiklik kaybolması ve saat biçimlendirme sınır durumları düzeltildi.
+
 ## [0.3.3] - 2026-11-13 · Testi
 ### Fixed
 - Ayarlardaki değişiklikler artık kendiliğinden kaydediliyor (yarım saniye sonra, kaydet düğmesi yok). Eskiden sayfanın en altındaki "Kaydet"e basmadan sekme değiştirince anahtarlar (örn. su hareketi) kaybolup "işe yaramıyor" gibi görünüyordu. Geçersiz alan (örn. kilo) kaydedilmez, kırmızı kalır.

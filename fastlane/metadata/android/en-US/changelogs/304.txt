@@ -1,0 +1,2 @@
+Added one-tap 200/330/500 ml quick-add chips on the home screen; polished water orb waves, turquoise theme contrast, and 48 dp touch targets.
+Undo now only reverts today's latest entry; fixed midnight rollover, widget Custom flow, instant notification refresh on permission grant, and settings autosave on exit.
