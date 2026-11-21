@@ -1,5 +1,6 @@
 package com.lyldz.ab
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,11 +17,15 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -40,16 +45,34 @@ import java.time.LocalTime
 const val EXTRA_CUSTOM = "open_custom"
 
 class MainActivity : ComponentActivity() {
+    private var openCustomRequest by mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { AbRoot(openCustom = intent.getBooleanExtra(EXTRA_CUSTOM, false)) }
+        if (savedInstanceState == null && intent.getBooleanExtra(EXTRA_CUSTOM, false)) {
+            openCustomRequest = true
+        }
+        setContent {
+            AbRoot(
+                openCustom = openCustomRequest,
+                onCustomConsumed = { openCustomRequest = false },
+            )
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_CUSTOM, false)) {
+            openCustomRequest = true
+        }
     }
 }
 
 private fun currentMin(): Int = LocalTime.now().let { it.hour * 60 + it.minute }
 
 @Composable
-private fun AbRoot(openCustom: Boolean) {
+private fun AbRoot(openCustom: Boolean, onCustomConsumed: () -> Unit) {
     val app = LocalContext.current.applicationContext as AbApp
     val vm: MainViewModel = viewModel(factory = viewModelFactory { initializer { MainViewModel(app) } })
     val today by vm.today.collectAsStateWithLifecycle()
@@ -73,17 +96,33 @@ private fun AbRoot(openCustom: Boolean) {
     }
     AbTheme(mode) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            today?.let { AbContent(it, vm, openCustom) }
+            today?.let { AbContent(it, vm, openCustom, onCustomConsumed) }
         }
     }
 }
 
 @Composable
-private fun AbContent(t: com.lyldz.ab.data.AbRepository.Today, vm: MainViewModel, openCustom: Boolean) {
+private fun AbContent(
+    t: com.lyldz.ab.data.AbRepository.Today,
+    vm: MainViewModel,
+    openCustom: Boolean,
+    onCustomConsumed: () -> Unit,
+) {
     if (!t.settings.onboarded) {
         OnboardingScreen(vm::finishOnboarding)
     } else {
         var nowMin by remember { mutableIntStateOf(currentMin()) }
+        val lifecycleOwner = LocalLifecycleOwner.current
+        DisposableEffect(lifecycleOwner) {
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    nowMin = currentMin()
+                    vm.refreshDate()
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        }
         LaunchedEffect(Unit) {
             while (true) {
                 delay(30_000)
@@ -91,6 +130,9 @@ private fun AbContent(t: com.lyldz.ab.data.AbRepository.Today, vm: MainViewModel
             }
         }
         var tab by rememberSaveable { mutableIntStateOf(0) } // 0 bugün, 1 grafikler, 2 geçmiş, 3 ayarlar
+        LaunchedEffect(openCustom) {
+            if (openCustom) tab = 0
+        }
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.weight(1f)) {
                 when (tab) {
@@ -99,6 +141,7 @@ private fun AbContent(t: com.lyldz.ab.data.AbRepository.Today, vm: MainViewModel
                         onDelete = vm::delete, onRestore = vm::restore, onEdit = vm::edit,
                         onSetCup = { vm.saveSettings(t.settings.copy(cupMl = it)) },
                         openCustom = openCustom,
+                        onCustomConsumed = onCustomConsumed,
                         streak = vm.streak.collectAsStateWithLifecycle().value,
                         onOpenSettings = { tab = 3 },
                         hintsShown = t.settings.longPressHints,
