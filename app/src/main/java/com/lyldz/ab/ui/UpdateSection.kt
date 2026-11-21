@@ -43,7 +43,7 @@ private sealed interface UpdateState {
 
 /** Ayarlar'da "Güncelleme": yalnızca dokununca GitHub sürümlerine bakar, indirir ve kurulumu başlatır. */
 @Composable
-fun UpdateSection() {
+fun UpdateSection(showCurrentVersion: Boolean = true) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val current = remember { Updater.currentVersion(ctx) }
@@ -51,7 +51,9 @@ fun UpdateSection() {
     var permHint by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.update_current, current), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (showCurrentVersion) {
+            Text(stringResource(R.string.update_current, current), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         when (val st = state) {
             UpdateState.Idle -> {}
             UpdateState.Checking -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

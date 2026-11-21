@@ -254,4 +254,14 @@
     <string name="history_day_progress">%1$s, %2$s of %3$s ml</string>
     <string name="over_label">Overflow: +%1$s ml</string>
     <string name="pick_cup_desc">Choose glass size</string>
+    <string name="set_reminders">Reminder notifications</string>
+    <string name="grp_profile_goal">Profile &amp; goal</string>
+    <string name="grp_day_reminders">Schedule &amp; reminders</string>
+    <string name="grp_data">Data &amp; backup</string>
+    <string name="grp_app">App &amp; about</string>
+    <string name="battery_status_ok">Battery: Unrestricted</string>
+    <string name="battery_status_restricted">Battery: Restricted (reminders may be delayed)</string>
+    <string name="onb_loc_denied">Location permission denied. You can search your city manually below.</string>
+    <string name="expand_section">Expand section</string>
+    <string name="collapse_section">Collapse section</string>
 </resources>

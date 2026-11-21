@@ -89,7 +89,7 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
     private suspend fun planNow(now: ZonedDateTime): Pair<AbRepository.Today, Plan?> {
         val t = repo.todayNow()
         val s = t.settings
-        val plan = if (!s.onboarded) null else nextPlan(
+        val plan = if (!s.onboarded || !s.remindersEnabled) null else nextPlan(
             now.hour * 60 + now.minute, s.windowStartMin, s.windowEndMin,
             t.goalMl, t.drankMl, s.reminderIntervalMin(), t.anchorMin,
         )
@@ -112,6 +112,11 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         }
         scheduleMorning(t.settings.windowStartMin, now)
         repo.recordGoal(now.toLocalDate(), t.goalMl)
+        if (!t.settings.remindersEnabled) {
+            alarm.cancel(pending(true))
+            Notifier.cancel(context)
+            return
+        }
         val day = now.toLocalDate().atStartOfDay(zone)
         val (at, notify) = if (plan != null) {
             day.plusMinutes(plan.nextAtMin.toLong()) to true
@@ -130,7 +135,7 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         if (!force && !Notifier.isShowing(context)) return
         val now = ZonedDateTime.now(zone)
         val (t, plan) = planNow(now)
-        if (!t.settings.onboarded) return
+        if (!t.settings.onboarded || !t.settings.remindersEnabled) return
         val nowMin = now.hour * 60 + now.minute
         val inWindow = nowMin in t.settings.windowStartMin..t.settings.windowEndMin
         val drank = fmtMl(t.drankMl)

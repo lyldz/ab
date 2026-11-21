@@ -41,6 +41,8 @@ data class Settings(
     val themeMode: Int = 0, // 0 sistem, 1 açık, 2 koyu
     /** Gösterge suyu telefonun eğimine/hareketine göre oynar (ivmeölçer, izin gerekmez). */
     val motionWater: Boolean = true,
+    /** Uygulama içi hatırlatma aç/kapat anahtarı. */
+    val remindersEnabled: Boolean = true,
     /** "Uzun bas" ipucunun kaç kez gösterildiği (3'te durur); ayar kaydı yazmaz, yalnızca [SettingsStore.setHintCount]. */
     val longPressHints: Int = 0,
 ) {
@@ -79,6 +81,7 @@ class SettingsStore(private val context: Context) {
             p[NAME] = s.name
             p[THEME] = s.themeMode
             p[MOTION] = s.motionWater
+            p[REMINDERS] = s.remindersEnabled
             p.putOrRemove(GOAL, s.goalOverrideMl)
             p.putOrRemove(CITY, s.city)
             p.putOrRemove(LAT, s.lat)
@@ -133,6 +136,7 @@ class SettingsStore(private val context: Context) {
             name = this[NAME] ?: d.name,
             themeMode = this[THEME]?.takeIf { it in 0..2 } ?: d.themeMode,
             motionWater = this[MOTION] ?: d.motionWater,
+            remindersEnabled = this[REMINDERS] ?: d.remindersEnabled,
             longPressHints = this[HINTS] ?: d.longPressHints,
         )
     }
@@ -155,6 +159,7 @@ class SettingsStore(private val context: Context) {
         val NAME = stringPreferencesKey("name")
         val THEME = intPreferencesKey("theme_mode")
         val MOTION = booleanPreferencesKey("motion_water")
+        val REMINDERS = booleanPreferencesKey("reminders_enabled")
         val HINTS = intPreferencesKey("long_press_hints")
         val LAST_NOTIFIED = longPreferencesKey("last_notified_ms")
     }

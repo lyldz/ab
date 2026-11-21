@@ -49,6 +49,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -60,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -70,6 +72,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.lyldz.ab.R
 import com.lyldz.ab.core.Activity
 import com.lyldz.ab.core.STOP_BEFORE_BED_MIN
@@ -99,6 +103,7 @@ private const val MAX_BED_MIN = LAST_END_MIN + STOP_BEFORE_BED_MIN // gece yarı
 @Composable
 fun OnboardingScreen(onDone: (Settings) -> Unit) {
     val ctx = LocalContext.current
+    val owner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     var step by rememberSaveable { mutableIntStateOf(0) }
     var weight by rememberSaveable { mutableStateOf("70") }
@@ -112,12 +117,24 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
     var locOk by rememberSaveable {
         mutableStateOf(ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
     }
+    DisposableEffect(owner, ctx) {
+        val obs = LifecycleEventObserver { _, e ->
+            if (e == Lifecycle.Event.ON_RESUME) {
+                notifOk = !needsNotifPermission ||
+                    ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                locOk = ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            }
+        }
+        owner.lifecycle.addObserver(obs)
+        onDispose { owner.lifecycle.removeObserver(obs) }
+    }
     var lat by rememberSaveable { mutableStateOf<Double?>(null) }
     var lon by rememberSaveable { mutableStateOf<Double?>(null) }
     var city by rememberSaveable { mutableStateOf<String?>(null) }
     var temp by rememberSaveable { mutableStateOf<Double?>(null) }
     var busy by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
+    var locDenied by remember { mutableStateOf(false) }
     var cityDialog by remember { mutableStateOf(false) }
     var timeDialog by remember { mutableStateOf<Int?>(null) } // 0 kalkış, 1 yatış
 
@@ -161,7 +178,13 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { notifOk = it }
     val locLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         locOk = granted
-        if (granted) findMe() else failed = true
+        if (granted) {
+            locDenied = false
+            findMe()
+        } else {
+            failed = false
+            locDenied = true
+        }
     }
 
     BackHandler(enabled = step > 0) { step-- }
@@ -197,7 +220,7 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
                     onPickTime = { timeDialog = it }, onCup = { cup = it },
                 )
                 3 -> PermissionsStep(
-                    notifOk = notifOk, locOk = locOk, temp = temp, city = city, busy = busy, failed = failed,
+                    notifOk = notifOk, locOk = locOk, temp = temp, city = city, busy = busy, failed = failed, locDenied = locDenied,
                     onNotif = {
                         if (needsNotifPermission) notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) else notifOk = true
                     },
@@ -345,7 +368,7 @@ private fun RoutineStep(wake: Int, bed: Int, end: Int, cup: Int, onPickTime: (In
         Text(stringResource(R.string.window_note, fmtTime(wake), fmtTime(end % 1440)), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
         Text(stringResource(R.string.onb_cup_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(200, 250, 350, 500).forEach { ml ->
+            listOf(200, 250, 330, 500).forEach { ml ->
                 FilterChip(selected = cup == ml, onClick = { onCup(ml) }, label = { Text("$ml ml") })
             }
         }
@@ -353,7 +376,7 @@ private fun RoutineStep(wake: Int, bed: Int, end: Int, cup: Int, onPickTime: (In
 }
 
 @Composable
-private fun TimeCard(label: String, minutes: Int, modifier: Modifier, onClick: () -> Unit) {
+internal fun TimeCard(label: String, minutes: Int, modifier: Modifier, onClick: () -> Unit) {
     Card(
         modifier.clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = Ab.card),
@@ -368,7 +391,7 @@ private fun TimeCard(label: String, minutes: Int, modifier: Modifier, onClick: (
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TimePickDialog(initialMin: Int, onDismiss: () -> Unit, onPick: (Int, Int) -> Unit) {
+internal fun TimePickDialog(initialMin: Int, onDismiss: () -> Unit, onPick: (Int, Int) -> Unit) {
     val st = rememberTimePickerState(initialHour = initialMin / 60, initialMinute = initialMin % 60, is24Hour = true)
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -380,9 +403,11 @@ private fun TimePickDialog(initialMin: Int, onDismiss: () -> Unit, onPick: (Int,
 
 @Composable
 private fun PermissionsStep(
-    notifOk: Boolean, locOk: Boolean, temp: Double?, city: String?, busy: Boolean, failed: Boolean,
+    notifOk: Boolean, locOk: Boolean, temp: Double?, city: String?, busy: Boolean, failed: Boolean, locDenied: Boolean,
     onNotif: () -> Unit, onLoc: () -> Unit, onCity: () -> Unit,
 ) {
+    val ctx = LocalContext.current
+    val showBattery = remember(notifOk) { notifOk && isBatteryRestricted(ctx) }
     StepColumn {
         Text(stringResource(R.string.onb_perm_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text(stringResource(R.string.onb_perm_sub), color = Ab.muted)
@@ -418,6 +443,8 @@ private fun PermissionsStep(
                             " · " + if (extra > 0) stringResource(R.string.onb_wx_extra, fmtMl(extra)) else stringResource(R.string.onb_wx_none),
                         fontWeight = FontWeight.SemiBold,
                     )
+                } else if (locDenied) {
+                    Text(stringResource(R.string.onb_loc_denied), color = MaterialTheme.colorScheme.tertiary)
                 } else if (failed) {
                     Text(stringResource(R.string.onb_wx_fail), color = MaterialTheme.colorScheme.tertiary)
                 }
@@ -425,8 +452,10 @@ private fun PermissionsStep(
             }
         }
 
-        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-            Column(Modifier.padding(16.dp)) { BatteryTipSection() }
+        if (showBattery) {
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                Column(Modifier.padding(16.dp)) { BatteryTipSection() }
+            }
         }
     }
 }
@@ -459,6 +488,7 @@ private fun SummaryStep(kg: Int, activity: Activity, temp: Double?, wake: Int, e
             }
         }
         Text(stringResource(R.string.onb_sum_foot), style = MaterialTheme.typography.bodySmall, color = Ab.muted, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Text(stringResource(R.string.onb_goal_note), style = MaterialTheme.typography.bodySmall, color = Ab.faint, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
     }
 }
 

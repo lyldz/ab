@@ -4,36 +4,30 @@ import android.Manifest
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
-import com.lyldz.ab.core.seriesName
-import com.lyldz.ab.data.Updater
-import com.lyldz.ab.ui.theme.Ab
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberUpdatedState
-import kotlinx.coroutines.delay
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -41,30 +35,45 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
 import com.lyldz.ab.core.Activity
-import com.lyldz.ab.core.STOP_BEFORE_BED_MIN
 import com.lyldz.ab.core.GOAL_WARN_ML
+import com.lyldz.ab.core.STOP_BEFORE_BED_MIN
+import com.lyldz.ab.core.seriesName
 import com.lyldz.ab.core.tempExtraMl
 import com.lyldz.ab.data.Settings
+import com.lyldz.ab.data.Updater
 import com.lyldz.ab.data.WeatherApi
 import com.lyldz.ab.data.currentCoarse
+import com.lyldz.ab.ui.theme.Ab
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import kotlin.math.roundToInt
+
+private const val SETTINGS_LAST_END_MIN = 23 * 60 + 30
+private const val SETTINGS_MAX_BED_MIN = SETTINGS_LAST_END_MIN + STOP_BEFORE_BED_MIN
 
 /** Değişiklikler geçerliyse yarım saniye sonra kendiliğinden kaydedilir (kaydet düğmesi yok); geçersiz alan kırmızı kalır, kaydedilmez. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -72,12 +81,11 @@ import kotlin.math.roundToInt
 fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
     var name by rememberSaveable { mutableStateOf(s.name) }
     var themeMode by rememberSaveable { mutableIntStateOf(s.themeMode) }
-    var motionWater by rememberSaveable { mutableStateOf(s.motionWater) }
+    var remindersEnabled by rememberSaveable { mutableStateOf(s.remindersEnabled) }
     var weight by rememberSaveable { mutableStateOf(s.weightKg.toString()) }
     var activityIdx by rememberSaveable { mutableIntStateOf(s.activity.ordinal) }
     var start by rememberSaveable { mutableIntStateOf(s.windowStartMin) }
     var end by rememberSaveable { mutableIntStateOf(s.windowEndMin) }
-    var cup by rememberSaveable { mutableIntStateOf(s.cupMl) }
     var useActivity by rememberSaveable { mutableStateOf(s.useActivity) }
     var useWeather by rememberSaveable { mutableStateOf(s.useWeather) }
     var manual by rememberSaveable { mutableStateOf(s.goalOverrideMl != null) }
@@ -86,6 +94,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     var lat by rememberSaveable { mutableStateOf(s.lat) }
     var lon by rememberSaveable { mutableStateOf(s.lon) }
     var cityDialog by remember { mutableStateOf(false) }
+    var timeDialog by remember { mutableStateOf<Int?>(null) } // 0 kalkış, 1 yatış
     var locMessage by remember { mutableStateOf(false) }
     var restoredFromBackup by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -114,12 +123,11 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     val draft = s.copy(
         name = name.trim(),
         themeMode = themeMode,
-        motionWater = motionWater,
+        remindersEnabled = remindersEnabled,
         weightKg = kg ?: s.weightKg,
         activity = Activity.entries[activityIdx],
         windowStartMin = start,
         windowEndMin = end,
-        cupMl = cup,
         useActivity = useActivity,
         useWeather = useWeather,
         goalOverrideMl = if (manual) manualMl else null,
@@ -152,16 +160,19 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
             }
         }
     }
-    val earlier = stringResource(R.string.earlier)
-    val later = stringResource(R.string.later)
+
+    val version = remember { Updater.currentVersion(ctx) }
+    val series = remember(version) { seriesName(version) }
+    val versionBadge = if (series.isEmpty()) version else "$version · $series"
 
     Column(
-        Modifier.fillMaxSize().statusBarsPadding().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        Modifier.fillMaxSize().statusBarsPadding().imePadding().verticalScroll(rememberScrollState()).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineLarge)
 
-        SettingsGroup(stringResource(R.string.grp_profile)) {
+        // 1. Profil ve Hedef (+ Hava & Konum birleşik)
+        SettingsGroup(stringResource(R.string.grp_profile_goal)) {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it.take(30) },
@@ -180,12 +191,43 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
             )
             Text(stringResource(R.string.onb_activity), style = MaterialTheme.typography.titleSmall)
             ActivityChips(activityIdx) { activityIdx = it }
-        }
 
-        SettingsGroup(stringResource(R.string.grp_goal)) {
+            HorizontalDivider(color = Ab.line)
             Text(stringResource(R.string.onb_goal, fmtMl(goal)), style = MaterialTheme.typography.titleLarge)
             SwitchRow(stringResource(R.string.set_use_activity), useActivity) { useActivity = it }
             SwitchRow(stringResource(R.string.set_use_weather), useWeather) { useWeather = it }
+            if (useWeather) {
+                val cityText = when {
+                    city != null -> city!!
+                    lat != null -> stringResource(R.string.weather_city_location)
+                    else -> stringResource(R.string.weather_city_none)
+                }
+                Text(stringResource(R.string.weather_city, cityText), style = MaterialTheme.typography.bodyMedium, color = Ab.strong)
+                draft.tempToday(today)?.let {
+                    Text(
+                        stringResource(R.string.weather_today, it.roundToInt().toString(), fmtMl(tempExtraMl(it))),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Ab.muted,
+                    )
+                }
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { cityDialog = true }, modifier = Modifier.heightIn(min = 48.dp)) {
+                        Text(stringResource(R.string.weather_search))
+                    }
+                    OutlinedButton(
+                        onClick = { locLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) },
+                        modifier = Modifier.heightIn(min = 48.dp),
+                    ) { Text(stringResource(R.string.weather_use_location)) }
+                    if (lat != null) {
+                        TextButton(
+                            onClick = { lat = null; lon = null; city = null },
+                            modifier = Modifier.heightIn(min = 48.dp),
+                        ) { Text(stringResource(R.string.weather_clear)) }
+                    }
+                }
+                if (locMessage) Text(stringResource(R.string.weather_no_location), color = MaterialTheme.colorScheme.tertiary)
+                Text(stringResource(R.string.weather_credit), color = Ab.muted, style = MaterialTheme.typography.bodySmall)
+            }
             SwitchRow(stringResource(R.string.set_override), manual) { manual = it }
             if (manual) {
                 OutlinedTextField(
@@ -201,58 +243,26 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
             if (goal > GOAL_WARN_ML) {
                 Text(stringResource(R.string.set_goal_warn), color = MaterialTheme.colorScheme.tertiary)
             }
-            Text(stringResource(R.string.onb_goal_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.onb_goal_note), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
         }
 
-        SettingsGroup(stringResource(R.string.grp_day)) {
-            Stepper(stringResource(R.string.onb_from), fmtTime(start), earlier, later,
-                { start = (start - 30).coerceIn(0, end - 60) }, { start = (start + 30).coerceIn(0, end - 60) })
-            Stepper(stringResource(R.string.onb_to), fmtTime((end + STOP_BEFORE_BED_MIN) % 1440), earlier, later,
-                { end = (end - 30).coerceIn(start + 60, 23 * 60 + 30) }, { end = (end + 30).coerceIn(start + 60, 23 * 60 + 30) })
+        // 2. Gün Düzeni ve Hatırlatmalar (TimePicker + Hatırlatma aç/kapat + İzinler & Pil)
+        SettingsGroup(stringResource(R.string.grp_day_reminders)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                TimeCard(stringResource(R.string.onb_from), start, Modifier.weight(1f)) { timeDialog = 0 }
+                TimeCard(stringResource(R.string.onb_to), (end + STOP_BEFORE_BED_MIN) % 1440, Modifier.weight(1f)) { timeDialog = 1 }
+            }
             Text(
                 stringResource(R.string.window_note, fmtTime(start), fmtTime(end)),
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Stepper(stringResource(R.string.set_cup), "${fmtMl(cup)} ml", stringResource(R.string.less), stringResource(R.string.more),
-                { cup = (cup - 50).coerceIn(100, 1000) }, { cup = (cup + 50).coerceIn(100, 1000) })
-        }
-
-        SettingsGroup(stringResource(R.string.grp_weather)) {
-            val cityText = when {
-                city != null -> city!!
-                lat != null -> stringResource(R.string.weather_city_location)
-                else -> stringResource(R.string.weather_city_none)
-            }
-            Text(stringResource(R.string.weather_city, cityText), style = MaterialTheme.typography.bodyLarge)
-            draft.tempToday(today)?.let {
-                Text(
-                    stringResource(R.string.weather_today, it.roundToInt().toString(), fmtMl(tempExtraMl(it))),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { cityDialog = true }, modifier = Modifier.heightIn(min = 48.dp)) {
-                    Text(stringResource(R.string.weather_search))
-                }
-                OutlinedButton(
-                    onClick = { locLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) },
-                    modifier = Modifier.heightIn(min = 48.dp),
-                ) { Text(stringResource(R.string.weather_use_location)) }
-                if (lat != null) {
-                    TextButton(
-                        onClick = { lat = null; lon = null; city = null },
-                        modifier = Modifier.heightIn(min = 48.dp),
-                    ) { Text(stringResource(R.string.weather_clear)) }
-                }
-            }
-            if (locMessage) Text(stringResource(R.string.weather_no_location), color = MaterialTheme.colorScheme.tertiary)
-            Text(
-                stringResource(R.string.weather_credit),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
+                color = Ab.muted,
             )
+            SwitchRow(stringResource(R.string.set_reminders), remindersEnabled) { remindersEnabled = it }
+            HorizontalDivider(color = Ab.line)
+            PermissionsContent()
         }
 
+        // 3. Görünüm
         SettingsGroup(stringResource(R.string.grp_look)) {
             Text(stringResource(R.string.set_theme), style = MaterialTheme.typography.titleSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -262,29 +272,26 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
             }
         }
 
-        SettingsGroup(stringResource(R.string.grp_perms)) { PermissionsContent() }
-
-        SettingsGroup(stringResource(R.string.backup_title)) {
+        // 4. Veri ve Yedekleme (katlanabilir)
+        CollapsibleSettingsGroup(title = stringResource(R.string.grp_data)) {
             BackupSection(onRestored = {
                 restoredFromBackup = true
                 onBack()
             })
         }
 
-        SettingsGroup(stringResource(R.string.update_title)) { UpdateSection() }
-
-        SettingsGroup(stringResource(R.string.grp_about)) {
-            val version = Updater.currentVersion(ctx)
-            val series = seriesName(version)
-            Text(if (series.isEmpty()) stringResource(R.string.update_current, version) else stringResource(R.string.about_version, version, series))
-            Text(stringResource(R.string.about_license), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(stringResource(R.string.about_source), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // 5. Uygulama ve Hakkında (katlanabilir, tekil sürüm etiketi)
+        CollapsibleSettingsGroup(title = stringResource(R.string.grp_app), badge = versionBadge) {
+            UpdateSection(showCurrentVersion = false)
+            HorizontalDivider(color = Ab.line)
+            Text(stringResource(R.string.about_license), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
+            Text(stringResource(R.string.about_source), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
         }
 
         Text(
             stringResource(if (valid) R.string.settings_autosave else R.string.settings_invalid),
             style = MaterialTheme.typography.bodySmall,
-            color = if (valid) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error,
+            color = if (valid) Ab.muted else MaterialTheme.colorScheme.error,
         )
     }
 
@@ -300,6 +307,24 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
             },
         )
     }
+    timeDialog?.let { which ->
+        val bed = end + STOP_BEFORE_BED_MIN
+        TimePickDialog(
+            initialMin = (if (which == 0) start else bed) % 1440,
+            onDismiss = { timeDialog = null },
+            onPick = { h, m ->
+                timeDialog = null
+                val picked = h * 60 + m
+                if (which == 0) {
+                    start = picked.coerceIn(0, (end - 60).coerceAtLeast(0))
+                } else {
+                    val b = if (picked < start + 3 * 60) picked + 1440 else picked
+                    val clampedBed = b.coerceIn(start + 3 * 60, SETTINGS_MAX_BED_MIN)
+                    end = (clampedBed - STOP_BEFORE_BED_MIN).coerceIn(start + 60, SETTINGS_LAST_END_MIN)
+                }
+            },
+        )
+    }
 }
 
 /** Ayarlar'da gruplanmış bölüm: başlık + içerik, kenarlıklı yuvarlak kart. */
@@ -312,6 +337,49 @@ internal fun SettingsGroup(title: String, content: @Composable ColumnScope.() ->
     ) {
         Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         content()
+    }
+}
+
+/** Seyrek kullanılan ayar grupları için dokununca açılan katlanabilir kart. */
+@Composable
+private fun CollapsibleSettingsGroup(
+    title: String,
+    badge: String? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    var expanded by rememberSaveable(title) { mutableStateOf(false) }
+    val shape = RoundedCornerShape(20.dp)
+    val toggleDesc = stringResource(if (expanded) R.string.collapse_section else R.string.expand_section)
+    Column(
+        Modifier.fillMaxWidth().clip(shape).background(MaterialTheme.colorScheme.surface).border(1.dp, Ab.line, shape),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                .clickable(role = Role.Button) { expanded = !expanded }
+                .semantics(mergeDescendants = true) { contentDescription = "$title, $toggleDesc" }
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                title,
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            if (badge != null) {
+                Text(badge, style = MaterialTheme.typography.bodySmall, color = Ab.muted)
+            }
+            Text(if (expanded) "\u25B4" else "\u25BE", color = Ab.muted, style = MaterialTheme.typography.titleMedium)
+        }
+        AnimatedVisibility(visible = expanded) {
+            Column(
+                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                content = content,
+            )
+        }
     }
 }
 

@@ -75,6 +75,10 @@ fun PermissionsContent() {
             open(notifSettings)
         }
     }
+    val locLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        tick++
+        if (!granted) open(appDetails)
+    }
 
     PermissionRow(stringResource(R.string.perm_notifications), notifOn) {
         if (!notifOn && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -83,7 +87,9 @@ fun PermissionsContent() {
             open(notifSettings)
         }
     }
-    PermissionRow(stringResource(R.string.perm_location), locOn) { open(appDetails) }
+    PermissionRow(stringResource(R.string.perm_location), locOn) {
+        if (!locOn) locLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) else open(appDetails)
+    }
     BatteryTipSection()
 }
 

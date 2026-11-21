@@ -173,7 +173,11 @@ fun HomeScreen(
 
     val remaining = today.goalMl - today.drankMl
     val pace = paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, nowMin)
-    val plan = nextPlan(nowMin, s.windowStartMin, s.windowEndMin, today.goalMl, today.drankMl, s.reminderIntervalMin(), today.anchorMin)
+    val plan = if (s.remindersEnabled) {
+        nextPlan(nowMin, s.windowStartMin, s.windowEndMin, today.goalMl, today.drankMl, s.reminderIntervalMin(), today.anchorMin)
+    } else {
+        null
+    }
 
     val temp = s.tempToday(LocalDate.now())
     val hasWeather = s.useWeather && temp != null
@@ -204,7 +208,7 @@ fun HomeScreen(
                         contentAlignment = Alignment.Center,
                     ) {
                         BellIcon(Ab.strong)
-                        if (!notifAllowed) {
+                        if (s.remindersEnabled && !notifAllowed) {
                             Box(Modifier.align(Alignment.TopEnd).padding(11.dp).size(9.dp).clip(CircleShape).background(AbColors.Aqua1))
                         }
                     }
