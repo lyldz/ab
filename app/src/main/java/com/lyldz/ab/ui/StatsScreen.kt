@@ -1,6 +1,7 @@
 package com.lyldz.ab.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -30,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
 import com.lyldz.ab.core.DayStat
 import com.lyldz.ab.core.summarize
+import com.lyldz.ab.ui.theme.Ab
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
@@ -102,7 +105,13 @@ fun StatsScreen(stats: List<DayStat>, days: Int, onDays: (Int) -> Unit, onBack: 
 
 @Composable
 private fun SummaryCard(label: String, value: String, sub: String?, modifier: Modifier) {
-    Card(modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+    Card(
+        modifier,
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, Ab.line),
+        elevation = CardDefaults.cardElevation(0.dp),
+    ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             Text(value, style = MaterialTheme.typography.titleMedium)
@@ -114,6 +123,7 @@ private fun SummaryCard(label: String, value: String, sub: String?, modifier: Mo
 /** Her gün bir çubuk (hedefe ulaşıldıysa tam renk); arkasındaki soluk zemin o günün hedef yüksekliğidir. */
 @Composable
 private fun BarChart(stats: List<DayStat>, modifier: Modifier) {
+    if (stats.isEmpty()) return
     val bar = MaterialTheme.colorScheme.primary
     val dim = bar.copy(alpha = 0.45f)
     val axis = MaterialTheme.colorScheme.surfaceVariant

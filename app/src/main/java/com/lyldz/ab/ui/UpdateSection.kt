@@ -73,10 +73,12 @@ fun UpdateSection() {
                     onClick = {
                         if (!ctx.packageManager.canRequestPackageInstalls()) {
                             permHint = true
-                            ctx.startActivity(
-                                Intent(AndroidSettings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}"))
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                            )
+                            runCatching {
+                                ctx.startActivity(
+                                    Intent(AndroidSettings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}"))
+                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                                )
+                            }
                         } else {
                             permHint = false
                             scope.launch {
