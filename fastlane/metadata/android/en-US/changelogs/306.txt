@@ -1,0 +1,2 @@
+Cleaner home screen with a single split Add Water button (Add | Glass picker) and a larger water orb.
+Simplified 5-group Settings with reminders toggle, in-app language picker (System/TR/EN), battery status indicator, and past-day logging.

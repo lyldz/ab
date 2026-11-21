@@ -1,0 +1,2 @@
+Ana ekran sadeleşti: tek bölünmüş su ekleme düğmesi (+ Su Ekle | Ölçü seçici) ve daha ferah su göstergesi.
+Ayarlar 5 sade gruba indirildi; hatırlatma aç/kapat, dil seçimi (Sistem/TR/EN), pil durum rozeti ve geçmiş güne kayıt ekleme geldi.
