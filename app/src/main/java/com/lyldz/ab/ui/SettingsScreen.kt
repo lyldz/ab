@@ -13,7 +13,9 @@ import androidx.compose.ui.text.font.FontWeight
 import com.lyldz.ab.core.seriesName
 import com.lyldz.ab.data.Updater
 import com.lyldz.ab.ui.theme.Ab
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -85,6 +87,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     var lon by rememberSaveable { mutableStateOf(s.lon) }
     var cityDialog by remember { mutableStateOf(false) }
     var locMessage by remember { mutableStateOf(false) }
+    var restoredFromBackup by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
     BackHandler(onBack = onBack)
@@ -130,11 +133,23 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     val today = LocalDate.now()
     val goal = draft.goalMl(today)
     val valid = weightOk && (!manual || manualMl != null)
+    val latestDraft by rememberUpdatedState(draft)
+    val latestSaved by rememberUpdatedState(s)
+    val latestValid by rememberUpdatedState(valid)
+    val latestOnSave by rememberUpdatedState(onSave)
+    val latestRestored by rememberUpdatedState(restoredFromBackup)
     // otomatik kaydet: kullanıcı kaydet düğmesine basmayı unutup sekme değiştirince ayar kaybolmasın
     LaunchedEffect(draft, valid) {
         if (valid && draft != s) {
             delay(500)
             onSave(draft)
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            if (!latestRestored && latestValid && latestDraft != latestSaved) {
+                latestOnSave(latestDraft)
+            }
         }
     }
     val earlier = stringResource(R.string.earlier)
@@ -250,7 +265,12 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
 
         SettingsGroup(stringResource(R.string.grp_perms)) { PermissionsContent() }
 
-        SettingsGroup(stringResource(R.string.backup_title)) { BackupSection(onRestored = onBack) }
+        SettingsGroup(stringResource(R.string.backup_title)) {
+            BackupSection(onRestored = {
+                restoredFromBackup = true
+                onBack()
+            })
+        }
 
         SettingsGroup(stringResource(R.string.update_title)) { UpdateSection() }
 
