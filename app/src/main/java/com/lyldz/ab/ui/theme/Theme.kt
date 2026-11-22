@@ -16,61 +16,60 @@ import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import com.lyldz.ab.R
 
-/** Tasarım sistemi belirteçleri (docs/design/brand/spec): Aqua, Mint, Deep Navy, Pearl, Slate, Mist. */
+/** Palet 2 — Derin Gece & Elektrik Turkuaz (Konsept A "ab" ligatürüyle uyumlu). */
 object AbColors {
-    val Aqua1 = Color(0xFF88D9E6)
+    val Aqua1 = Color(0xFF5CE1E6)
     val Aqua2 = Color(0xFFA0E7E5)
-    val Teal = Color(0xFF5BC0BE)
-    val DeepTeal = Color(0xFF1F7F92)
+    val Teal = Color(0xFF22B8CF)
+    val DeepTeal = Color(0xFF0E7490)
     val Ocean = Color(0xFF0A7FA8)
-    val Navy = Color(0xFF0F203C)
+    val Navy = Color(0xFF0B253A)
     val Pearl = Color(0xFFF8FAFC)
-    val Ice = Color(0xFFF3FAFC)
+    val Ice = Color(0xFFF4F9FB)
     val Slate = Color(0xFF475B70)
     val SlateLight = Color(0xFF7B93A4)
-    val Mist = Color(0xFFD6E9EF)
+    val Mist = Color(0xFFD5E8F0)
 }
 
-// Açık tema (tasarım kılavuzu). Etkileşimli metinler (düğme yazısı, anahtar) okunaklı olsun
-// diye Material "primary" derin turkuaz (#1F7F92); saf aqua/mint görsellerde (gösterge, düğme gradyanı) kullanılır.
+// Açık tema: ferah buzul zemin (#F4F9FB), derin lacivert metin (#0B253A), keskin okyanus-teal vurgu (#0E7490).
 private val Light = lightColorScheme(
     primary = AbColors.DeepTeal,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFE0F5F8),
+    primaryContainer = Color(0xFFDFF6FA),
     onPrimaryContainer = AbColors.Navy,
     secondary = AbColors.Teal,
     onSecondary = AbColors.Navy,
-    secondaryContainer = Color(0xFFE6F8F8),
+    secondaryContainer = Color(0xFFE6F8FA),
     onSecondaryContainer = AbColors.Navy,
     background = AbColors.Ice,
     onBackground = AbColors.Navy,
     surface = Color.White,
     onSurface = AbColors.Navy,
-    surfaceVariant = Color(0xFFEBF4F7),
+    surfaceVariant = Color(0xFFEAF4F8),
     onSurfaceVariant = AbColors.Slate,
     outline = AbColors.SlateLight,
     outlineVariant = AbColors.Mist,
     tertiary = Color(0xFFB08A3E),
 )
 
-// Koyu tema: derin okyanus-siyah zemin, yüksek kontrastlı açık metin, parlak turkuaz/aqua vurgular.
+// Koyu tema: derin gece laciverti (#06131F), parlak elektrik turkuaz vurgu (#5CE1E6).
 private val Dark = darkColorScheme(
     primary = AbColors.Aqua1,
     onPrimary = AbColors.Navy,
-    primaryContainer = Color(0xFF132D35),
-    onPrimaryContainer = Color(0xFFE8FAFD),
-    secondary = AbColors.Aqua2,
+    primaryContainer = Color(0xFF102A3C),
+    onPrimaryContainer = Color(0xFFF0F9FF),
+    secondary = Color(0xFF38BDF8),
     onSecondary = AbColors.Navy,
-    secondaryContainer = Color(0xFF142E33),
-    onSecondaryContainer = Color(0xFFE8FAFD),
-    background = Color(0xFF070C10),
-    onBackground = Color(0xFFF1F7FA),
-    surface = Color(0xFF101920),
-    onSurface = Color(0xFFF1F7FA),
-    surfaceVariant = Color(0xFF18252E),
-    onSurfaceVariant = Color(0xFFA6BDCB),
-    outline = Color(0xFF6A8392),
-    outlineVariant = Color(0xFF213440),
+    secondaryContainer = Color(0xFF122E40),
+    onSecondaryContainer = Color(0xFFF0F9FF),
+    background = Color(0xFF06131F),
+    onBackground = Color(0xFFF0F9FF),
+    surface = Color(0xFF0D1F30),
+    onSurface = Color(0xFFF0F9FF),
+    surfaceVariant = Color(0xFF142B40),
+    onSurfaceVariant = Color(0xFFA3BED0),
+    outline = Color(0xFF668399),
+    outlineVariant = Color(0xFF1E374D),
     tertiary = Color(0xFFD9B96A),
 )
 

@@ -1,0 +1,2 @@
+New geometric "ab" ligature app icon with a water droplet counter and a crisp monochrome bold-"b" droplet notification icon.
+Updated to the Deep Night & Electric Turquoise palette and added high-contrast glossy water droplets in light theme.

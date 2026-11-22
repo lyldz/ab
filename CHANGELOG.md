@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [0.3.8] - 2026-11-22 · Testi
+### Changed
+- Yeni uygulama logosu (Konsept A): derin gece laciverti (`#0B253A`) üzerinde `b` içinde negatif alan su damlası barındıran geometrik elektrik turkuaz `ab` ligatürü (Android 13+ monokrom temalı ikon dahil).
+- Yeni siyah-beyaz 24 dp bildirim ve Hızlı Ayarlar simgesi (İkon 4): dolu su damlası içinde kalın, durum çubuğunda net okunan geometrik `b` negatif alanı.
+- Renk paleti **Derin Gece & Elektrik Turkuaz** (Palet 2) olarak güncellendi (`Theme.kt` ve `AbWidget.kt`).
+- Açık temada `WaterOrb` hedef aşımı taşma halkası ve 8 adet 4 katmanlı cam su zerreciği (gölge + gradyan + ince kenarlık + beyaz parıltı) yüksek kontrastla görünür hale getirildi.
+
 ## [0.3.7] - 2026-11-22 · Testi
 ### Added
 - Android Hızlı Ayarlar kutucuğu (Quick Settings Tile): uygulamayı açmadan bildirim çekmecesinden tek dokunuşla su ekleme ve alt başlıkta günlük ilerleme.
