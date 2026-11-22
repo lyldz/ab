@@ -1,5 +1,6 @@
 package com.lyldz.ab.tile
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
@@ -80,6 +81,7 @@ class AbTileService : TileService() {
         tile.updateTile()
     }
 
+    @SuppressLint("StartActivityAndCollapseDeprecated") // API 34+ PendingIntent dalını kullanır
     private fun openApp() {
         val intent = Intent(this, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
