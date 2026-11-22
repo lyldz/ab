@@ -1,6 +1,7 @@
 package com.lyldz.ab.ui
 
 import android.Manifest
+import android.app.AlarmManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -53,11 +55,21 @@ fun PermissionsContent() {
         onDispose { owner.lifecycle.removeObserver(obs) }
     }
     val notifOn = remember(tick) { Notifier.hasPermission(ctx) }
+    val exactAlarmOn = remember(tick) {
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            runCatching { ctx.getSystemService(AlarmManager::class.java)?.canScheduleExactAlarms() == true }.getOrDefault(false)
+    }
     val locOn = remember(tick) {
         ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
+    var testStatus by remember { mutableStateOf<Int?>(null) }
     val appDetails = Intent(AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${ctx.packageName}"))
     val notifSettings = Intent(AndroidSettings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(AndroidSettings.EXTRA_APP_PACKAGE, ctx.packageName)
+    val exactAlarmSettings = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        Intent(AndroidSettings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:${ctx.packageName}"))
+    } else {
+        appDetails
+    }
     fun open(intent: Intent) {
         runCatching { ctx.startActivity(intent) }
             .onFailure { runCatching { ctx.startActivity(appDetails) } }
@@ -87,8 +99,25 @@ fun PermissionsContent() {
             open(notifSettings)
         }
     }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        PermissionRow(stringResource(R.string.perm_exact_alarm), exactAlarmOn) { open(exactAlarmSettings) }
+    }
     PermissionRow(stringResource(R.string.perm_location), locOn) {
         if (!locOn) locLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) else open(appDetails)
+    }
+    OutlinedButton(
+        onClick = {
+            val sent = Notifier.showTest(ctx)
+            testStatus = if (sent) R.string.notif_test_sent else R.string.notif_test_no_perm
+        },
+        modifier = Modifier.heightIn(min = 48.dp),
+    ) { Text(stringResource(R.string.notif_test_btn)) }
+    testStatus?.let { msgRes ->
+        Text(
+            stringResource(msgRes),
+            style = MaterialTheme.typography.bodySmall,
+            color = if (msgRes == R.string.notif_test_sent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
+        )
     }
     BatteryTipSection()
 }

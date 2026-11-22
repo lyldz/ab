@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.Build
 import com.lyldz.ab.R
 import com.lyldz.ab.core.PACE_TOLERANCE_ML
 import com.lyldz.ab.core.Plan
@@ -45,11 +46,27 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
 
+    /**
+     * Android 12+'ta opsiyonel SCHEDULE_EXACT_ALARM izni verilmişse (veya API < 31) tam zamanında
+     * alarm kurar; izin yoksa sessizce inexact setAndAllowWhileIdle'a düşer.
+     */
+    private fun scheduleAt(triggerMs: Long, pi: PendingIntent) {
+        val safeMs = maxOf(triggerMs, System.currentTimeMillis() + 5_000L)
+        val canExact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            runCatching { alarm.canScheduleExactAlarms() }.getOrDefault(false)
+        if (canExact) {
+            runCatching { alarm.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, safeMs, pi) }
+                .onFailure { alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, safeMs, pi) }
+        } else {
+            alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, safeMs, pi)
+        }
+    }
+
     /** Her gün rutin başında bir kez: sıcaklığı al. Sıradaki rutin başına kurulur. */
     private fun scheduleMorning(startMin: Int, now: ZonedDateTime) {
         val startToday = now.toLocalDate().atStartOfDay(now.zone).plusMinutes(startMin.toLong())
         val at = if (now.isBefore(startToday)) startToday else startToday.plusDays(1)
-        alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at.toInstant().toEpochMilli(), morningPending())
+        scheduleAt(at.toInstant().toEpochMilli(), morningPending())
     }
 
     /** Çevrimdışı durumda hava durumu isteğini zaman aşımı beklemeden atlamak için aktif ağ kontrolü. */
@@ -126,7 +143,7 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
             // hedef doldu ya da pencere bitti: yarın rutin başında yeniden hesapla, bildirim yok
             day.plusDays(1).plusMinutes(t.settings.windowStartMin.toLong()) to false
         }
-        alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at.toInstant().toEpochMilli(), pending(notify))
+        scheduleAt(at.toInstant().toEpochMilli(), pending(notify))
     }
 
     /**
@@ -175,7 +192,9 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
             // 1 dk tolerans: saat ayarı ya da alarm kayması yüzünden dakika erken denk gelirse bildirim yutulmasın
             if (plan != null && plan.nextAtMin <= now.hour * 60 + now.minute + 1) {
                 val text = context.getString(R.string.notif_text, fmtMl(plan.amountMl), fmtMl(t.drankMl), fmtMl(t.goalMl))
-                Notifier.show(context, paceTitle(t, now.hour * 60 + now.minute), text, t.drankMl, t.goalMl, plan.amountMl)
+                // önceki sessiz durum bildirimini kaldır ki yeni hatırlatma taze ses/titreşimle gelsin
+                Notifier.cancel(context)
+                Notifier.show(context, paceTitle(t, now.hour * 60 + now.minute), text, t.drankMl, t.goalMl, plan.amountMl, quiet = false)
                 repo.markNotified(System.currentTimeMillis())
             }
         }

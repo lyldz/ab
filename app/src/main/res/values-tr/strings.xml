@@ -275,4 +275,10 @@
     <string name="src_tile">Hızlı Ayarlar</string>
     <string name="tile_label">Su ekle</string>
     <string name="tile_setup">Kurulumu tamamla</string>
+    <string name="perm_exact_alarm">Tam zamanında alarmlar</string>
+    <string name="notif_test_btn">Test bildirimi gönder</string>
+    <string name="notif_test_title">Test hatırlatması</string>
+    <string name="notif_test_text">Bildirimler sorunsuz çalışıyor.</string>
+    <string name="notif_test_sent">Test bildirimi gönderildi.</string>
+    <string name="notif_test_no_perm">Önce bildirim iznini açmalısın.</string>
 </resources>
