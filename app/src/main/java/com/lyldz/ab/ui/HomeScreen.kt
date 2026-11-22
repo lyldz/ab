@@ -112,6 +112,7 @@ fun HomeScreen(
     onRestore: (Intake) -> Unit,
     onEdit: (Intake, Int, Int) -> Unit,
     onSetCup: (Int) -> Unit,
+    onSetPresets: (List<Int>) -> Unit = {},
     openCustom: Boolean = false,
     onCustomConsumed: () -> Unit = {},
     streak: Int = 0,
@@ -263,8 +264,8 @@ fun HomeScreen(
                             Text("${(rawFraction * 100).roundToInt()}%", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                         }
                         Row(verticalAlignment = Alignment.Bottom) {
-                            Text(fmtMl(today.drankMl), fontSize = (orb.value * 0.15f).coerceIn(26f, 40f).sp, fontWeight = FontWeight.ExtraBold, color = Ab.strong)
-                            Text(" ml", color = Ab.muted, modifier = Modifier.padding(bottom = 5.dp))
+                            Text(fmtVolNum(today.drankMl, s.unit), fontSize = (orb.value * 0.15f).coerceIn(26f, 40f).sp, fontWeight = FontWeight.ExtraBold, color = Ab.strong)
+                            Text(" ${unitLabel(s.unit)}", color = Ab.muted, modifier = Modifier.padding(bottom = 5.dp))
                         }
                         Text(
                             if (remaining < 0) stringResource(R.string.over_label, fmtMl(-remaining))
@@ -279,7 +280,7 @@ fun HomeScreen(
 
                 val nextAt = plan?.nextAtMin
                 val nextNeed = if (plan != null) paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, plan.nextAtMin) - today.drankMl else 0
-                TimelineCard(today.entries, nextAt, nextNeed, streak) { editing = it }
+                TimelineCard(today.entries, nextAt, nextNeed, streak, s.unit) { editing = it }
 
                 val pill = RoundedCornerShape(999.dp)
                 val addDesc = stringResource(R.string.add_ml, fmtMl(s.cupMl))
@@ -303,7 +304,7 @@ fun HomeScreen(
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
-                                "${stringResource(R.string.add_water)} (${fmtMl(s.cupMl)} ml)",
+                                "${stringResource(R.string.add_water)} (${fmtVol(s.cupMl, s.unit)})",
                                 style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = AbColors.Navy,
                                 maxLines = 1,
                             )
@@ -366,7 +367,16 @@ fun HomeScreen(
     }
 
     if (goalInfo) GoalInfoDialog(today, temp, onDismiss = { goalInfo = false }, onSettings = { goalInfo = false; onOpenSettings() })
-    if (cupDialog) CupDialog(s.cupMl, onDismiss = { cupDialog = false }, onPick = { cupDialog = false; onSetCup(it); add(it) })
+    if (cupDialog) {
+        CupDialog(
+            current = s.cupMl,
+            presets = s.cupPresets,
+            unit = s.unit,
+            onDismiss = { cupDialog = false },
+            onPick = { cupDialog = false; onSetCup(it); add(it) },
+            onSavePresets = onSetPresets,
+        )
+    }
     if (custom) CustomDialog(onDismiss = { custom = false }, onAdd = { custom = false; add(it) })
     editing?.let { e ->
         EditDialog(
@@ -471,7 +481,7 @@ private fun HintBubble(text: String) {
 
 /** Bugünün kayıtları: çizgi üzerinde onay işaretli düğümler, son düğüm sıradaki hatırlatma; çoksa yatay kayar. */
 @Composable
-private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int, streak: Int, onEntry: (Intake) -> Unit) {
+private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int, streak: Int, unit: Int = UNIT_ML, onEntry: (Intake) -> Unit) {
     val shape = RoundedCornerShape(24.dp)
     val context = LocalContext.current
     val sorted = entries.sortedBy { it.atMs }
@@ -509,7 +519,7 @@ private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     sorted.forEach { e ->
-                        TimelineNode(done = true, time = fmtTime(minuteOfDay(e.atMs)), detail = "${fmtMl(e.ml)} ml", onClick = { onEntry(e) })
+                        TimelineNode(done = true, time = fmtTime(minuteOfDay(e.atMs)), detail = fmtVol(e.ml, unit), onClick = { onEntry(e) })
                     }
                     if (nextAtMin != null) {
                         TimelineNode(
@@ -606,23 +616,40 @@ private fun BellIcon(color: Color) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
-private fun CupDialog(current: Int, onDismiss: () -> Unit, onPick: (Int) -> Unit) {
+private fun CupDialog(
+    current: Int,
+    presets: List<Int>,
+    unit: Int,
+    onDismiss: () -> Unit,
+    onPick: (Int) -> Unit,
+    onSavePresets: (List<Int>) -> Unit,
+) {
     var custom by remember { mutableStateOf("") }
-    val customMl = custom.toIntOrNull()?.takeIf { it in 50..1000 }
+    var list by remember(presets) { mutableStateOf(presets) }
+    val customMl = custom.toIntOrNull()?.takeIf { it in 50..2000 }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.cup_dialog_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    listOf(100, 150, 200, 250, 300, 400, 500).forEach { ml ->
+                    list.forEach { ml ->
                         val selected = ml == current
                         val cupDesc = stringResource(R.string.add_ml, fmtMl(ml))
                         Column(
                             Modifier.heightIn(min = 48.dp)
-                                .selectable(selected = selected, role = Role.RadioButton, onClick = { onPick(ml) })
+                                .combinedClickable(
+                                    role = Role.RadioButton,
+                                    onLongClick = {
+                                        if (list.size > 2) {
+                                            val next = list - ml
+                                            list = next
+                                            onSavePresets(next)
+                                        }
+                                    },
+                                ) { onPick(ml) }
                                 .semantics(mergeDescendants = true) { contentDescription = cupDesc }
                                 .padding(4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -633,9 +660,12 @@ private fun CupDialog(current: Int, onDismiss: () -> Unit, onPick: (Int) -> Unit
                                 ),
                                 contentAlignment = Alignment.Center,
                             ) { CupIcon(ml) }
-                            Text("${fmtMl(ml)} ml", style = MaterialTheme.typography.bodySmall)
+                            Text(fmtVol(ml, unit), style = MaterialTheme.typography.bodySmall)
                         }
                     }
+                }
+                if (list.size > 2) {
+                    Text(stringResource(R.string.cup_remove_hint), style = MaterialTheme.typography.labelSmall, color = Ab.faint)
                 }
                 OutlinedTextField(
                     value = custom,
@@ -645,6 +675,16 @@ private fun CupDialog(current: Int, onDismiss: () -> Unit, onPick: (Int) -> Unit
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
+                if (customMl != null && customMl !in list && list.size < 8) {
+                    TextButton(
+                        onClick = {
+                            val next = (list + customMl).distinct().sorted()
+                            list = next
+                            onSavePresets(next)
+                        },
+                        modifier = Modifier.heightIn(min = 48.dp),
+                    ) { Text(stringResource(R.string.cup_save_preset)) }
+                }
             }
         },
         confirmButton = { TextButton(onClick = { customMl?.let(onPick) }, enabled = customMl != null) { Text(stringResource(R.string.cup_set)) } },

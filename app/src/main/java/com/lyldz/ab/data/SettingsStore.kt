@@ -19,6 +19,18 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 
+val DEFAULT_CUP_PRESETS = listOf(150, 200, 250, 330, 500, 750)
+
+fun parseCupPresets(raw: String?): List<Int> {
+    if (raw.isNullOrBlank()) return DEFAULT_CUP_PRESETS
+    val parsed = raw.split(',').mapNotNull { it.trim().toIntOrNull()?.takeIf { ml -> ml in 50..2000 } }
+        .distinct().sorted().take(8)
+    return parsed.ifEmpty { DEFAULT_CUP_PRESETS }
+}
+
+fun encodeCupPresets(presets: List<Int>): String =
+    presets.filter { it in 50..2000 }.distinct().sorted().take(8).ifEmpty { DEFAULT_CUP_PRESETS }.joinToString(",")
+
 data class Settings(
     val weightKg: Int = 70,
     val activity: Activity = Activity.NONE,
@@ -45,6 +57,10 @@ data class Settings(
     val remindersEnabled: Boolean = true,
     /** Uygulama dili: "" sistem, "tr" Türkçe, "en" İngilizce. */
     val language: String = "",
+    /** Gösterim birimi: 0 = ml, 1 = fl oz (tüm kayıtlar dahili olarak ml saklanır). */
+    val unit: Int = 0,
+    /** Kullanıcının özel bardak/şişe ön ayarları (ml). */
+    val cupPresets: List<Int> = DEFAULT_CUP_PRESETS,
     /** "Uzun bas" ipucunun kaç kez gösterildiği (3'te durur); ayar kaydı yazmaz, yalnızca [SettingsStore.setHintCount]. */
     val longPressHints: Int = 0,
 ) {
@@ -85,6 +101,8 @@ class SettingsStore(private val context: Context) {
             p[MOTION] = s.motionWater
             p[REMINDERS] = s.remindersEnabled
             p[LANGUAGE] = s.language
+            p[UNIT] = s.unit
+            p[CUP_PRESETS] = encodeCupPresets(s.cupPresets)
             p.putOrRemove(GOAL, s.goalOverrideMl)
             p.putOrRemove(CITY, s.city)
             p.putOrRemove(LAT, s.lat)
@@ -141,6 +159,8 @@ class SettingsStore(private val context: Context) {
             motionWater = this[MOTION] ?: d.motionWater,
             remindersEnabled = this[REMINDERS] ?: d.remindersEnabled,
             language = this[LANGUAGE]?.takeIf { it == "" || it == "tr" || it == "en" } ?: d.language,
+            unit = this[UNIT]?.takeIf { it in 0..1 } ?: d.unit,
+            cupPresets = parseCupPresets(this[CUP_PRESETS]),
             longPressHints = this[HINTS] ?: d.longPressHints,
         )
     }
@@ -165,6 +185,8 @@ class SettingsStore(private val context: Context) {
         val MOTION = booleanPreferencesKey("motion_water")
         val REMINDERS = booleanPreferencesKey("reminders_enabled")
         val LANGUAGE = stringPreferencesKey("language")
+        val UNIT = intPreferencesKey("unit")
+        val CUP_PRESETS = stringPreferencesKey("cup_presets")
         val HINTS = intPreferencesKey("long_press_hints")
         val LAST_NOTIFIED = longPreferencesKey("last_notified_ms")
     }
