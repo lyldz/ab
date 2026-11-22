@@ -1,0 +1,2 @@
+• Refined the app launcher icon and home header wordmark to faithfully match Concept A's curved "a" ligature tail flowing into "b" with balanced proportions.
+• Upgraded Gradle wrapper to 8.14.3.

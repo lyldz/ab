@@ -1,0 +1,2 @@
+• Uygulama ikonu ve ana ekran sol üst logosu, Konsept A'daki kıvrımlı "a" kuyruğu ve akışkan "ab" ligatürüyle birebir eşleşecek şekilde güncellendi.
+• Derleme altyapısı Gradle 8.14.3 sürümüne yükseltildi.
