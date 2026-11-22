@@ -272,4 +272,7 @@
     <string name="history_add_title">Add past water entry</string>
     <string name="history_pick_day">Day</string>
     <string name="history_card_add_hint">Tap to add water</string>
+    <string name="src_tile">Quick Settings</string>
+    <string name="tile_label">Add water</string>
+    <string name="tile_setup">Finish setup</string>
 </resources>

@@ -272,4 +272,7 @@
     <string name="history_add_title">Geçmiş güne kayıt ekle</string>
     <string name="history_pick_day">Gün</string>
     <string name="history_card_add_hint">Kayıt eklemek için dokun</string>
+    <string name="src_tile">Hızlı Ayarlar</string>
+    <string name="tile_label">Su ekle</string>
+    <string name="tile_setup">Kurulumu tamamla</string>
 </resources>

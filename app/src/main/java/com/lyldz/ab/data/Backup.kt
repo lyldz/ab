@@ -84,7 +84,7 @@ object Backup {
                 val at = o.optLong("at", 0L)
                 val ml = o.optInt("ml", 0)
                 if (at <= 0L || ml !in 1..5000) continue
-                intakes += Intake(atMs = at, ml = ml, source = o.optInt("src", SOURCE_APP).takeIf { it in 0..2 } ?: SOURCE_APP)
+                intakes += Intake(atMs = at, ml = ml, source = o.optInt("src", SOURCE_APP).takeIf { it in 0..3 } ?: SOURCE_APP)
             }
         }
         val goals = mutableListOf<DayGoal>()
