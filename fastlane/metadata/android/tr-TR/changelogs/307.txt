@@ -1,0 +1,2 @@
+Bildirim güvenilirliği düzeltildi: tam zamanında alarm (opsiyonel), taze sesli hatırlatma ve "Test bildirimi gönder" düğmesi eklendi.
+Android Hızlı Ayarlar kutucuğu, özel kap ön ayarları (kaydet/kaldır) ve ml / fl oz birim desteği geldi.

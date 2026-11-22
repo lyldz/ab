@@ -82,6 +82,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     var name by rememberSaveable { mutableStateOf(s.name) }
     var themeMode by rememberSaveable { mutableIntStateOf(s.themeMode) }
     var language by rememberSaveable { mutableStateOf(s.language) }
+    var unit by rememberSaveable { mutableIntStateOf(s.unit) }
     var remindersEnabled by rememberSaveable { mutableStateOf(s.remindersEnabled) }
     var weight by rememberSaveable { mutableStateOf(s.weightKg.toString()) }
     var activityIdx by rememberSaveable { mutableIntStateOf(s.activity.ordinal) }
@@ -125,6 +126,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
         name = name.trim(),
         themeMode = themeMode,
         language = language,
+        unit = unit,
         remindersEnabled = remindersEnabled,
         weightKg = kg ?: s.weightKg,
         activity = Activity.entries[activityIdx],
@@ -287,6 +289,16 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
                                 }
                             }
                         },
+                        label = { Text(stringResource(label)) },
+                    )
+                }
+            }
+            Text(stringResource(R.string.set_unit), style = MaterialTheme.typography.titleSmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(UNIT_ML to R.string.unit_ml, UNIT_OZ to R.string.unit_oz).forEach { (u, label) ->
+                    FilterChip(
+                        selected = unit == u,
+                        onClick = { unit = u },
                         label = { Text(stringResource(label)) },
                     )
                 }

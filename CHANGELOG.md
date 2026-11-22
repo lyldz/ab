@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+## [0.3.7] - 2026-11-22 · Testi
+### Added
+- Android Hızlı Ayarlar kutucuğu (Quick Settings Tile): uygulamayı açmadan bildirim çekmecesinden tek dokunuşla su ekleme ve alt başlıkta günlük ilerleme.
+- Özel kap ön ayarları (`CupDialog` içinde 50–2000 ml özel ölçü kaydetme / uzun basarak kaldırma) ve `ml` / `fl oz` birim desteği (*Ayarlar → Görünüm*).
+- Opsiyonel tam zamanında alarmlar (`SCHEDULE_EXACT_ALARM`) durum satırı ve tek dokunuşla "Test bildirimi gönder" düğmesi.
+### Fixed
+- Hatırlatma vakti geldiğinde önceki sessiz durum bildirimi kaldırılıp yeni hatırlatma taze ses/titreşimle gönderilir (Android/Xiaomi'de sessiz güncelleme yutulması giderildi).
+- İzin açıksa `setExactAndAllowWhileIdle` kullanılır ve geçmiş zamana alarm kurulması engellenir (`+5 sn` alt sınır).
+
 ## [0.3.6] - 2026-11-21 · Testi
 ### Added
 - Geçmiş güne kayıt ekleme (U-04): Geçmiş ekranında "+ Geçmişe ekle" ve gün kartına dokunarak son 7 gün içindeki unutulan su kayıtlarını miktar ve saatle ekleyebilme.

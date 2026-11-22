@@ -275,6 +275,11 @@
     <string name="src_tile">Quick Settings</string>
     <string name="tile_label">Add water</string>
     <string name="tile_setup">Finish setup</string>
+    <string name="set_unit">Unit</string>
+    <string name="unit_ml">ml</string>
+    <string name="unit_oz">fl oz</string>
+    <string name="cup_save_preset">Save to presets</string>
+    <string name="cup_remove_hint">Long press to remove</string>
     <string name="perm_exact_alarm">Exact alarms</string>
     <string name="notif_test_btn">Send test notification</string>
     <string name="notif_test_title">Test reminder</string>

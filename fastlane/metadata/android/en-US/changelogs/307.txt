@@ -1,0 +1,2 @@
+Fixed notification reliability: optional exact alarms, fresh audible reminder alerts, and a 1-tap "Send test notification" button.
+Added Android Quick Settings tile, custom vessel presets (save/remove), and ml / fl oz unit support.

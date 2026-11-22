@@ -59,6 +59,7 @@ fun HistoryScreen(
     stats: List<DayStat>,
     onBack: () -> Unit,
     defaultCupMl: Int = 200,
+    unit: Int = UNIT_ML,
     onAddForDay: ((LocalDate, Int, Int) -> Unit)? = null,
 ) {
     BackHandler(onBack = onBack)
@@ -115,7 +116,7 @@ fun HistoryScreen(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text(dayText, fontWeight = FontWeight.SemiBold, color = Ab.strong)
                         Text(
-                            "${fmtMl(d.ml)} / ${fmtMl(d.goalMl)} ml" + if (d.reached) "  \u2713" else "",
+                            "${fmtVolNum(d.ml, unit)} / ${fmtVol(d.goalMl, unit)}" + if (d.reached) "  \u2713" else "",
                             fontWeight = if (d.reached) FontWeight.SemiBold else FontWeight.Normal,
                             color = when {
                                 d.reached -> MaterialTheme.colorScheme.primary

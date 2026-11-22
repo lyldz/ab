@@ -275,6 +275,11 @@
     <string name="src_tile">Hızlı Ayarlar</string>
     <string name="tile_label">Su ekle</string>
     <string name="tile_setup">Kurulumu tamamla</string>
+    <string name="set_unit">Birim</string>
+    <string name="unit_ml">ml</string>
+    <string name="unit_oz">fl oz</string>
+    <string name="cup_save_preset">Ölçülere kaydet</string>
+    <string name="cup_remove_hint">Kaldırmak için uzun bas</string>
     <string name="perm_exact_alarm">Tam zamanında alarmlar</string>
     <string name="notif_test_btn">Test bildirimi gönder</string>
     <string name="notif_test_title">Test hatırlatması</string>
