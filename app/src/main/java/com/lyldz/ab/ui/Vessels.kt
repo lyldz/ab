@@ -86,18 +86,22 @@ fun WaterOrb(
         val ring = outer * 0.82f
         val inner = ring - 7.dp.toPx()
 
-        // hale: doluluk arttıkça açık aquadan derin okyanus mavisine döner, güçlenir ve dışa yayılır
+        // hale: doluluk arttıkça açık aquadan derin okyanus mavisine döner; açık temada damlacıkları yutmaması için dengeli
         val f = level.coerceIn(0f, 1f)
         val ov = overflow.coerceIn(0f, 1f)
-        val haloColor = lerp(AbColors.Aqua1, AbColors.Ocean, f)
-        val haloAlpha = ((if (dark) 0.16f else 0.22f) + (if (dark) 0.42f else 0.50f) * f + 0.14f * ov).coerceAtMost(0.88f)
+        val haloColor = if (dark) lerp(AbColors.Aqua1, AbColors.Ocean, f) else lerp(AbColors.Aqua1, AbColors.Ocean, 0.20f + 0.55f * f)
+        val haloAlpha = if (dark) {
+            (0.16f + 0.42f * f + 0.14f * ov).coerceAtMost(0.88f)
+        } else {
+            (0.09f + 0.23f * f + 0.06f * ov).coerceAtMost(0.38f)
+        }
         val solid = ring / outer
         drawCircle(
             Brush.radialGradient(
                 colorStops = arrayOf(
                     0f to haloColor.copy(alpha = haloAlpha),
                     solid to haloColor.copy(alpha = haloAlpha),
-                    solid + (1f - solid) * 0.48f to haloColor.copy(alpha = haloAlpha * 0.42f),
+                    solid + (1f - solid) * 0.48f to haloColor.copy(alpha = haloAlpha * if (dark) 0.42f else 0.30f),
                     1f to Color.Transparent,
                 ),
                 center = c, radius = outer,
@@ -119,31 +123,89 @@ fun WaterOrb(
                 }
                 close()
             }
-            drawPath(
-                spillPath,
-                Brush.radialGradient(
-                    colorStops = arrayOf(
-                        (ring / outer).coerceIn(0f, 0.9f) to AbColors.Aqua1.copy(alpha = (if (dark) 0.42f else 0.58f) * ov),
-                        1f to AbColors.Aqua2.copy(alpha = 0.06f * ov),
+            val spillStop = (ring / outer).coerceIn(0f, 0.9f)
+            if (dark) {
+                drawPath(
+                    spillPath,
+                    Brush.radialGradient(
+                        colorStops = arrayOf(
+                            spillStop to AbColors.Aqua1.copy(alpha = 0.42f * ov),
+                            1f to AbColors.Aqua2.copy(alpha = 0.06f * ov),
+                        ),
+                        center = c,
+                        radius = outer,
                     ),
-                    center = c,
-                    radius = outer,
-                ),
-            )
-            // kenardan dışarı süzülen küçük taşma damlacıkları
+                )
+            } else {
+                drawPath(
+                    spillPath,
+                    Brush.radialGradient(
+                        colorStops = arrayOf(
+                            spillStop to AbColors.Teal.copy(alpha = 0.48f * ov),
+                            (spillStop + 1f) * 0.5f to AbColors.Aqua1.copy(alpha = 0.28f * ov),
+                            1f to AbColors.DeepTeal.copy(alpha = 0.14f * ov),
+                        ),
+                        center = c,
+                        radius = outer,
+                    ),
+                )
+                drawPath(
+                    spillPath,
+                    color = AbColors.DeepTeal.copy(alpha = 0.58f * ov),
+                    style = Stroke(width = 1.25.dp.toPx(), join = StrokeJoin.Round),
+                )
+            }
+            // kenardan dışarı süzülen 8 adet taşma damlacığı (açık temada 4 katmanlı cam su zerreciği)
             val twoPi = (2 * PI).toFloat()
-            val dropCount = 6
+            val dropCount = 8
             for (i in 0 until dropCount) {
                 val progress = ((phaseA / twoPi) + i.toFloat() / dropCount) % 1f
-                val ang = i * (twoPi / dropCount) + 0.35f * sin(phaseB + i)
-                val dist = ring + (outer - ring) * (0.18f + 0.78f * progress)
-                val dropR = (2.2f + 2.4f * ov).dp.toPx() * (1f - 0.35f * progress)
-                val dropAlpha = sin(progress * PI.toFloat()) * (if (dark) 0.78f else 0.88f) * (0.45f + 0.55f * ov)
-                drawCircle(
-                    color = if (i % 2 == 0) AbColors.Aqua1.copy(alpha = dropAlpha) else AbColors.Aqua2.copy(alpha = dropAlpha),
-                    radius = dropR,
-                    center = Offset(c.x + dist * cos(ang), c.y + dist * sin(ang)),
-                )
+                val ang = i * (twoPi / dropCount) + 0.26f * sin(phaseB + i * 1.3f)
+                val dist = ring + (outer - ring) * (0.16f + 0.78f * progress)
+                val sizeScale = when (i % 3) { 0 -> 1.15f; 1 -> 0.92f; else -> 0.76f }
+                val dropR = ((2.3f + 2.3f * ov) * sizeScale).dp.toPx() * (1f - 0.32f * progress)
+                val center = Offset(c.x + dist * cos(ang), c.y + dist * sin(ang))
+                if (dark) {
+                    val dropAlpha = sin(progress * PI.toFloat()) * 0.78f * (0.45f + 0.55f * ov)
+                    drawCircle(
+                        color = if (i % 2 == 0) AbColors.Aqua1.copy(alpha = dropAlpha) else AbColors.Aqua2.copy(alpha = dropAlpha),
+                        radius = dropR,
+                        center = center,
+                    )
+                } else {
+                    val dropAlpha = sin(progress * PI.toFloat()) * 0.92f * (0.50f + 0.50f * ov)
+                    // 1) hafif dış gölge
+                    drawCircle(
+                        color = AbColors.Navy.copy(alpha = 0.12f * dropAlpha),
+                        radius = dropR * 1.12f,
+                        center = center + Offset(0f, 0.8.dp.toPx()),
+                    )
+                    // 2) kontrastlı cam damlacık gövdesi
+                    val edgeColor = when (i % 3) { 0 -> AbColors.Ocean; 1 -> AbColors.DeepTeal; else -> AbColors.Teal }
+                    val coreColor = when (i % 3) { 0 -> AbColors.Teal; 1 -> AbColors.Aqua1; else -> AbColors.Aqua2 }
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(coreColor.copy(alpha = dropAlpha), edgeColor.copy(alpha = dropAlpha)),
+                            center = center - Offset(dropR * 0.2f, dropR * 0.2f),
+                            radius = (dropR * 1.15f).coerceAtLeast(1f),
+                        ),
+                        radius = dropR,
+                        center = center,
+                    )
+                    // 3) ince yüzey gerilimi kenarlığı
+                    drawCircle(
+                        color = AbColors.DeepTeal.copy(alpha = 0.62f * dropAlpha),
+                        radius = dropR,
+                        center = center,
+                        style = Stroke(width = 0.85.dp.toPx()),
+                    )
+                    // 4) sol üst beyaz ışık yansıması
+                    drawCircle(
+                        color = Color.White.copy(alpha = 0.88f * dropAlpha),
+                        radius = (dropR * 0.28f).coerceAtLeast(0.7.dp.toPx()),
+                        center = center + Offset(-dropR * 0.32f, -dropR * 0.32f),
+                    )
+                }
             }
         }
         drawCircle(card, ring, c)
