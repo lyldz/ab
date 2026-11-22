@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [0.3.10] - 2026-11-22 · Testi
+### Changed
+- Uygulama logosu (`ic_launcher_foreground.xml`, `ic_launcher_monochrome.xml`) ve ana ekran sol üst logosu (`ic_wordmark.xml`, `ic_wordmark_light.xml`), Konsept A tasarımına birebir uyacak şekilde `a` harfinin `b` altına doğru kıvrılan akışkan kuyruğu, dengeli `b` gövdesi ve ortalanmış su damlasıyla yenilendi.
+- Gradle wrapper `8.11.1` → `8.14.3` sürümüne güncellendi.
+
 ## [0.3.9] - 2026-11-22 · Testi
 ### Added
 - Ana ekran sağ üstte yeni **Profil ve hedef** ekranı (`ProfileScreen`): ad, kilo, hareket düzeyi, otomatik/elle günlük su hedefi ve konum/hava durumu ayarları artık doğrudan buradan yönetilir (isim girilmişse baş harf rozeti, yoksa minimalist kişi ikonu).
