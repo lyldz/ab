@@ -38,7 +38,7 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-fun StatsScreen(stats: List<DayStat>, days: Int, onDays: (Int) -> Unit, onBack: () -> Unit) {
+fun StatsScreen(stats: List<DayStat>, days: Int, onDays: (Int) -> Unit, onBack: () -> Unit, unit: Int = UNIT_ML) {
     BackHandler(onBack = onBack)
     val sum = summarize(stats)
     Column(
@@ -56,7 +56,7 @@ fun StatsScreen(stats: List<DayStat>, days: Int, onDays: (Int) -> Unit, onBack: 
             Text(stringResource(R.string.stats_none), color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SummaryCard(stringResource(R.string.stats_avg), "${fmtMl(sum.avgMl)} ml", null, Modifier.weight(1f))
+                SummaryCard(stringResource(R.string.stats_avg), fmtVol(sum.avgMl, unit), null, Modifier.weight(1f))
                 SummaryCard(
                     stringResource(R.string.stats_reached),
                     stringResource(R.string.stats_days_fmt, sum.reachedDays.toString(), sum.recordedDays.toString()),
@@ -66,7 +66,7 @@ fun StatsScreen(stats: List<DayStat>, days: Int, onDays: (Int) -> Unit, onBack: 
                 sum.best?.let {
                     SummaryCard(
                         stringResource(R.string.stats_best),
-                        "${fmtMl(it.ml)} ml",
+                        fmtVol(it.ml, unit),
                         it.day.format(DateTimeFormatter.ofPattern("d MMM", Locale.getDefault())),
                         Modifier.weight(1f),
                     )

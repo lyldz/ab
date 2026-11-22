@@ -31,6 +31,8 @@ object Backup {
             .put("motionWater", s.motionWater)
             .put("remindersEnabled", s.remindersEnabled)
             .put("language", s.language)
+            .put("unit", s.unit)
+            .put("cupPresets", encodeCupPresets(s.cupPresets))
         s.goalOverrideMl?.let { settings.put("goalOverrideMl", it) }
         s.city?.let { settings.put("city", it) }
         s.lat?.let { settings.put("lat", it) }
@@ -75,6 +77,8 @@ object Backup {
             motionWater = so.optBoolean("motionWater", def.motionWater),
             remindersEnabled = so.optBoolean("remindersEnabled", def.remindersEnabled),
             language = so.optString("language", def.language).takeIf { it == "" || it == "tr" || it == "en" } ?: def.language,
+            unit = so.optInt("unit", def.unit).takeIf { it in 0..1 } ?: def.unit,
+            cupPresets = if (so.has("cupPresets")) parseCupPresets(so.optString("cupPresets")) else def.cupPresets,
             onboarded = true,
         )
         val intakes = mutableListOf<Intake>()

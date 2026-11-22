@@ -146,6 +146,7 @@ private fun AbContent(
                         t, nowMin, vm::add, vm::undo,
                         onDelete = vm::delete, onRestore = vm::restore, onEdit = vm::edit,
                         onSetCup = { vm.saveSettings(t.settings.copy(cupMl = it)) },
+                        onSetPresets = { vm.saveSettings(t.settings.copy(cupPresets = it)) },
                         openCustom = openCustom,
                         onCustomConsumed = onCustomConsumed,
                         streak = vm.streak.collectAsStateWithLifecycle().value,
@@ -156,12 +157,13 @@ private fun AbContent(
                     1 -> {
                         val stats by vm.stats.collectAsStateWithLifecycle()
                         val days by vm.periodDays.collectAsStateWithLifecycle()
-                        StatsScreen(stats, days, vm::setPeriod, onBack = { tab = 0 })
+                        StatsScreen(stats, days, vm::setPeriod, onBack = { tab = 0 }, unit = t.settings.unit)
                     }
                     2 -> HistoryScreen(
                         stats = vm.history.collectAsStateWithLifecycle().value,
                         onBack = { tab = 0 },
                         defaultCupMl = t.settings.cupMl,
+                        unit = t.settings.unit,
                         onAddForDay = vm::addForDay,
                     )
                     else -> SettingsScreen(t.settings, onSave = vm::saveSettings, onBack = { tab = 0 })
