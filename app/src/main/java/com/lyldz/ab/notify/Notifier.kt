@@ -109,6 +109,22 @@ object Notifier {
         runCatching { NotificationManagerCompat.from(ctx).cancel(NOTIF_ID) }
     }
 
+    /** Ayarlar'dan tek dokunuşla taze, sesli test bildirimi gönderir; izin yoksa false döner. */
+    fun showTest(ctx: Context): Boolean {
+        if (!hasPermission(ctx)) return false
+        cancel(ctx)
+        show(
+            ctx = ctx,
+            title = ctx.getString(R.string.notif_test_title),
+            text = ctx.getString(R.string.notif_test_text),
+            drankMl = 0,
+            goalMl = 2000,
+            firstMl = 200,
+            quiet = false,
+        )
+        return true
+    }
+
     /** Bildirim şu an gösteriliyor mu (kaydırılıp kapatılmadıysa). */
     fun isShowing(ctx: Context): Boolean = runCatching {
         ctx.getSystemService(NotificationManager::class.java)?.activeNotifications?.any { it.id == NOTIF_ID } == true

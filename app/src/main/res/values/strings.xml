@@ -280,4 +280,10 @@
     <string name="unit_oz">fl oz</string>
     <string name="cup_save_preset">Save to presets</string>
     <string name="cup_remove_hint">Long press to remove</string>
+    <string name="perm_exact_alarm">Exact alarms</string>
+    <string name="notif_test_btn">Send test notification</string>
+    <string name="notif_test_title">Test reminder</string>
+    <string name="notif_test_text">Notifications are working properly.</string>
+    <string name="notif_test_sent">Test notification sent.</string>
+    <string name="notif_test_no_perm">Enable notification permission first.</string>
 </resources>
