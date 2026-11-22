@@ -286,4 +286,6 @@
     <string name="notif_test_text">Notifications are working properly.</string>
     <string name="notif_test_sent">Test notification sent.</string>
     <string name="notif_test_no_perm">Enable notification permission first.</string>
+    <string name="profile_desc">Profile &amp; goal</string>
+    <string name="back_desc">Back</string>
 </resources>

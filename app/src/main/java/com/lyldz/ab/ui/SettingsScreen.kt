@@ -1,9 +1,6 @@
 package com.lyldz.ab.ui
 
-import android.Manifest
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,8 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,14 +17,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -54,112 +47,60 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
-import com.lyldz.ab.core.Activity
-import com.lyldz.ab.core.GOAL_WARN_ML
 import com.lyldz.ab.core.STOP_BEFORE_BED_MIN
 import com.lyldz.ab.core.seriesName
-import com.lyldz.ab.core.tempExtraMl
 import com.lyldz.ab.data.Settings
 import com.lyldz.ab.data.Updater
 import com.lyldz.ab.data.WeatherApi
-import com.lyldz.ab.data.currentCoarse
 import com.lyldz.ab.ui.theme.Ab
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import kotlin.math.roundToInt
 
 private const val SETTINGS_LAST_END_MIN = 23 * 60 + 30
 private const val SETTINGS_MAX_BED_MIN = SETTINGS_LAST_END_MIN + STOP_BEFORE_BED_MIN
 
-/** Değişiklikler geçerliyse yarım saniye sonra kendiliğinden kaydedilir (kaydet düğmesi yok); geçersiz alan kırmızı kalır, kaydedilmez. */
-@OptIn(ExperimentalLayoutApi::class)
+/**
+ * Uygulama ayarları (4 sade grup): Gün düzeni ve hatırlatmalar, Görünüm (Tema/Dil/Birim),
+ * katlanabilir Veri ve yedekleme, katlanabilir Uygulama ve hakkında.
+ * Kişisel bilgiler, hedef ve konum ana ekranın sağ üstündeki Profil ekranındadır.
+ */
 @Composable
 fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
-    var name by rememberSaveable { mutableStateOf(s.name) }
     var themeMode by rememberSaveable { mutableIntStateOf(s.themeMode) }
     var language by rememberSaveable { mutableStateOf(s.language) }
     var unit by rememberSaveable { mutableIntStateOf(s.unit) }
     var remindersEnabled by rememberSaveable { mutableStateOf(s.remindersEnabled) }
-    var weight by rememberSaveable { mutableStateOf(s.weightKg.toString()) }
-    var activityIdx by rememberSaveable { mutableIntStateOf(s.activity.ordinal) }
     var start by rememberSaveable { mutableIntStateOf(s.windowStartMin) }
     var end by rememberSaveable { mutableIntStateOf(s.windowEndMin) }
-    var useActivity by rememberSaveable { mutableStateOf(s.useActivity) }
-    var useWeather by rememberSaveable { mutableStateOf(s.useWeather) }
-    var manual by rememberSaveable { mutableStateOf(s.goalOverrideMl != null) }
-    var manualText by rememberSaveable { mutableStateOf((s.goalOverrideMl ?: s.goalMl(LocalDate.now())).toString()) }
-    var city by rememberSaveable { mutableStateOf(s.city) }
-    var lat by rememberSaveable { mutableStateOf(s.lat) }
-    var lon by rememberSaveable { mutableStateOf(s.lon) }
-    var cityDialog by remember { mutableStateOf(false) }
     var timeDialog by remember { mutableStateOf<Int?>(null) } // 0 kalkış, 1 yatış
-    var locMessage by remember { mutableStateOf(false) }
     var restoredFromBackup by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
     BackHandler(onBack = onBack)
 
-    fun useMyLocation() {
-        scope.launch {
-            val pos = currentCoarse(ctx)
-            locMessage = pos == null
-            if (pos != null) {
-                lat = pos.first
-                lon = pos.second
-                city = null
-            }
-        }
-    }
-    val locLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) useMyLocation() else locMessage = true
-    }
-
-    val kg = weight.toIntOrNull()
-    val weightOk = kg != null && kg in 30..250
-    val manualMl = manualText.toIntOrNull()?.takeIf { it in 500..8000 }
-    val placeChanged = lat != s.lat || lon != s.lon
     val draft = s.copy(
-        name = name.trim(),
         themeMode = themeMode,
         language = language,
         unit = unit,
         remindersEnabled = remindersEnabled,
-        weightKg = kg ?: s.weightKg,
-        activity = Activity.entries[activityIdx],
         windowStartMin = start,
         windowEndMin = end,
-        useActivity = useActivity,
-        useWeather = useWeather,
-        goalOverrideMl = if (manual) manualMl else null,
-        city = city,
-        lat = lat,
-        lon = lon,
-        // yer değişince eski sıcaklık geçersiz; kaydedince yeniden çekilir
-        tempC = if (placeChanged) null else s.tempC,
-        tempDay = if (placeChanged) null else s.tempDay,
     )
-    val today = LocalDate.now()
-    val goal = draft.goalMl(today)
-    val valid = weightOk && (!manual || manualMl != null)
     val latestDraft by rememberUpdatedState(draft)
     val latestSaved by rememberUpdatedState(s)
-    val latestValid by rememberUpdatedState(valid)
     val latestOnSave by rememberUpdatedState(onSave)
     val latestRestored by rememberUpdatedState(restoredFromBackup)
-    // otomatik kaydet: kullanıcı kaydet düğmesine basmayı unutup sekme değiştirince ayar kaybolmasın
-    LaunchedEffect(draft, valid) {
-        if (valid && draft != s) {
+
+    LaunchedEffect(draft) {
+        if (draft != s) {
             delay(500)
             onSave(draft)
         }
     }
     DisposableEffect(Unit) {
         onDispose {
-            if (!latestRestored && latestValid && latestDraft != latestSaved) {
+            if (!latestRestored && latestDraft != latestSaved) {
                 latestOnSave(latestDraft)
             }
         }
@@ -175,82 +116,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     ) {
         Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineLarge)
 
-        // 1. Profil ve Hedef (+ Hava & Konum birleşik)
-        SettingsGroup(stringResource(R.string.grp_profile_goal)) {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it.take(30) },
-                label = { Text(stringResource(R.string.set_name)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            OutlinedTextField(
-                value = weight,
-                onValueChange = { weight = it.filter(Char::isDigit).take(3) },
-                label = { Text(stringResource(R.string.onb_weight)) },
-                isError = !weightOk,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Text(stringResource(R.string.onb_activity), style = MaterialTheme.typography.titleSmall)
-            ActivityChips(activityIdx) { activityIdx = it }
-
-            HorizontalDivider(color = Ab.line)
-            Text(stringResource(R.string.onb_goal, fmtMl(goal)), style = MaterialTheme.typography.titleLarge)
-            SwitchRow(stringResource(R.string.set_use_activity), useActivity) { useActivity = it }
-            SwitchRow(stringResource(R.string.set_use_weather), useWeather) { useWeather = it }
-            if (useWeather) {
-                val cityText = when {
-                    city != null -> city!!
-                    lat != null -> stringResource(R.string.weather_city_location)
-                    else -> stringResource(R.string.weather_city_none)
-                }
-                Text(stringResource(R.string.weather_city, cityText), style = MaterialTheme.typography.bodyMedium, color = Ab.strong)
-                draft.tempToday(today)?.let {
-                    Text(
-                        stringResource(R.string.weather_today, it.roundToInt().toString(), fmtMl(tempExtraMl(it))),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Ab.muted,
-                    )
-                }
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { cityDialog = true }, modifier = Modifier.heightIn(min = 48.dp)) {
-                        Text(stringResource(R.string.weather_search))
-                    }
-                    OutlinedButton(
-                        onClick = { locLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) },
-                        modifier = Modifier.heightIn(min = 48.dp),
-                    ) { Text(stringResource(R.string.weather_use_location)) }
-                    if (lat != null) {
-                        TextButton(
-                            onClick = { lat = null; lon = null; city = null },
-                            modifier = Modifier.heightIn(min = 48.dp),
-                        ) { Text(stringResource(R.string.weather_clear)) }
-                    }
-                }
-                if (locMessage) Text(stringResource(R.string.weather_no_location), color = MaterialTheme.colorScheme.tertiary)
-                Text(stringResource(R.string.weather_credit), color = Ab.muted, style = MaterialTheme.typography.bodySmall)
-            }
-            SwitchRow(stringResource(R.string.set_override), manual) { manual = it }
-            if (manual) {
-                OutlinedTextField(
-                    value = manualText,
-                    onValueChange = { manualText = it.filter(Char::isDigit).take(4) },
-                    label = { Text(stringResource(R.string.set_goal_ml)) },
-                    isError = manualMl == null,
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            if (goal > GOAL_WARN_ML) {
-                Text(stringResource(R.string.set_goal_warn), color = MaterialTheme.colorScheme.tertiary)
-            }
-            Text(stringResource(R.string.onb_goal_note), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
-        }
-
-        // 2. Gün Düzeni ve Hatırlatmalar (TimePicker + Hatırlatma aç/kapat + İzinler & Pil)
+        // 1. Gün Düzeni ve Hatırlatmalar
         SettingsGroup(stringResource(R.string.grp_day_reminders)) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TimeCard(stringResource(R.string.onb_from), start, Modifier.weight(1f)) { timeDialog = 0 }
@@ -266,7 +132,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
             PermissionsContent()
         }
 
-        // 3. Görünüm
+        // 2. Görünüm (Tema, Dil, Birim)
         SettingsGroup(stringResource(R.string.grp_look)) {
             Text(stringResource(R.string.set_theme), style = MaterialTheme.typography.titleSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -282,8 +148,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
                         onClick = {
                             if (language != tag) {
                                 language = tag
-                                val next = draft.copy(language = tag)
-                                if (valid) onSave(next)
+                                onSave(draft.copy(language = tag))
                                 if (AppLocale.apply(ctx, tag)) {
                                     (ctx as? android.app.Activity)?.recreate()
                                 }
@@ -305,7 +170,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
             }
         }
 
-        // 4. Veri ve Yedekleme (katlanabilir)
+        // 3. Veri ve Yedekleme (katlanabilir)
         CollapsibleSettingsGroup(title = stringResource(R.string.grp_data)) {
             BackupSection(onRestored = {
                 restoredFromBackup = true
@@ -313,7 +178,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
             })
         }
 
-        // 5. Uygulama ve Hakkında (katlanabilir, tekil sürüm etiketi)
+        // 4. Uygulama ve Hakkında (katlanabilir, tekil sürüm etiketi)
         CollapsibleSettingsGroup(title = stringResource(R.string.grp_app), badge = versionBadge) {
             UpdateSection(showCurrentVersion = false)
             HorizontalDivider(color = Ab.line)
@@ -322,24 +187,12 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
         }
 
         Text(
-            stringResource(if (valid) R.string.settings_autosave else R.string.settings_invalid),
+            stringResource(R.string.settings_autosave),
             style = MaterialTheme.typography.bodySmall,
-            color = if (valid) Ab.muted else MaterialTheme.colorScheme.error,
+            color = Ab.muted,
         )
     }
 
-    if (cityDialog) {
-        CityDialog(
-            onDismiss = { cityDialog = false },
-            onPick = { c ->
-                cityDialog = false
-                city = c.label
-                lat = c.lat
-                lon = c.lon
-                locMessage = false
-            },
-        )
-    }
     timeDialog?.let { which ->
         val bed = end + STOP_BEFORE_BED_MIN
         TimePickDialog(
@@ -464,7 +317,7 @@ internal fun CityDialog(onDismiss: () -> Unit, onPick: (WeatherApi.City) -> Unit
 }
 
 @Composable
-private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+internal fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         Switch(checked = checked, onCheckedChange = onChange)

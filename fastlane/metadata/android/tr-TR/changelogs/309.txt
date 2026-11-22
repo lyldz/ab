@@ -1,0 +1,3 @@
+• Ana ekran sol üstteki logo, yeni geometrik "ab" ligatürüyle hem açık hem karanlık tema için güncellendi.
+• Sağ üstteki bildirim çanı yerine yeni "Profil ve hedef" düğmesi eklendi: ad, kilo, hareket düzeyi, otomatik/elle günlük su hedefi ve konum/hava ayarları artık buradan yönetilir.
+• Ayarlar menüsü yalnızca hatırlatmalar, görünüm, veri ve uygulama ayarlarıyla daha sade hale getirildi.
