@@ -62,5 +62,15 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/ab_widget_info" />
         </receiver>
+        <service
+            android:name=".tile.AbTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_stat_ab"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

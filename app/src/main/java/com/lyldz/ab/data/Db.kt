@@ -29,6 +29,7 @@ data class DayGoal(@PrimaryKey val day: String, val goalMl: Int)
 const val SOURCE_APP = 0
 const val SOURCE_NOTIFICATION = 1
 const val SOURCE_WIDGET = 2
+const val SOURCE_TILE = 3
 
 val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {

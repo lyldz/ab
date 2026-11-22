@@ -16,6 +16,7 @@ import com.lyldz.ab.core.tempExtraMl
 import androidx.glance.appwidget.updateAll
 import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.WeatherApi
+import com.lyldz.ab.tile.AbTileService
 import com.lyldz.ab.ui.fmtMl
 import com.lyldz.ab.ui.fmtTime
 import com.lyldz.ab.widget.AbWidget
@@ -96,10 +97,11 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         return t to plan
     }
 
-    /** Alarmı kurar ve widget'ı tazeler; her veri değişiminden sonra bu çağrılır. */
+    /** Alarmı kurar ve widget ile Hızlı Ayarlar kutucuğunu tazeler; her veri değişiminden sonra bu çağrılır. */
     suspend fun reschedule(zone: ZoneId = ZoneId.systemDefault()) {
         scheduleAlarm(zone)
         runCatching { AbWidget().updateAll(context) }
+        AbTileService.requestRefresh(context)
     }
 
     private suspend fun scheduleAlarm(zone: ZoneId) {
