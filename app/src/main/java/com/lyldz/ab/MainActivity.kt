@@ -37,6 +37,7 @@ import com.lyldz.ab.ui.HistoryScreen
 import com.lyldz.ab.ui.HomeScreen
 import com.lyldz.ab.ui.MainViewModel
 import com.lyldz.ab.ui.OnboardingScreen
+import com.lyldz.ab.ui.ProfileScreen
 import com.lyldz.ab.ui.SettingsScreen
 import com.lyldz.ab.ui.StatsScreen
 import com.lyldz.ab.ui.theme.AbTheme
@@ -136,40 +137,52 @@ private fun AbContent(
             }
         }
         var tab by rememberSaveable { mutableIntStateOf(0) } // 0 bugün, 1 grafikler, 2 geçmiş, 3 ayarlar
+        var showProfile by rememberSaveable { mutableStateOf(false) }
         LaunchedEffect(openCustom) {
-            if (openCustom) tab = 0
+            if (openCustom) {
+                showProfile = false
+                tab = 0
+            }
         }
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.weight(1f)) {
-                when (tab) {
-                    0 -> HomeScreen(
-                        t, nowMin, vm::add, vm::undo,
-                        onDelete = vm::delete, onRestore = vm::restore, onEdit = vm::edit,
-                        onSetCup = { vm.saveSettings(t.settings.copy(cupMl = it)) },
-                        onSetPresets = { vm.saveSettings(t.settings.copy(cupPresets = it)) },
-                        openCustom = openCustom,
-                        onCustomConsumed = onCustomConsumed,
-                        streak = vm.streak.collectAsStateWithLifecycle().value,
-                        onOpenSettings = { tab = 3 },
-                        hintsShown = t.settings.longPressHints,
-                        onHintCount = vm::setHintCount,
-                    )
-                    1 -> {
-                        val stats by vm.stats.collectAsStateWithLifecycle()
-                        val days by vm.periodDays.collectAsStateWithLifecycle()
-                        StatsScreen(stats, days, vm::setPeriod, onBack = { tab = 0 }, unit = t.settings.unit)
+                if (showProfile) {
+                    ProfileScreen(t.settings, onSave = vm::saveSettings, onBack = { showProfile = false })
+                } else {
+                    when (tab) {
+                        0 -> HomeScreen(
+                            t, nowMin, vm::add, vm::undo,
+                            onDelete = vm::delete, onRestore = vm::restore, onEdit = vm::edit,
+                            onSetCup = { vm.saveSettings(t.settings.copy(cupMl = it)) },
+                            onSetPresets = { vm.saveSettings(t.settings.copy(cupPresets = it)) },
+                            openCustom = openCustom,
+                            onCustomConsumed = onCustomConsumed,
+                            streak = vm.streak.collectAsStateWithLifecycle().value,
+                            onOpenSettings = { tab = 3 },
+                            onOpenProfile = { showProfile = true },
+                            hintsShown = t.settings.longPressHints,
+                            onHintCount = vm::setHintCount,
+                        )
+                        1 -> {
+                            val stats by vm.stats.collectAsStateWithLifecycle()
+                            val days by vm.periodDays.collectAsStateWithLifecycle()
+                            StatsScreen(stats, days, vm::setPeriod, onBack = { tab = 0 }, unit = t.settings.unit)
+                        }
+                        2 -> HistoryScreen(
+                            stats = vm.history.collectAsStateWithLifecycle().value,
+                            onBack = { tab = 0 },
+                            defaultCupMl = t.settings.cupMl,
+                            unit = t.settings.unit,
+                            onAddForDay = vm::addForDay,
+                        )
+                        else -> SettingsScreen(t.settings, onSave = vm::saveSettings, onBack = { tab = 0 })
                     }
-                    2 -> HistoryScreen(
-                        stats = vm.history.collectAsStateWithLifecycle().value,
-                        onBack = { tab = 0 },
-                        defaultCupMl = t.settings.cupMl,
-                        unit = t.settings.unit,
-                        onAddForDay = vm::addForDay,
-                    )
-                    else -> SettingsScreen(t.settings, onSave = vm::saveSettings, onBack = { tab = 0 })
                 }
             }
-            BottomBar(tab) { tab = it }
+            BottomBar(tab) {
+                showProfile = false
+                tab = it
+            }
         }
     }
 }

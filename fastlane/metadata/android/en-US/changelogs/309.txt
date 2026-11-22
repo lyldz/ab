@@ -1,0 +1,3 @@
+• Updated the home header wordmark to the new geometric "ab" ligature for both light and dark themes.
+• Replaced the top-right bell icon with a dedicated "Profile & goal" screen for name, weight, activity, manual/auto daily water goal, and location/weather settings.
+• Simplified the Settings tab to focus on schedule & reminders, appearance, data backup, and app info.

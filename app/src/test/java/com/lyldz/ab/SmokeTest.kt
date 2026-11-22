@@ -56,12 +56,18 @@ class SmokeTest {
         compose.onNodeWithContentDescription("+200 ml").performScrollTo().performClick()
         waitFor("Added 200 ml")
 
+        // sağ üst profil düğmesi: kişisel bilgiler, kilo, hedef, konum
+        compose.onNodeWithContentDescription("Profile & goal").performClick()
+        waitFor("Weight (kg)")
+        compose.onNodeWithContentDescription("Back").performClick()
+        waitFor("TODAY'S TIMELINE")
+
         tap("Charts") // alt gezinme: İstatistik
         waitFor("7 days")
         tap("History") // alt gezinme: Geçmiş
         waitFor("Today")
         tap("Settings") // alt gezinme: Ayarlar
-        waitFor("Weight (kg)")
+        waitFor("Schedule & reminders")
         tap("Today")
         waitFor("TODAY'S TIMELINE")
     }

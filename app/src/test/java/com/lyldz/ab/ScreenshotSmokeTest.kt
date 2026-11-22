@@ -75,12 +75,17 @@ abstract class ScreenshotBase(private val prefix: String) {
         repeat(6) { compose.onNodeWithContentDescription("+200 ml").performScrollTo().performClick() }
         shot("home-top-filled")
         tap("Settings")
-        wait("Profile & goal")
+        wait("Schedule & reminders")
         shot("settings-1")
-        compose.onNodeWithText("Schedule & reminders").performScrollTo()
+        compose.onNodeWithText("Appearance").performScrollTo()
         shot("settings-2")
         compose.onNodeWithText("App & about").performScrollTo()
         shot("settings-3")
+        tap("Today")
+        wait("TODAY'S TIMELINE")
+        compose.onNodeWithContentDescription("Profile & goal").performClick()
+        wait("Weight (kg)")
+        shot("profile")
     }
 }
 

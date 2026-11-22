@@ -286,4 +286,6 @@
     <string name="notif_test_text">Bildirimler sorunsuz çalışıyor.</string>
     <string name="notif_test_sent">Test bildirimi gönderildi.</string>
     <string name="notif_test_no_perm">Önce bildirim iznini açmalısın.</string>
+    <string name="profile_desc">Profil ve hedef</string>
+    <string name="back_desc">Geri</string>
 </resources>

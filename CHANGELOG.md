@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [0.3.9] - 2026-11-22 · Testi
+### Added
+- Ana ekran sağ üstte yeni **Profil ve hedef** ekranı (`ProfileScreen`): ad, kilo, hareket düzeyi, otomatik/elle günlük su hedefi ve konum/hava durumu ayarları artık doğrudan buradan yönetilir (isim girilmişse baş harf rozeti, yoksa minimalist kişi ikonu).
+### Changed
+- Ana ekran sol üstteki eski serif `Āb` logosu, yeni Konsept A geometrik `ab` ligatürüyle (açık temada derin gece laciverti + elektrik turkuaz damla, karanlık temada elektrik turkuaz gradyan) güncellendi.
+- Ayarlar ekranından profil/hedef/konum bölümü çıkarılarak uygulama düzeni, hatırlatmalar, görünüm, veri ve hakkında ayarlarına odaklanan 4 sade gruba indirildi.
+
 ## [0.3.8] - 2026-11-22 · Testi
 ### Changed
 - Yeni uygulama logosu (Konsept A): derin gece laciverti (`#0B253A`) üzerinde `b` içinde negatif alan su damlası barındıran geometrik elektrik turkuaz `ab` ligatürü (Android 13+ monokrom temalı ikon dahil).

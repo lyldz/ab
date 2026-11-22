@@ -3,7 +3,6 @@ package com.lyldz.ab.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
@@ -73,7 +72,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -81,8 +79,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import com.lyldz.ab.R
 import com.lyldz.ab.core.PACE_TOLERANCE_ML
 import com.lyldz.ab.core.baseGoalMl
@@ -92,10 +88,10 @@ import com.lyldz.ab.core.roundTo10
 import com.lyldz.ab.core.tempExtraMl
 import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.Intake
-import com.lyldz.ab.notify.Notifier
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.util.Locale
 import kotlin.math.roundToInt
 
 private const val MAX_HINTS = 3
@@ -117,15 +113,14 @@ fun HomeScreen(
     onCustomConsumed: () -> Unit = {},
     streak: Int = 0,
     onOpenSettings: () -> Unit = {},
+    onOpenProfile: () -> Unit = onOpenSettings,
     hintsShown: Int = MAX_HINTS,
     onHintCount: (Int) -> Unit = {},
 ) {
     val s = today.settings
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     var undoBanner by remember { mutableStateOf<Triple<Long, String, () -> Unit>?>(null) }
     var custom by rememberSaveable { mutableStateOf(openCustom) }
-    var notifAllowed by remember { mutableStateOf(Notifier.hasPermission(context)) }
     LaunchedEffect(undoBanner?.first) {
         if (undoBanner != null) {
             delay(1800)
@@ -137,15 +132,6 @@ fun HomeScreen(
             custom = true
             onCustomConsumed()
         }
-    }
-    DisposableEffect(lifecycleOwner, context) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                notifAllowed = Notifier.hasPermission(context)
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     var editing by remember { mutableStateOf<Intake?>(null) }
     var cupDialog by remember { mutableStateOf(false) }
@@ -191,26 +177,33 @@ fun HomeScreen(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 6.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                // üst çubuk: wordmark, (isim varsa) selamlama, bildirim çanı
+                // üst çubuk: wordmark, (isim varsa) selamlama, profil ve hedef düğmesi
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Image(
                         painterResource(if (Ab.isDark) R.drawable.ic_wordmark_light else R.drawable.ic_wordmark),
-                        contentDescription = stringResource(R.string.app_name), modifier = Modifier.height(46.dp),
+                        contentDescription = stringResource(R.string.app_name), modifier = Modifier.height(38.dp),
                     )
                     Text(
                         if (s.name.isBlank()) "" else stringResource(R.string.greet_hello, s.name),
                         color = Ab.muted, style = MaterialTheme.typography.bodyMedium, maxLines = 1,
                         modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
                     )
-                    val bellDesc = stringResource(R.string.bell_desc)
+                    val profileDesc = stringResource(R.string.profile_desc)
+                    val initial = s.name.trim().firstOrNull()?.toString()?.uppercase(Locale("tr"))
                     Box(
                         Modifier.size(48.dp).clip(CircleShape).background(Ab.card).border(1.dp, Ab.line, CircleShape)
-                            .clickable(role = Role.Button, onClick = onOpenSettings).semantics { contentDescription = bellDesc },
+                            .clickable(role = Role.Button, onClick = onOpenProfile).semantics { contentDescription = profileDesc },
                         contentAlignment = Alignment.Center,
                     ) {
-                        BellIcon(Ab.strong)
-                        if (s.remindersEnabled && !notifAllowed) {
-                            Box(Modifier.align(Alignment.TopEnd).padding(11.dp).size(9.dp).clip(CircleShape).background(AbColors.Aqua1))
+                        if (initial != null) {
+                            Text(
+                                initial,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Ab.strong,
+                            )
+                        } else {
+                            ProfileIcon(Ab.strong)
                         }
                     }
                 }
@@ -366,7 +359,7 @@ fun HomeScreen(
         }
     }
 
-    if (goalInfo) GoalInfoDialog(today, temp, onDismiss = { goalInfo = false }, onSettings = { goalInfo = false; onOpenSettings() })
+    if (goalInfo) GoalInfoDialog(today, temp, onDismiss = { goalInfo = false }, onProfile = { goalInfo = false; onOpenProfile() })
     if (cupDialog) {
         CupDialog(
             current = s.cupMl,
@@ -600,19 +593,17 @@ private fun TimelineNode(done: Boolean, time: String, detail: String, onClick: (
 }
 
 @Composable
-private fun BellIcon(color: Color) {
+private fun ProfileIcon(color: Color) {
     Canvas(Modifier.size(22.dp)) {
         val k = size.width / 24f
-        val body = Path().apply {
-            moveTo(12 * k, 3 * k)
-            cubicTo(8 * k, 3 * k, 6 * k, 6 * k, 6 * k, 10 * k)
-            lineTo(6 * k, 14 * k); lineTo(4 * k, 17 * k); lineTo(20 * k, 17 * k); lineTo(18 * k, 14 * k)
-            lineTo(18 * k, 10 * k)
-            cubicTo(18 * k, 6 * k, 16 * k, 3 * k, 12 * k, 3 * k)
-            close()
+        val stroke = Stroke(1.9f * k, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        drawCircle(color, radius = 3.8f * k, center = Offset(12 * k, 8.2f * k), style = stroke)
+        val shoulders = Path().apply {
+            moveTo(4.8f * k, 19.6f * k)
+            cubicTo(4.8f * k, 15.6f * k, 8.0f * k, 14.0f * k, 12.0f * k, 14.0f * k)
+            cubicTo(16.0f * k, 14.0f * k, 19.2f * k, 15.6f * k, 19.2f * k, 19.6f * k)
         }
-        drawPath(body, color, style = Stroke(1.8f * k, join = StrokeJoin.Round))
-        drawArc(color, 20f, 140f, false, Offset(9.5f * k, 17.5f * k), androidx.compose.ui.geometry.Size(5 * k, 4 * k), style = Stroke(1.8f * k, cap = StrokeCap.Round))
+        drawPath(shoulders, color, style = stroke)
     }
 }
 
@@ -704,7 +695,7 @@ private fun InfoBadge() {
 
 /** Hedefin parçaları: kilo, hareket, bugünün sıcaklığı ve konum. */
 @Composable
-private fun GoalInfoDialog(today: AbRepository.Today, temp: Double?, onDismiss: () -> Unit, onSettings: () -> Unit) {
+private fun GoalInfoDialog(today: AbRepository.Today, temp: Double?, onDismiss: () -> Unit, onProfile: () -> Unit) {
     val s = today.settings
     val tempExtra = if (s.useWeather && temp != null) tempExtraMl(temp) else 0
     val off = stringResource(R.string.gi_off)
@@ -737,7 +728,7 @@ private fun GoalInfoDialog(today: AbRepository.Today, temp: Double?, onDismiss: 
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.ok)) } },
-        dismissButton = { TextButton(onClick = onSettings) { Text(stringResource(R.string.settings)) } },
+        dismissButton = { TextButton(onClick = onProfile) { Text(stringResource(R.string.profile_desc)) } },
     )
 }
 
