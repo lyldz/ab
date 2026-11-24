@@ -56,11 +56,12 @@ object Notifier {
     @SuppressLint("MissingPermission") // hasPermission() Android 13+ izni ve bildirim anahtarını kapsar
     fun show(ctx: Context, title: String, text: String, drankMl: Int, goalMl: Int, firstMl: Int, quiet: Boolean = false) {
         if (!hasPermission(ctx)) return
+        val lctx = com.lyldz.ab.ui.AppLocale.wrapContext(ctx)
         val nm = NotificationManagerCompat.from(ctx)
 
         val open = openMainPendingIntent(ctx)
         val second = if (firstMl == 500) 1000 else 500
-        val custom = RemoteInput.Builder(KEY_TEXT).setLabel(ctx.getString(R.string.notif_custom_hint)).build()
+        val custom = RemoteInput.Builder(KEY_TEXT).setLabel(lctx.getString(R.string.notif_custom_hint)).build()
         val customPi = PendingIntent.getBroadcast(
             ctx, 3, addIntent(ctx), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE, // RemoteInput mutable ister
         )
@@ -75,10 +76,10 @@ object Notifier {
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setContentIntent(open)
             .setAutoCancel(true)
-            .addAction(addAction(ctx, 1, firstMl))
-            .addAction(addAction(ctx, 2, second))
+            .addAction(addAction(ctx, lctx, 1, firstMl))
+            .addAction(addAction(ctx, lctx, 2, second))
             .addAction(
-                NotificationCompat.Action.Builder(0, ctx.getString(R.string.notif_custom), customPi)
+                NotificationCompat.Action.Builder(0, lctx.getString(R.string.notif_custom), customPi)
                     .addRemoteInput(custom)
                     .build(),
             )
@@ -90,14 +91,15 @@ object Notifier {
     @SuppressLint("MissingPermission") // hasPermission() Android 13+ izni ve bildirim anahtarını kapsar
     fun showWeather(ctx: Context, tempC: Int, goalMl: Int, extraMl: Int) {
         if (!hasPermission(ctx)) return
+        val lctx = com.lyldz.ab.ui.AppLocale.wrapContext(ctx)
         val nm = NotificationManagerCompat.from(ctx)
         val open = openMainPendingIntent(ctx)
         nm.notify(
             GOAL_NOTIF_ID,
             NotificationCompat.Builder(ctx, GOAL_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_stat_ab)
-                .setContentTitle(ctx.getString(R.string.weather_notif_title, tempC.toString()))
-                .setContentText(ctx.getString(R.string.weather_notif_text, fmtMl(goalMl), fmtMl(extraMl)))
+                .setContentTitle(lctx.getString(R.string.weather_notif_title, tempC.toString()))
+                .setContentText(lctx.getString(R.string.weather_notif_text, fmtMl(goalMl), fmtMl(extraMl)))
                 .setContentIntent(open)
                 .setAutoCancel(true)
                 .build(),
@@ -112,11 +114,12 @@ object Notifier {
     /** Ayarlar'dan tek dokunuşla taze, sesli test bildirimi gönderir; izin yoksa false döner. */
     fun showTest(ctx: Context): Boolean {
         if (!hasPermission(ctx)) return false
+        val lctx = com.lyldz.ab.ui.AppLocale.wrapContext(ctx)
         cancel(ctx)
         show(
             ctx = ctx,
-            title = ctx.getString(R.string.notif_test_title),
-            text = ctx.getString(R.string.notif_test_text),
+            title = lctx.getString(R.string.notif_test_title),
+            text = lctx.getString(R.string.notif_test_text),
             drankMl = 0,
             goalMl = 2000,
             firstMl = 200,
@@ -141,11 +144,11 @@ object Notifier {
     private fun addIntent(ctx: Context) =
         Intent(ctx, ReminderReceiver::class.java).setAction(ACTION_ADD)
 
-    private fun addAction(ctx: Context, code: Int, ml: Int): NotificationCompat.Action {
+    private fun addAction(ctx: Context, lctx: Context, code: Int, ml: Int): NotificationCompat.Action {
         val pi = PendingIntent.getBroadcast(
             ctx, code, addIntent(ctx).putExtra(EXTRA_ML, ml),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        return NotificationCompat.Action.Builder(0, ctx.getString(R.string.add_ml, fmtMl(ml)), pi).build()
+        return NotificationCompat.Action.Builder(0, lctx.getString(R.string.add_ml, fmtMl(ml)), pi).build()
     }
 }

@@ -173,7 +173,8 @@ object Updater {
                             val now = System.currentTimeMillis()
                             if (now - last > 150) {
                                 last = now
-                                onProgress(if (total > 0) done.toFloat() / total else -1f)
+                                val p = if (total > 0) done.toFloat() / total else -1f
+                                withContext(Dispatchers.Main) { onProgress(p) }
                             }
                         }
                     }

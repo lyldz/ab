@@ -78,7 +78,7 @@ fun BackupSection(onRestored: () -> Unit) {
         message?.let { Text(it, color = MaterialTheme.colorScheme.tertiary) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(
-                onClick = { exportLauncher.launch("ab-yedek-${LocalDate.now()}.json") },
+                onClick = { exportLauncher.launch("${ctx.getString(R.string.backup_filename_prefix)}-${LocalDate.now()}.json") },
                 modifier = Modifier.heightIn(min = 48.dp),
             ) { Text(stringResource(R.string.backup_export)) }
             OutlinedButton(onClick = { importLauncher.launch(arrayOf("*/*")) }, modifier = Modifier.heightIn(min = 48.dp)) {

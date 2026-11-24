@@ -187,18 +187,19 @@ private fun PastDayAddDialog(
                     }
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val mlUnit = stringResource(R.string.unit_ml)
                     listOf(200, 250, 330, 500).forEach { preset ->
                         FilterChip(
                             selected = text == preset.toString(),
                             onClick = { text = preset.toString() },
-                            label = { Text("$preset ml") },
+                            label = { Text("$preset $mlUnit") },
                         )
                     }
                 }
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it.filter(Char::isDigit).take(4) },
-                    suffix = { Text("ml") },
+                    suffix = { Text(stringResource(R.string.unit_ml)) },
                     isError = ml == null,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),

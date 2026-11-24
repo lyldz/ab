@@ -31,9 +31,9 @@ suspend fun currentCoarse(ctx: Context): Pair<Double, Double>? {
             cont.invokeOnCancellation { signal.cancel() }
             runCatching {
                 lm.getCurrentLocation(LocationManager.NETWORK_PROVIDER, signal, ContextCompat.getMainExecutor(ctx)) { loc ->
-                    cont.resume(loc?.let { round1(it.latitude) to round1(it.longitude) })
+                    if (cont.isActive) cont.resume(loc?.let { round1(it.latitude) to round1(it.longitude) })
                 }
-            }.onFailure { cont.resume(null) }
+            }.onFailure { if (cont.isActive) cont.resume(null) }
         }
     }
 }

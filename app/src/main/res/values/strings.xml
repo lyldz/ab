@@ -288,4 +288,5 @@
     <string name="notif_test_no_perm">Enable notification permission first.</string>
     <string name="profile_desc">Profile &amp; goal</string>
     <string name="back_desc">Back</string>
+    <string name="backup_filename_prefix">ab-backup</string>
 </resources>

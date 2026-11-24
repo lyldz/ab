@@ -400,7 +400,7 @@ private fun EditDialog(e: Intake, onDismiss: () -> Unit, onSave: (Int, Int) -> U
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it.filter(Char::isDigit).take(4) },
-                    suffix = { Text("ml") },
+                    suffix = { Text(stringResource(R.string.unit_ml)) },
                     isError = ml == null,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -431,7 +431,7 @@ private fun CustomDialog(onDismiss: () -> Unit, onAdd: (Int) -> Unit) {
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it.filter(Char::isDigit).take(4) },
-                suffix = { Text("ml") },
+                suffix = { Text(stringResource(R.string.unit_ml)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
@@ -662,7 +662,7 @@ private fun CupDialog(
                     value = custom,
                     onValueChange = { custom = it.filter(Char::isDigit).take(4) },
                     label = { Text(stringResource(R.string.cup_custom_hint)) },
-                    suffix = { Text("ml") },
+                    suffix = { Text(stringResource(R.string.unit_ml)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )

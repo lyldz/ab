@@ -13,9 +13,13 @@ import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.SettingsStore
 import com.lyldz.ab.notify.Notifier
 import com.lyldz.ab.notify.Reminders
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import java.time.LocalDate
 
 class AbApp : Application() {
+    val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val repo: AbRepository by lazy {
         val db = Room.databaseBuilder(this, AbDb::class.java, "ab.db").addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
         AbRepository(db.intake(), SettingsStore(this))

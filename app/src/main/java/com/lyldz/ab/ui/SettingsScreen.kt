@@ -91,6 +91,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     val latestSaved by rememberUpdatedState(s)
     val latestOnSave by rememberUpdatedState(onSave)
     val latestRestored by rememberUpdatedState(restoredFromBackup)
+    var langSaved by remember { mutableStateOf(false) }
 
     LaunchedEffect(draft) {
         if (draft != s) {
@@ -100,7 +101,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
     }
     DisposableEffect(Unit) {
         onDispose {
-            if (!latestRestored && latestDraft != latestSaved) {
+            if (!latestRestored && !langSaved && latestDraft != latestSaved) {
                 latestOnSave(latestDraft)
             }
         }
@@ -148,6 +149,7 @@ fun SettingsScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) 
                         onClick = {
                             if (language != tag) {
                                 language = tag
+                                langSaved = true
                                 onSave(draft.copy(language = tag))
                                 if (AppLocale.apply(ctx, tag)) {
                                     (ctx as? android.app.Activity)?.recreate()

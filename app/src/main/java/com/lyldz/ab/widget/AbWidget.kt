@@ -66,12 +66,15 @@ class AbWidgetReceiver : GlanceAppWidgetReceiver() {
 class AddWaterAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
         val ml = parameters[ML_KEY] ?: return
-        (context.applicationContext as AbApp).addWater(ml, SOURCE_WIDGET)
+        val app = context.applicationContext as AbApp
+        if (!app.repo.todayNow().settings.onboarded) return
+        app.addWater(ml, SOURCE_WIDGET)
     }
 }
 
 @Composable
 private fun Content(ctx: Context, t: AbRepository.Today) {
+    val lctx = com.lyldz.ab.ui.AppLocale.wrapContext(ctx)
     val open = actionStartActivity(
         Intent(ctx, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
@@ -81,6 +84,18 @@ private fun Content(ctx: Context, t: AbRepository.Today) {
             .putExtra(EXTRA_CUSTOM, true)
             .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
     )
+    if (!t.settings.onboarded) {
+        Column(
+            GlanceModifier.fillMaxSize().background(BG).cornerRadius(20.dp).padding(14.dp).clickable(open),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                lctx.getString(R.string.tile_setup),
+                style = TextStyle(color = TEXT, fontSize = 16.sp, fontWeight = FontWeight.Bold),
+            )
+        }
+        return
+    }
     val amounts = listOf(t.settings.cupMl, 500, 1000).distinct()
 
     Column(
@@ -88,7 +103,7 @@ private fun Content(ctx: Context, t: AbRepository.Today) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            "${fmtMl(t.drankMl)} / ${fmtMl(t.goalMl)} ml",
+            lctx.getString(R.string.home_progress, fmtMl(t.drankMl), fmtMl(t.goalMl)),
             style = TextStyle(color = TEXT, fontSize = 20.sp, fontWeight = FontWeight.Bold),
         )
         Spacer(GlanceModifier.height(8.dp))
@@ -104,7 +119,7 @@ private fun Content(ctx: Context, t: AbRepository.Today) {
                 Pill("+${fmtMl(ml)}", GlanceModifier.defaultWeight(), actionRunCallback<AddWaterAction>(actionParametersOf(ML_KEY to ml)))
                 Spacer(GlanceModifier.width(6.dp))
             }
-            Pill(ctx.getString(R.string.add_custom), GlanceModifier.defaultWeight(), custom)
+            Pill(lctx.getString(R.string.add_custom), GlanceModifier.defaultWeight(), custom)
         }
     }
 }

@@ -368,8 +368,9 @@ private fun RoutineStep(wake: Int, bed: Int, end: Int, cup: Int, onPickTime: (In
         Text(stringResource(R.string.window_note, fmtTime(wake), fmtTime(end % 1440)), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
         Text(stringResource(R.string.onb_cup_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val mlUnit = stringResource(R.string.unit_ml)
             listOf(200, 250, 330, 500).forEach { ml ->
-                FilterChip(selected = cup == ml, onClick = { onCup(ml) }, label = { Text("$ml ml") })
+                FilterChip(selected = cup == ml, onClick = { onCup(ml) }, label = { Text("$ml $mlUnit") })
             }
         }
     }

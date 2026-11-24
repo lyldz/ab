@@ -14,6 +14,7 @@ import com.lyldz.ab.MainActivity
 import com.lyldz.ab.R
 import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.SOURCE_TILE
+import com.lyldz.ab.ui.AppLocale
 import com.lyldz.ab.ui.fmtMl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +43,7 @@ class AbTileService : TileService() {
     override fun onClick() {
         super.onClick()
         val app = applicationContext as? AbApp ?: return
-        scope.launch {
+        app.appScope.launch {
             val today = runCatching { app.repo.todayNow() }.getOrNull() ?: return@launch
             if (!today.settings.onboarded) {
                 withContext(Dispatchers.Main) { openApp() }
@@ -52,8 +53,9 @@ class AbTileService : TileService() {
             app.addWater(ml, SOURCE_TILE)
             val updated = runCatching { app.repo.todayNow() }.getOrNull()
             withContext(Dispatchers.Main) {
+                val lctx = AppLocale.wrapContext(applicationContext)
                 updated?.let(::render)
-                Toast.makeText(applicationContext, getString(R.string.added, fmtMl(ml)), Toast.LENGTH_SHORT).show()
+                Toast.makeText(applicationContext, lctx.getString(R.string.added, fmtMl(ml)), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -65,16 +67,17 @@ class AbTileService : TileService() {
 
     private fun render(today: AbRepository.Today) {
         val tile = qsTile ?: return
+        val lctx = AppLocale.wrapContext(this)
         if (!today.settings.onboarded) {
-            tile.label = getString(R.string.tile_label)
+            tile.label = lctx.getString(R.string.tile_label)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                tile.subtitle = getString(R.string.tile_setup)
+                tile.subtitle = lctx.getString(R.string.tile_setup)
             }
             tile.state = Tile.STATE_INACTIVE
         } else {
-            tile.label = getString(R.string.add_ml, fmtMl(today.settings.cupMl))
+            tile.label = lctx.getString(R.string.add_ml, fmtMl(today.settings.cupMl))
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                tile.subtitle = getString(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl))
+                tile.subtitle = lctx.getString(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl))
             }
             tile.state = if (today.drankMl >= today.goalMl) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
         }
