@@ -1,0 +1,3 @@
+- 19 yeni dinamik ayar ve aç/kapa anahtarı (bildirimler, widget, görünüm/animasyonlar, hedef formülü ve istatistik pencereleri)
+- Ayarları varsayılanlara sıfırlama (su kayıtları korunur) ve her ayar için açıklayıcı alt metinler
+- fl oz birim gösterimi bildirim, widget ve Hızlı Ayarlar kutucuğunda düzeltildi

@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+## [0.3.11] - 2026-11-25 · Testi
+### Added
+- 19 yeni dinamik ayar ve aç/kapa anahtarı (sessiz durum bildirimi, sabah hava durumu bildirimi, tam zamanında alarm tercihi, özel hatırlatma aralığı, yatıştan önce durma süresi, bildirim 2. hızlı düğme, widget hızlı ekleme miktarları, Hızlı Ayarlar onay mesajı, su dalgalanma/sürekli dalga/taşma efekti, keşif ipuçları, geri-al süresi, kilo başına ml katsayısı, minimum otomatik hedef, yüksek hedef uyarı eşiği, tempo toleransı, varsayılan grafik dönemi, geçmiş gün sayısı ve seri hesaplama penceresi).
+- Ayarlar ekranı mantıksal 6 kategori altında toplandı, her ayara açıklayıcı alt metin eklendi ve **Varsayılanlara Sıfırla** (su geçmişini koruyarak) özelliği entegre edildi.
+### Fixed
+- `motion_water` anahtarı kullanıcı arayüzünde görünür ve reaktif hale getirildi.
+- `fl oz` birim seçimi artık bildirim, widget, Hızlı Ayarlar kutucuğu ve ana ekran etiketlerinin tamamında tutarlı uygulanır.
+- `cupMl` doğrulama aralığı (`50..2000` ml) tüm katmanlarda eşitlendi; yedekten geri yüklemede dil senkronizasyonu düzeltildi.
+
 ## [0.3.10] - 2026-11-22 · Testi
 ### Changed
 - Uygulama logosu (`ic_launcher_foreground.xml`, `ic_launcher_monochrome.xml`) ve ana ekran sol üst logosu (`ic_wordmark.xml`, `ic_wordmark_light.xml`), Konsept A tasarımına birebir uyacak şekilde `a` harfinin `b` altına doğru kıvrılan akışkan kuyruğu, dengeli `b` gövdesi ve ortalanmış su damlasıyla yenilendi.
