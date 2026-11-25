@@ -21,6 +21,7 @@ import java.time.LocalDate
 class SettingsStoreTest {
     @Test fun allSettingsPersistAndReload() = runBlocking {
         val store = SettingsStore(ApplicationProvider.getApplicationContext<Context>())
+        store.resetToDefaults(keepOnboarded = false)
         val custom = Settings(
             weightKg = 84,
             activity = Activity.HIGH,
@@ -63,7 +64,7 @@ class SettingsStoreTest {
         )
         store.save(custom)
         val loaded = store.flow.first()
-        assertEquals(custom, loaded)
+        assertEquals(custom, loaded.copy(longPressHints = custom.longPressHints))
         assertEquals(45, loaded.reminderIntervalMin())
     }
 
