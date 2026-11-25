@@ -17,11 +17,15 @@ const val MAX_MANUAL_GOAL_ML = 8000
 /** Tek seferde eklenebilecek geçerli su miktarı aralığı (ml). */
 const val MIN_INTAKE_ML = 1
 const val MAX_INTAKE_ML = 5000
+const val MIN_CUP_ML = 50
+const val MAX_CUP_ML = 2000
 
 /** Tek dokunuşla hızlı ekleme için yaygın bardak/şişe hacimleri (ml). */
 val QUICK_VESSEL_ML: List<Int> = listOf(150, 200, 250, 330, 500)
 
 fun isValidIntakeMl(ml: Int): Boolean = ml in MIN_INTAKE_ML..MAX_INTAKE_ML
+
+fun isValidCupMl(ml: Int): Boolean = ml in MIN_CUP_ML..MAX_CUP_ML
 
 fun coerceIntakeMl(ml: Int): Int = ml.coerceIn(MIN_INTAKE_ML, MAX_INTAKE_ML)
 
@@ -43,9 +47,11 @@ fun tempExtraMl(maxTempC: Double): Int {
     }
 }
 
-fun baseGoalMl(kg: Int): Int {
+fun baseGoalMl(kg: Int, mlPerKg: Int = ML_PER_KG, minGoalMl: Int = MIN_GOAL_ML): Int {
     val safeKg = kg.coerceIn(0, MAX_WEIGHT_KG)
-    return max(MIN_GOAL_ML, ML_PER_KG * safeKg)
+    val safePerKg = mlPerKg.coerceIn(15, 50)
+    val safeMin = minGoalMl.coerceIn(500, 3000)
+    return max(safeMin, safePerKg * safeKg)
 }
 
 /** Hareket ve sıcaklık eki ayardan kapatılabilir; tempC null ise (veri yok) sıcaklık eki 0. */
@@ -55,7 +61,9 @@ fun dailyGoalMl(
     tempC: Double?,
     useActivity: Boolean = true,
     useWeather: Boolean = true,
-): Int = baseGoalMl(kg) +
+    mlPerKg: Int = ML_PER_KG,
+    minGoalMl: Int = MIN_GOAL_ML,
+): Int = baseGoalMl(kg, mlPerKg, minGoalMl) +
     (if (useActivity) activity.extraMl else 0) +
     (if (useWeather && tempC != null) tempExtraMl(tempC) else 0)
 

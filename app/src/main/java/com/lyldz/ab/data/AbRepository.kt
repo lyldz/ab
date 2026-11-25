@@ -33,8 +33,15 @@ class AbRepository(
         store.save(s)
         if (s.onboarded) {
             val today = LocalDate.now(zone)
-            recordGoal(today, s.goalMl(today))
+            recordGoal(today, s.sanitized().goalMl(today))
         }
+    }
+
+    suspend fun resetSettings() {
+        store.resetToDefaults(keepOnboarded = true)
+        val s = store.flow.first()
+        val today = LocalDate.now(zone)
+        recordGoal(today, s.goalMl(today))
     }
 
     /** Gün sınırı verilen güne (varsayılan: abone olunduğu an) sabittir; gün dönünce arayüz yeniden abone olmalı. */

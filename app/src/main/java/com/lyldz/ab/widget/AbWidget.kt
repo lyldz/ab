@@ -41,7 +41,8 @@ import com.lyldz.ab.MainActivity
 import com.lyldz.ab.R
 import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.SOURCE_WIDGET
-import com.lyldz.ab.ui.fmtMl
+import com.lyldz.ab.ui.fmtVol
+import com.lyldz.ab.ui.fmtVolNum
 
 private val BG = ColorProvider(Color(0xFFF4F9FB), Color(0xFF06131F))
 private val TEXT = ColorProvider(Color(0xFF0B253A), Color(0xFFF0F9FF))
@@ -96,14 +97,15 @@ private fun Content(ctx: Context, t: AbRepository.Today) {
         }
         return
     }
-    val amounts = listOf(t.settings.cupMl, 500, 1000).distinct()
+    val unit = t.settings.unit
+    val amounts = (listOf(t.settings.cupMl) + t.settings.widgetQuickAmounts).distinct().take(3)
 
     Column(
         GlanceModifier.fillMaxSize().background(BG).cornerRadius(20.dp).padding(14.dp).clickable(open),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            lctx.getString(R.string.home_progress, fmtMl(t.drankMl), fmtMl(t.goalMl)),
+            "${fmtVolNum(t.drankMl, unit)} / ${fmtVol(t.goalMl, unit)}",
             style = TextStyle(color = TEXT, fontSize = 20.sp, fontWeight = FontWeight.Bold),
         )
         Spacer(GlanceModifier.height(8.dp))
@@ -116,7 +118,7 @@ private fun Content(ctx: Context, t: AbRepository.Today) {
         Spacer(GlanceModifier.height(10.dp))
         Row(GlanceModifier.fillMaxWidth()) {
             amounts.forEach { ml ->
-                Pill("+${fmtMl(ml)}", GlanceModifier.defaultWeight(), actionRunCallback<AddWaterAction>(actionParametersOf(ML_KEY to ml)))
+                Pill("+${fmtVolNum(ml, unit)}", GlanceModifier.defaultWeight(), actionRunCallback<AddWaterAction>(actionParametersOf(ML_KEY to ml)))
                 Spacer(GlanceModifier.width(6.dp))
             }
             Pill(lctx.getString(R.string.add_custom), GlanceModifier.defaultWeight(), custom)

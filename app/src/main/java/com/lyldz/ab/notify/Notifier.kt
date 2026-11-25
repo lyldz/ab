@@ -15,7 +15,8 @@ import androidx.core.app.RemoteInput
 import androidx.core.content.ContextCompat
 import com.lyldz.ab.MainActivity
 import com.lyldz.ab.R
-import com.lyldz.ab.ui.fmtMl
+import com.lyldz.ab.ui.UNIT_ML
+import com.lyldz.ab.ui.fmtVol
 
 const val CHANNEL_ID = "reminders"
 const val NOTIF_ID = 1
@@ -54,13 +55,23 @@ object Notifier {
      * uygulamayı açmadan miktar yazılan "Özel" satır içi giriş.
      */
     @SuppressLint("MissingPermission") // hasPermission() Android 13+ izni ve bildirim anahtarını kapsar
-    fun show(ctx: Context, title: String, text: String, drankMl: Int, goalMl: Int, firstMl: Int, quiet: Boolean = false) {
+    fun show(
+        ctx: Context,
+        title: String,
+        text: String,
+        drankMl: Int,
+        goalMl: Int,
+        firstMl: Int,
+        quiet: Boolean = false,
+        secondMl: Int = 500,
+        unit: Int = UNIT_ML,
+    ) {
         if (!hasPermission(ctx)) return
         val lctx = com.lyldz.ab.ui.AppLocale.wrapContext(ctx)
         val nm = NotificationManagerCompat.from(ctx)
 
         val open = openMainPendingIntent(ctx)
-        val second = if (firstMl == 500) 1000 else 500
+        val second = if (firstMl == secondMl) (if (secondMl == 1000) 500 else 1000) else secondMl
         val custom = RemoteInput.Builder(KEY_TEXT).setLabel(lctx.getString(R.string.notif_custom_hint)).build()
         val customPi = PendingIntent.getBroadcast(
             ctx, 3, addIntent(ctx), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE, // RemoteInput mutable ister
@@ -76,8 +87,8 @@ object Notifier {
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setContentIntent(open)
             .setAutoCancel(true)
-            .addAction(addAction(ctx, lctx, 1, firstMl))
-            .addAction(addAction(ctx, lctx, 2, second))
+            .addAction(addAction(ctx, 1, firstMl, unit))
+            .addAction(addAction(ctx, 2, second, unit))
             .addAction(
                 NotificationCompat.Action.Builder(0, lctx.getString(R.string.notif_custom), customPi)
                     .addRemoteInput(custom)
@@ -89,7 +100,7 @@ object Notifier {
 
     /** Sabah sıcaklığı hedefi yükselttiyse bir kez haber verir. */
     @SuppressLint("MissingPermission") // hasPermission() Android 13+ izni ve bildirim anahtarını kapsar
-    fun showWeather(ctx: Context, tempC: Int, goalMl: Int, extraMl: Int) {
+    fun showWeather(ctx: Context, tempC: Int, goalMl: Int, extraMl: Int, unit: Int = UNIT_ML) {
         if (!hasPermission(ctx)) return
         val lctx = com.lyldz.ab.ui.AppLocale.wrapContext(ctx)
         val nm = NotificationManagerCompat.from(ctx)
@@ -99,7 +110,7 @@ object Notifier {
             NotificationCompat.Builder(ctx, GOAL_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_stat_ab)
                 .setContentTitle(lctx.getString(R.string.weather_notif_title, tempC.toString()))
-                .setContentText(lctx.getString(R.string.weather_notif_text, fmtMl(goalMl), fmtMl(extraMl)))
+                .setContentText(lctx.getString(R.string.weather_notif_text_vol, fmtVol(goalMl, unit), fmtVol(extraMl, unit)))
                 .setContentIntent(open)
                 .setAutoCancel(true)
                 .build(),
@@ -144,11 +155,11 @@ object Notifier {
     private fun addIntent(ctx: Context) =
         Intent(ctx, ReminderReceiver::class.java).setAction(ACTION_ADD)
 
-    private fun addAction(ctx: Context, lctx: Context, code: Int, ml: Int): NotificationCompat.Action {
+    private fun addAction(ctx: Context, code: Int, ml: Int, unit: Int = UNIT_ML): NotificationCompat.Action {
         val pi = PendingIntent.getBroadcast(
             ctx, code, addIntent(ctx).putExtra(EXTRA_ML, ml),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        return NotificationCompat.Action.Builder(0, lctx.getString(R.string.add_ml, fmtMl(ml)), pi).build()
+        return NotificationCompat.Action.Builder(0, "+${fmtVol(ml, unit)}", pi).build()
     }
 }

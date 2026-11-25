@@ -12,6 +12,11 @@ class BackupTest {
         weightKg = 82, activity = Activity.HIGH, cupMl = 250, windowStartMin = 420, windowEndMin = 1380,
         useActivity = false, useWeather = true, goalOverrideMl = 3000, city = "Ankara, Türkiye", lat = 39.9, lon = 32.9,
         name = "Deniz", themeMode = 2, onboarded = true, tempC = 31.0, tempDay = "2026-11-13", lastNotifiedMs = 5L,
+        motionWater = false, statusNotificationEnabled = false, weatherNotificationEnabled = false,
+        preferExactAlarm = false, customReminderIntervalMin = 50, stopBeforeBedMin = 90, notifSecondActionMl = 750,
+        widgetQuickAmounts = listOf(300, 600), tileToastEnabled = false, mlPerKg = 30, minGoalMl = 1800,
+        goalWarnMl = 6000, paceToleranceMl = 80, waterWaveAnimation = false, showOverflowEffect = false,
+        showHints = false, undoBannerMs = 3000, defaultStatsDays = 30, historyDays = 60, streakWindowDays = 120,
     )
     private val data = BackupData(
         intakes = listOf(Intake(7, 2_000, 250, SOURCE_NOTIFICATION), Intake(3, 1_000, 200, SOURCE_APP)),

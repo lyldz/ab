@@ -15,7 +15,8 @@ import com.lyldz.ab.R
 import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.SOURCE_TILE
 import com.lyldz.ab.ui.AppLocale
-import com.lyldz.ab.ui.fmtMl
+import com.lyldz.ab.ui.fmtVol
+import com.lyldz.ab.ui.fmtVolNum
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -55,7 +56,13 @@ class AbTileService : TileService() {
             withContext(Dispatchers.Main) {
                 val lctx = AppLocale.wrapContext(applicationContext)
                 updated?.let(::render)
-                Toast.makeText(applicationContext, lctx.getString(R.string.added, fmtMl(ml)), Toast.LENGTH_SHORT).show()
+                if (today.settings.tileToastEnabled) {
+                    Toast.makeText(
+                        applicationContext,
+                        lctx.getString(R.string.added_vol, fmtVol(ml, today.settings.unit)),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
             }
         }
     }
@@ -75,9 +82,10 @@ class AbTileService : TileService() {
             }
             tile.state = Tile.STATE_INACTIVE
         } else {
-            tile.label = lctx.getString(R.string.add_ml, fmtMl(today.settings.cupMl))
+            val u = today.settings.unit
+            tile.label = "+${fmtVol(today.settings.cupMl, u)}"
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                tile.subtitle = lctx.getString(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl))
+                tile.subtitle = "${fmtVolNum(today.drankMl, u)} / ${fmtVol(today.goalMl, u)}"
             }
             tile.state = if (today.drankMl >= today.goalMl) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
         }

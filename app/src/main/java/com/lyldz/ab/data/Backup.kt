@@ -1,6 +1,11 @@
 package com.lyldz.ab.data
 
 import com.lyldz.ab.core.Activity
+import com.lyldz.ab.core.MAX_MANUAL_GOAL_ML
+import com.lyldz.ab.core.MAX_WEIGHT_KG
+import com.lyldz.ab.core.MIN_MANUAL_GOAL_ML
+import com.lyldz.ab.core.MIN_WEIGHT_KG
+import com.lyldz.ab.core.isValidCupMl
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.LocalDate
@@ -8,7 +13,7 @@ import java.time.LocalDate
 data class BackupData(val intakes: List<Intake>, val goals: List<DayGoal>, val settings: Settings)
 
 /**
- * Yedek dosyası (JSON, sürüm 1): içme kayıtları, günlük hedef anlık görüntüleri ve ayarlar. Geçici
+ * Yedek dosyası (JSON, sürüm 1): içme kayıtları, günlük hedef anlık görüntüleri ve tüm ayarlar. Geçici
  * alanlar (bugünün sıcaklığı, son bildirim, kurulum bayrağı) yazılmaz. Okurken her alan doğrulanır:
  * bozuk satır atlanır, aralık dışı ayar varsayılana döner; biçim tanınmazsa null.
  */
@@ -17,7 +22,7 @@ object Backup {
     const val VERSION = 1
 
     fun toJson(d: BackupData, appVersion: String, exportedAtMs: Long): String {
-        val s = d.settings
+        val s = d.settings.sanitized()
         val settings = JSONObject()
             .put("weightKg", s.weightKg)
             .put("activity", s.activity.name)
@@ -33,6 +38,25 @@ object Backup {
             .put("language", s.language)
             .put("unit", s.unit)
             .put("cupPresets", encodeCupPresets(s.cupPresets))
+            .put("statusNotificationEnabled", s.statusNotificationEnabled)
+            .put("weatherNotificationEnabled", s.weatherNotificationEnabled)
+            .put("preferExactAlarm", s.preferExactAlarm)
+            .put("stopBeforeBedMin", s.stopBeforeBedMin)
+            .put("notifSecondActionMl", s.notifSecondActionMl)
+            .put("widgetQuickAmounts", encodeWidgetAmounts(s.widgetQuickAmounts))
+            .put("tileToastEnabled", s.tileToastEnabled)
+            .put("mlPerKg", s.mlPerKg)
+            .put("minGoalMl", s.minGoalMl)
+            .put("goalWarnMl", s.goalWarnMl)
+            .put("paceToleranceMl", s.paceToleranceMl)
+            .put("waterWaveAnimation", s.waterWaveAnimation)
+            .put("showOverflowEffect", s.showOverflowEffect)
+            .put("showHints", s.showHints)
+            .put("undoBannerMs", s.undoBannerMs)
+            .put("defaultStatsDays", s.defaultStatsDays)
+            .put("historyDays", s.historyDays)
+            .put("streakWindowDays", s.streakWindowDays)
+        s.customReminderIntervalMin?.let { settings.put("customReminderIntervalMin", it) }
         s.goalOverrideMl?.let { settings.put("goalOverrideMl", it) }
         s.city?.let { settings.put("city", it) }
         s.lat?.let { settings.put("lat", it) }
@@ -61,14 +85,14 @@ object Backup {
         val lon = if (so.has("lon")) so.optDouble("lon", Double.NaN).takeIf { it in -180.0..180.0 } else null
         val place = lat != null && lon != null
         val settings = def.copy(
-            weightKg = so.optInt("weightKg", def.weightKg).takeIf { it in 30..250 } ?: def.weightKg,
+            weightKg = so.optInt("weightKg", def.weightKg).takeIf { it in MIN_WEIGHT_KG..MAX_WEIGHT_KG } ?: def.weightKg,
             activity = runCatching { Activity.valueOf(so.optString("activity")) }.getOrDefault(def.activity),
-            cupMl = so.optInt("cupMl", def.cupMl).takeIf { it in 100..1000 } ?: def.cupMl,
+            cupMl = so.optInt("cupMl", def.cupMl).takeIf(::isValidCupMl) ?: def.cupMl,
             windowStartMin = if (windowOk) start else def.windowStartMin,
             windowEndMin = if (windowOk) end else def.windowEndMin,
             useActivity = so.optBoolean("useActivity", def.useActivity),
             useWeather = so.optBoolean("useWeather", def.useWeather),
-            goalOverrideMl = if (so.has("goalOverrideMl")) so.optInt("goalOverrideMl").takeIf { it in 500..8000 } else null,
+            goalOverrideMl = if (so.has("goalOverrideMl")) so.optInt("goalOverrideMl").takeIf { it in MIN_MANUAL_GOAL_ML..MAX_MANUAL_GOAL_ML } else null,
             city = if (place) so.optString("city").takeIf { it.isNotBlank() }?.take(100) else null,
             lat = if (place) lat else null,
             lon = if (place) lon else null,
@@ -79,6 +103,25 @@ object Backup {
             language = so.optString("language", def.language).takeIf { it == "" || it == "tr" || it == "en" } ?: def.language,
             unit = so.optInt("unit", def.unit).takeIf { it in 0..1 } ?: def.unit,
             cupPresets = if (so.has("cupPresets")) parseCupPresets(so.optString("cupPresets")) else def.cupPresets,
+            statusNotificationEnabled = so.optBoolean("statusNotificationEnabled", def.statusNotificationEnabled),
+            weatherNotificationEnabled = so.optBoolean("weatherNotificationEnabled", def.weatherNotificationEnabled),
+            preferExactAlarm = so.optBoolean("preferExactAlarm", def.preferExactAlarm),
+            customReminderIntervalMin = if (so.has("customReminderIntervalMin")) so.optInt("customReminderIntervalMin").takeIf { it in 15..240 } else null,
+            stopBeforeBedMin = so.optInt("stopBeforeBedMin", def.stopBeforeBedMin).takeIf { it in 0..240 } ?: def.stopBeforeBedMin,
+            notifSecondActionMl = so.optInt("notifSecondActionMl", def.notifSecondActionMl).takeIf(::isValidCupMl) ?: def.notifSecondActionMl,
+            widgetQuickAmounts = if (so.has("widgetQuickAmounts")) parseWidgetAmounts(so.optString("widgetQuickAmounts")) else def.widgetQuickAmounts,
+            tileToastEnabled = so.optBoolean("tileToastEnabled", def.tileToastEnabled),
+            mlPerKg = so.optInt("mlPerKg", def.mlPerKg).takeIf { it in 15..50 } ?: def.mlPerKg,
+            minGoalMl = so.optInt("minGoalMl", def.minGoalMl).takeIf { it in 500..3000 } ?: def.minGoalMl,
+            goalWarnMl = so.optInt("goalWarnMl", def.goalWarnMl).takeIf { it in 2000..8000 } ?: def.goalWarnMl,
+            paceToleranceMl = so.optInt("paceToleranceMl", def.paceToleranceMl).takeIf { it in 0..500 } ?: def.paceToleranceMl,
+            waterWaveAnimation = so.optBoolean("waterWaveAnimation", def.waterWaveAnimation),
+            showOverflowEffect = so.optBoolean("showOverflowEffect", def.showOverflowEffect),
+            showHints = so.optBoolean("showHints", def.showHints),
+            undoBannerMs = so.optInt("undoBannerMs", def.undoBannerMs).takeIf { it in 1000..10000 } ?: def.undoBannerMs,
+            defaultStatsDays = so.optInt("defaultStatsDays", def.defaultStatsDays).takeIf { it == 7 || it == 30 } ?: def.defaultStatsDays,
+            historyDays = so.optInt("historyDays", def.historyDays).takeIf { it in 7..365 } ?: def.historyDays,
+            streakWindowDays = so.optInt("streakWindowDays", def.streakWindowDays).takeIf { it in 30..365 } ?: def.streakWindowDays,
             onboarded = true,
         )
         val intakes = mutableListOf<Intake>()
