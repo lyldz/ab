@@ -123,7 +123,7 @@ fun HomeScreen(
     var custom by rememberSaveable { mutableStateOf(openCustom) }
     LaunchedEffect(undoBanner?.first) {
         if (undoBanner != null) {
-            delay(1800)
+            delay(s.undoBannerMs.toLong())
             undoBanner = null
         }
     }
@@ -137,7 +137,11 @@ fun HomeScreen(
     var cupDialog by remember { mutableStateOf(false) }
     var goalInfo by remember { mutableStateOf(false) }
     var hintVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(s.showHints) {
+        if (!s.showHints) {
+            hintVisible = false
+            return@LaunchedEffect
+        }
         // uygulama başına bir kez, ilk MAX_HINTS açılışta; sekme değiştirince tekrar çıkmaz
         if (!hintShownThisRun && hintsShown < MAX_HINTS) {
             hintShownThisRun = true
@@ -155,7 +159,7 @@ fun HomeScreen(
 
     fun add(ml: Int) {
         onAdd(ml)
-        showUndo(context.getString(R.string.added, fmtMl(ml)), onUndo)
+        showUndo(context.getString(R.string.added_vol, fmtVol(ml, s.unit)), onUndo)
     }
 
     val remaining = today.goalMl - today.drankMl
@@ -218,24 +222,25 @@ fun HomeScreen(
                             .semantics { contentDescription = infoDesc }.padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text(stringResource(R.string.goal_label, fmtMl(today.goalMl)), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.goal_label_vol, fmtVol(today.goalMl, s.unit)), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         InfoBadge()
                     }
                     if (s.useWeather && temp != null) {
                         val extra = tempExtraMl(temp)
                         val degrees = temp.roundToInt().toString()
                         Text(
-                            if (extra > 0 && s.goalOverrideMl == null) stringResource(R.string.home_weather, degrees, fmtMl(extra))
+                            if (extra > 0 && s.goalOverrideMl == null) stringResource(R.string.home_weather_vol, degrees, fmtVol(extra, s.unit))
                             else stringResource(R.string.home_weather_none, degrees),
                             style = MaterialTheme.typography.bodySmall, color = Ab.muted,
                         )
                     }
+                    val tol = s.paceToleranceMl
                     Text(
                         when {
                             remaining <= 0 -> stringResource(R.string.home_plan_done)
                             plan == null -> stringResource(R.string.home_plan_none)
-                            pace - today.drankMl >= PACE_TOLERANCE_ML -> stringResource(R.string.pace_behind, fmtMl(roundTo10(pace - today.drankMl)))
-                            today.drankMl - pace >= PACE_TOLERANCE_ML -> stringResource(R.string.pace_ahead, fmtMl(roundTo10(today.drankMl - pace)))
+                            pace - today.drankMl >= tol && pace > today.drankMl -> stringResource(R.string.pace_behind_vol, fmtVol(roundTo10(pace - today.drankMl), s.unit))
+                            today.drankMl - pace >= tol && today.drankMl > pace -> stringResource(R.string.pace_ahead_vol, fmtVol(roundTo10(today.drankMl - pace), s.unit))
                             else -> stringResource(R.string.pace_on)
                         },
                         style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center,
@@ -246,7 +251,10 @@ fun HomeScreen(
                     WaterOrb(
                         rawFraction,
                         stringResource(R.string.home_progress, fmtMl(today.drankMl), fmtMl(today.goalMl)),
-                        Modifier.size(orb), motion = s.motionWater,
+                        Modifier.size(orb),
+                        motion = s.motionWater,
+                        waveAnimation = s.waterWaveAnimation,
+                        showOverflow = s.showOverflowEffect,
                     )
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Row(
@@ -261,8 +269,8 @@ fun HomeScreen(
                             Text(" ${unitLabel(s.unit)}", color = Ab.muted, modifier = Modifier.padding(bottom = 5.dp))
                         }
                         Text(
-                            if (remaining < 0) stringResource(R.string.over_label, fmtMl(-remaining))
-                            else stringResource(R.string.left_label, fmtMl(remaining)),
+                            if (remaining < 0) stringResource(R.string.over_label_vol, fmtVol(-remaining, s.unit))
+                            else stringResource(R.string.left_label_vol, fmtVol(remaining, s.unit)),
                             style = MaterialTheme.typography.bodySmall,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = if (remaining < 0) FontWeight.SemiBold else FontWeight.Normal,
@@ -704,8 +712,8 @@ private fun GoalInfoDialog(today: AbRepository.Today, temp: Double?, onDismiss: 
         title = { Text(stringResource(R.string.goal_info_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                InfoRow(stringResource(R.string.gi_weight, s.weightKg.toString()), "${fmtMl(baseGoalMl(s.weightKg))} ml")
-                Text(stringResource(R.string.gi_formula), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
+                InfoRow(stringResource(R.string.gi_weight, s.weightKg.toString()), fmtVol(baseGoalMl(s.weightKg, s.mlPerKg, s.minGoalMl), s.unit))
+                Text(stringResource(R.string.gi_formula_dyn, s.mlPerKg, fmtMl(s.minGoalMl)), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
                 InfoRow(
                     stringResource(R.string.gi_activity, stringResource(activityLabel(s.activity))),
                     if (s.useActivity) "+${fmtMl(s.activity.extraMl)} ml" else off,

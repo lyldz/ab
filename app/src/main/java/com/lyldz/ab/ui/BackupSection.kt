@@ -101,7 +101,9 @@ fun BackupSection(onRestored: () -> Unit) {
                         val n = runCatching { app.importBackup(d) }.getOrNull()
                         if (n == null) message = ctx.getString(R.string.backup_import_failed) else {
                             message = ctx.getString(R.string.backup_imported, n)
+                            val recreate = AppLocale.apply(ctx, d.settings.language)
                             onRestored()
+                            if (recreate) (ctx as? android.app.Activity)?.recreate()
                         }
                     }
                 }) { Text(stringResource(R.string.backup_restore)) }

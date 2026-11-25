@@ -59,23 +59,27 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
             app.repo.today(d)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    private val period = MutableStateFlow(7)
-    val periodDays: StateFlow<Int> = period
+    private val periodOverride = MutableStateFlow<Int?>(null)
+    val periodDays: StateFlow<Int> = combine(periodOverride, app.repo.settings) { ov, s ->
+        ov ?: s.defaultStatsDays
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 7)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val stats: StateFlow<List<DayStat>> =
-        combine(period, date) { p, d -> p to d }.flatMapLatest { (p, d) -> app.repo.stats(p, d) }
+        combine(periodDays, date) { p, d -> p to d }.flatMapLatest { (p, d) -> app.repo.stats(p, d) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val streak: StateFlow<Int> =
-        date.flatMapLatest { d -> app.repo.stats(60, d) }.map(::streakDays)
+        combine(date, app.repo.settings.map { it.streakWindowDays }.distinctUntilChanged()) { d, win -> d to win }
+            .flatMapLatest { (d, win) -> app.repo.stats(win, d) }.map(::streakDays)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-    /** Geçmiş sekmesi: son 30 günün günlük toplamları. */
+    /** Geçmiş sekmesi: kullanıcının seçtiği gün sayısı kadar günlük toplam. */
     @OptIn(ExperimentalCoroutinesApi::class)
     val history: StateFlow<List<DayStat>> =
-        date.flatMapLatest { d -> app.repo.stats(30, d) }
+        combine(date, app.repo.settings.map { it.historyDays }.distinctUntilChanged()) { d, days -> d to days }
+            .flatMapLatest { (d, days) -> app.repo.stats(days, d) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setHintCount(n: Int) {
@@ -83,7 +87,7 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
     }
 
     fun setPeriod(days: Int) {
-        period.value = days
+        periodOverride.value = days
     }
 
     fun finishOnboarding(s: Settings) {
@@ -100,6 +104,16 @@ class MainViewModel(private val app: AbApp) : ViewModel() {
             app.repo.saveSettings(s)
             app.reminders.refreshWeather()
             app.reminders.reschedule()
+            app.reminders.refreshNotification()
+        }
+    }
+
+    fun resetSettings() {
+        viewModelScope.launch {
+            periodOverride.value = null
+            app.repo.resetSettings()
+            app.reminders.reschedule()
+            app.reminders.refreshNotification(force = true)
         }
     }
 

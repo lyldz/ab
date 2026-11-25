@@ -185,8 +185,8 @@ fun ProfileScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
 
         SettingsGroup(stringResource(R.string.grp_goal)) {
             Text(stringResource(R.string.onb_goal, fmtMl(goal)), style = MaterialTheme.typography.titleLarge)
-            SwitchRow(stringResource(R.string.set_use_activity), useActivity) { useActivity = it }
-            SwitchRow(stringResource(R.string.set_use_weather), useWeather) { useWeather = it }
+            SwitchRow(stringResource(R.string.set_use_activity), useActivity, stringResource(R.string.desc_use_activity)) { useActivity = it }
+            SwitchRow(stringResource(R.string.set_use_weather), useWeather, stringResource(R.string.desc_use_weather)) { useWeather = it }
             if (useWeather) {
                 HorizontalDivider(color = Ab.line)
                 val cityText = when {
@@ -221,7 +221,7 @@ fun ProfileScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
                 Text(stringResource(R.string.weather_credit), color = Ab.muted, style = MaterialTheme.typography.bodySmall)
                 HorizontalDivider(color = Ab.line)
             }
-            SwitchRow(stringResource(R.string.set_override), manual) { manual = it }
+            SwitchRow(stringResource(R.string.set_override), manual, stringResource(R.string.desc_override)) { manual = it }
             if (manual) {
                 OutlinedTextField(
                     value = manualText,
@@ -233,8 +233,8 @@ fun ProfileScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            if (goal > GOAL_WARN_ML) {
-                Text(stringResource(R.string.set_goal_warn), color = MaterialTheme.colorScheme.tertiary)
+            if (goal > s.goalWarnMl) {
+                Text(stringResource(R.string.set_goal_warn_dyn, fmtVol(s.goalWarnMl, s.unit)), color = MaterialTheme.colorScheme.tertiary)
             }
             Text(stringResource(R.string.onb_goal_note), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
         }

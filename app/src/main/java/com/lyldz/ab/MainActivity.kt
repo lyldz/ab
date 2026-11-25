@@ -175,7 +175,12 @@ private fun AbContent(
                             unit = t.settings.unit,
                             onAddForDay = vm::addForDay,
                         )
-                        else -> SettingsScreen(t.settings, onSave = vm::saveSettings, onBack = { tab = 0 })
+                        else -> SettingsScreen(
+                            t.settings,
+                            onSave = vm::saveSettings,
+                            onReset = vm::resetSettings,
+                            onBack = { tab = 0 },
+                        )
                     }
                 }
             }

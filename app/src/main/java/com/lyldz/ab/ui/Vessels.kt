@@ -68,13 +68,15 @@ fun WaterOrb(
     description: String,
     modifier: Modifier = Modifier,
     motion: Boolean = true,
+    waveAnimation: Boolean = true,
+    showOverflow: Boolean = true,
 ) {
     // Sistem "animasyon ölçeği" kapalıyken (pil tasarrufu, geliştirici seçeneği) Compose'un animate*
     // API'leri durur; gösterge canlı kalsın diye kare saatine bağlı kendi animasyonumuzu kullanıyoruz.
     val level by rememberSmoothed(fraction.coerceIn(0f, 1f))
-    val overflow by rememberSmoothed(((fraction - 1f) / 0.5f).coerceIn(0f, 1f))
-    val phaseA by rememberPhase(4600)
-    val phaseB by rememberPhase(6400, reverse = true)
+    val overflow by rememberSmoothed(if (showOverflow) ((fraction - 1f) / 0.5f).coerceIn(0f, 1f) else 0f)
+    val phaseA by rememberPhase(4600, enabled = waveAnimation)
+    val phaseB by rememberPhase(6400, reverse = true, enabled = waveAnimation)
     val ripple by rememberFillRipple(fraction, enabled = motion)
 
     val card = Ab.card
@@ -369,9 +371,10 @@ private fun rememberSmoothed(target: Float): State<Float> {
 
 /** 0..2π arasında dönen faz; [periodMs] bir tur süresi. */
 @Composable
-private fun rememberPhase(periodMs: Int, reverse: Boolean = false): State<Float> {
+private fun rememberPhase(periodMs: Int, reverse: Boolean = false, enabled: Boolean = true): State<Float> {
     val phase = remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(enabled) {
+        if (!enabled) return@LaunchedEffect
         var last = 0L
         val twoPi = (2 * PI).toFloat()
         while (true) {

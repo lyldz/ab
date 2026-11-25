@@ -8,7 +8,6 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import com.lyldz.ab.R
-import com.lyldz.ab.core.PACE_TOLERANCE_ML
 import com.lyldz.ab.core.Plan
 import com.lyldz.ab.core.nextPlan
 import com.lyldz.ab.core.paceMl
@@ -18,8 +17,9 @@ import androidx.glance.appwidget.updateAll
 import com.lyldz.ab.data.AbRepository
 import com.lyldz.ab.data.WeatherApi
 import com.lyldz.ab.tile.AbTileService
-import com.lyldz.ab.ui.fmtMl
 import com.lyldz.ab.ui.fmtTime
+import com.lyldz.ab.ui.fmtVol
+import com.lyldz.ab.ui.fmtVolNum
 import com.lyldz.ab.widget.AbWidget
 import java.time.LocalDate
 import java.time.ZoneId
@@ -47,13 +47,15 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
     )
 
     /**
-     * Android 12+'ta opsiyonel SCHEDULE_EXACT_ALARM izni verilmişse (veya API < 31) tam zamanında
-     * alarm kurar; izin yoksa sessizce inexact setAndAllowWhileIdle'a düşer.
+     * Android 12+'ta opsiyonel SCHEDULE_EXACT_ALARM izni verilmiş ve kullanıcı ayarı açıksa tam zamanında
+     * alarm kurar; izin yoksa veya kapalıysa inexact setAndAllowWhileIdle'a düşer.
      */
-    private fun scheduleAt(triggerMs: Long, pi: PendingIntent) {
+    private fun scheduleAt(triggerMs: Long, pi: PendingIntent, preferExact: Boolean = true) {
         val safeMs = maxOf(triggerMs, System.currentTimeMillis() + 5_000L)
-        val canExact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
-            runCatching { alarm.canScheduleExactAlarms() }.getOrDefault(false)
+        val canExact = preferExact && (
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+                runCatching { alarm.canScheduleExactAlarms() }.getOrDefault(false)
+            )
         if (canExact) {
             runCatching { alarm.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, safeMs, pi) }
                 .onFailure { alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, safeMs, pi) }
@@ -63,10 +65,10 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
     }
 
     /** Her gün rutin başında bir kez: sıcaklığı al. Sıradaki rutin başına kurulur. */
-    private fun scheduleMorning(startMin: Int, now: ZonedDateTime) {
+    private fun scheduleMorning(startMin: Int, now: ZonedDateTime, preferExact: Boolean) {
         val startToday = now.toLocalDate().atStartOfDay(now.zone).plusMinutes(startMin.toLong())
         val at = if (now.isBefore(startToday)) startToday else startToday.plusDays(1)
-        scheduleAt(at.toInstant().toEpochMilli(), morningPending())
+        scheduleAt(at.toInstant().toEpochMilli(), morningPending(), preferExact)
     }
 
     /** Çevrimdışı durumda hava durumu isteğini zaman aşımı beklemeden atlamak için aktif ağ kontrolü. */
@@ -100,8 +102,8 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         val extra = refreshWeather(zone)
         val s = repo.settingsNow()
         val temp = s.tempC
-        if (extra != null && extra > 0 && s.onboarded && s.goalOverrideMl == null && temp != null) {
-            Notifier.showWeather(context, temp.roundToInt(), repo.todayNow().goalMl, extra)
+        if (extra != null && extra > 0 && s.onboarded && s.weatherNotificationEnabled && s.goalOverrideMl == null && temp != null) {
+            Notifier.showWeather(context, temp.roundToInt(), repo.todayNow().goalMl, extra, s.unit)
         }
         reschedule(zone)
     }
@@ -131,16 +133,19 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
             alarm.cancel(morningPending())
             return
         }
-        scheduleMorning(t.settings.windowStartMin, now)
+        scheduleMorning(t.settings.windowStartMin, now, t.settings.preferExactAlarm)
         repo.recordGoal(now.toLocalDate(), t.goalMl)
         if (!t.settings.remindersEnabled) {
             alarm.cancel(pending(true))
             Notifier.cancel(context)
             return
         }
+        if (!t.settings.statusNotificationEnabled) {
+            Notifier.cancel(context)
+        }
         val day = now.toLocalDate().atStartOfDay(zone)
         if (plan != null) {
-            scheduleAt(day.plusMinutes(plan.nextAtMin.toLong()).toInstant().toEpochMilli(), pending(true))
+            scheduleAt(day.plusMinutes(plan.nextAtMin.toLong()).toInstant().toEpochMilli(), pending(true), t.settings.preferExactAlarm)
         } else {
             // hedef doldu ya da pencere bitti: yarın rutin başında ACTION_MORNING yeniden hesaplar
             alarm.cancel(pending(true))
@@ -155,11 +160,14 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         if (!force && !Notifier.isShowing(context)) return
         val now = ZonedDateTime.now(zone)
         val (t, plan) = planNow(now)
-        if (!t.settings.onboarded || !t.settings.remindersEnabled) return
+        if (!t.settings.onboarded || !t.settings.remindersEnabled || !t.settings.statusNotificationEnabled) {
+            Notifier.cancel(context)
+            return
+        }
         val nowMin = now.hour * 60 + now.minute
         val inWindow = nowMin in t.settings.windowStartMin..t.settings.windowEndMin
-        val drank = fmtMl(t.drankMl)
-        val goal = fmtMl(t.goalMl)
+        val unit = t.settings.unit
+        val progress = "${fmtVolNum(t.drankMl, unit)} / ${fmtVol(t.goalMl, unit)}"
         val done = t.drankMl >= t.goalMl
         val lctx = com.lyldz.ab.ui.AppLocale.wrapContext(context)
         val title = when {
@@ -168,20 +176,24 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
             else -> paceTitle(t, nowMin, lctx)
         }
         val text = when {
-            done -> lctx.getString(R.string.home_progress, drank, goal)
-            plan != null -> lctx.getString(R.string.notif_text_after, drank, goal, fmtTime(plan.nextAtMin))
-            else -> lctx.getString(R.string.home_progress, drank, goal)
+            done -> progress
+            plan != null -> lctx.getString(R.string.notif_text_after_vol, progress, fmtTime(plan.nextAtMin))
+            else -> progress
         }
-        Notifier.show(context, title, text, t.drankMl, t.goalMl, plan?.amountMl ?: t.settings.cupMl, quiet = true)
+        Notifier.show(
+            context, title, text, t.drankMl, t.goalMl, plan?.amountMl ?: t.settings.cupMl,
+            quiet = true, secondMl = t.settings.notifSecondActionMl, unit = unit,
+        )
     }
 
-    /** Bildirim başlığı: tempoya göre "X ml geridesin / ilerdesin / tam tempodasın" (ana ekranla aynı kural). */
+    /** Bildirim başlığı: tempoya göre "X geridesin / ilerdesin / tam tempodasın" (ana ekranla aynı kural). */
     private fun paceTitle(t: AbRepository.Today, nowMin: Int, lctx: Context = com.lyldz.ab.ui.AppLocale.wrapContext(context)): String {
         val s = t.settings
         val diff = paceMl(t.goalMl, s.windowStartMin, s.windowEndMin, nowMin) - t.drankMl
+        val tol = s.paceToleranceMl
         return when {
-            diff >= PACE_TOLERANCE_ML -> lctx.getString(R.string.pace_behind, fmtMl(roundTo10(diff)))
-            diff <= -PACE_TOLERANCE_ML -> lctx.getString(R.string.pace_ahead, fmtMl(roundTo10(-diff)))
+            diff >= tol && tol >= 0 && diff > 0 -> lctx.getString(R.string.pace_behind_vol, fmtVol(roundTo10(diff), s.unit))
+            diff <= -tol && tol >= 0 && diff < 0 -> lctx.getString(R.string.pace_ahead_vol, fmtVol(roundTo10(-diff), s.unit))
             else -> lctx.getString(R.string.pace_on)
         }
     }
@@ -194,10 +206,15 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
             // 1 dk tolerans: saat ayarı ya da alarm kayması yüzünden dakika erken denk gelirse bildirim yutulmasın
             if (plan != null && plan.nextAtMin <= now.hour * 60 + now.minute + 1) {
                 val lctx = com.lyldz.ab.ui.AppLocale.wrapContext(context)
-                val text = lctx.getString(R.string.notif_text, fmtMl(plan.amountMl), fmtMl(t.drankMl), fmtMl(t.goalMl))
+                val u = t.settings.unit
+                val progress = "${fmtVolNum(t.drankMl, u)} / ${fmtVol(t.goalMl, u)}"
+                val text = lctx.getString(R.string.notif_text_vol, fmtVol(plan.amountMl, u), progress)
                 // önceki sessiz durum bildirimini kaldır ki yeni hatırlatma taze ses/titreşimle gelsin
                 Notifier.cancel(context)
-                Notifier.show(context, paceTitle(t, now.hour * 60 + now.minute, lctx), text, t.drankMl, t.goalMl, plan.amountMl, quiet = false)
+                Notifier.show(
+                    context, paceTitle(t, now.hour * 60 + now.minute, lctx), text, t.drankMl, t.goalMl, plan.amountMl,
+                    quiet = false, secondMl = t.settings.notifSecondActionMl, unit = u,
+                )
                 repo.markNotified(System.currentTimeMillis())
             }
         }
