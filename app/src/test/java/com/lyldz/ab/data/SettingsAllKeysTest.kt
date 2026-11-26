@@ -133,4 +133,47 @@ class SettingsAllKeysTest {
         assertEquals(30, nextPlan(600, 360, 1080, 2000, 1970, 60, 590, 250, 800)!!.amountMl) // kalandan fazla değil
         assertFalse(nextPlan(600, 360, 1080, 2000, 2500, 60, 500, 0, 0) != null)
     }
+
+    @Test fun textAndListFieldsClampAndFallbackSafely() {
+        val longName = "A".repeat(80)
+        val longCity = "İstanbul ".repeat(20)
+        val s = Settings(
+            name = longName,
+            city = "   ",
+            cupPresets = listOf(-10, 0, 250, 250, 99999, 150, 330, 500, 750, 1000, 1200, 1500, 2000),
+            widgetQuickAmounts = listOf(-5, 99999, 300, 300, 500, 750, 1000),
+            language = "fr",
+        ).sanitized()
+        assertEquals(30, s.name.length)
+        assertEquals(null, s.city)
+        assertEquals("", s.language)
+        assertEquals(listOf(150, 250, 330, 500, 750, 1000, 1200, 1500), s.cupPresets)
+        assertEquals(listOf(300, 500, 750), s.widgetQuickAmounts)
+
+        val emptyLists = Settings(
+            city = longCity,
+            cupPresets = emptyList(),
+            widgetQuickAmounts = listOf(1, 2, 99999),
+            language = "tr",
+        ).sanitized()
+        assertEquals(100, emptyLists.city!!.length)
+        assertEquals("tr", emptyLists.language)
+        assertEquals(DEFAULT_CUP_PRESETS, emptyLists.cupPresets)
+        assertEquals(DEFAULT_WIDGET_AMOUNTS, emptyLists.widgetQuickAmounts)
+
+        val back = Backup.parse(Backup.toJson(BackupData(emptyList(), emptyList(), s.copy(city = longCity, lat = 41.0, lon = 29.0, language = "en")), "t", 1L))!!.settings
+        assertEquals(30, back.name.length)
+        assertEquals(100, back.city!!.length)
+        assertEquals("en", back.language)
+        assertEquals(s.cupPresets, back.cupPresets)
+        assertEquals(s.widgetQuickAmounts, back.widgetQuickAmounts)
+
+        val badBackup = """{"format":"ab-backup","version":1,"settings":{"name":"${"Z".repeat(60)}","city":"   ","lat":41.0,"lon":29.0,"language":"de","cupPresets":"bad,0,-5","widgetQuickAmounts":""},"intakes":[],"goals":[]}"""
+        val parsedBad = Backup.parse(badBackup)!!.settings
+        assertEquals(30, parsedBad.name.length)
+        assertEquals(null, parsedBad.city)
+        assertEquals("", parsedBad.language)
+        assertEquals(DEFAULT_CUP_PRESETS, parsedBad.cupPresets)
+        assertEquals(DEFAULT_WIDGET_AMOUNTS, parsedBad.widgetQuickAmounts)
+    }
 }
