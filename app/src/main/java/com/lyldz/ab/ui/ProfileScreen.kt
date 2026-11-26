@@ -248,6 +248,7 @@ fun ProfileScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
 
     if (cityDialog) {
         CityDialog(
+            timeoutMs = s.networkTimeoutSec * 1_000,
             onDismiss = { cityDialog = false },
             onPick = { c ->
                 cityDialog = false

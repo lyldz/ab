@@ -3,6 +3,10 @@
 [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/) biçimi, [SemVer](https://semver.org/lang/tr/) sürümleme.
 
 ## [Unreleased]
+### Added
+- 5 yeni gelişmiş ayar (Ayarlar > Hedef ve istatistik, gelişmiş): en az ve en çok hatırlatma miktarı, ipucu gösterim sayısı, ağ zaman aşımı ve arka plan hava denetimi sınırı. Varsayılanlar eski sabit değerlerle aynıdır (100 ml, 500 ml, 3, 10 sn, 6 sn); yedek dışa/içe aktarma ve sıfırlama bu ayarları da kapsar. Eski yedekler bozulmadan yüklenir.
+### Tests
+- `SettingsAllKeysTest`: her ayar alanı için varsayılan, uç değer, yedek gidiş-dönüşü ve eski davranış korunumu; alan sayısı koruması.
 
 ## [0.3.11] - 2026-11-25 · Testi
 ### Added

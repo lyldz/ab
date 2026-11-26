@@ -91,8 +91,8 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         val today = LocalDate.now(zone).toString()
         if (!s.useWeather || lat == null || lon == null || s.tempDay == today) return null
         if (!isNetworkAvailable()) return null
-        val t = kotlinx.coroutines.withTimeoutOrNull(6_000) {
-            runCatching { WeatherApi.fetchMaxTemp(lat, lon) }.getOrNull()
+        val t = kotlinx.coroutines.withTimeoutOrNull(s.backgroundWeatherTimeoutSec * 1_000L) {
+            runCatching { WeatherApi.fetchMaxTemp(lat, lon, s.networkTimeoutSec * 1_000) }.getOrNull()
         } ?: return null
         repo.saveTemperature(t, today)
         return tempExtraMl(t)
@@ -113,7 +113,7 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         val s = t.settings
         val plan = if (!s.onboarded || !s.remindersEnabled) null else nextPlan(
             now.hour * 60 + now.minute, s.windowStartMin, s.windowEndMin,
-            t.goalMl, t.drankMl, s.reminderIntervalMin(), t.anchorMin,
+            t.goalMl, t.drankMl, s.reminderIntervalMin(), t.anchorMin, s.minReminderMl, s.maxReminderMl,
         )
         return t to plan
     }

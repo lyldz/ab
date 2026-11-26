@@ -115,6 +115,11 @@ fun SettingsScreen(
     var defaultStatsDays by rememberSaveable { mutableIntStateOf(s.defaultStatsDays) }
     var historyDays by rememberSaveable { mutableIntStateOf(s.historyDays) }
     var streakWindowDays by rememberSaveable { mutableIntStateOf(s.streakWindowDays) }
+    var minReminderMl by rememberSaveable { mutableIntStateOf(s.minReminderMl) }
+    var maxReminderMl by rememberSaveable { mutableIntStateOf(s.maxReminderMl) }
+    var maxHints by rememberSaveable { mutableIntStateOf(s.maxHints) }
+    var networkTimeoutSec by rememberSaveable { mutableIntStateOf(s.networkTimeoutSec) }
+    var backgroundWeatherTimeoutSec by rememberSaveable { mutableIntStateOf(s.backgroundWeatherTimeoutSec) }
 
     var timeDialog by remember { mutableStateOf<Int?>(null) } // 0 kalkış, 1 yatış
     var resetDialog by remember { mutableStateOf(false) }
@@ -153,6 +158,11 @@ fun SettingsScreen(
         defaultStatsDays = s.defaultStatsDays
         historyDays = s.historyDays
         streakWindowDays = s.streakWindowDays
+        minReminderMl = s.minReminderMl
+        maxReminderMl = s.maxReminderMl
+        maxHints = s.maxHints
+        networkTimeoutSec = s.networkTimeoutSec
+        backgroundWeatherTimeoutSec = s.backgroundWeatherTimeoutSec
     }
 
     val draft = s.copy(
@@ -184,6 +194,11 @@ fun SettingsScreen(
         defaultStatsDays = defaultStatsDays,
         historyDays = historyDays,
         streakWindowDays = streakWindowDays,
+        minReminderMl = minReminderMl,
+        maxReminderMl = maxReminderMl,
+        maxHints = maxHints,
+        networkTimeoutSec = networkTimeoutSec,
+        backgroundWeatherTimeoutSec = backgroundWeatherTimeoutSec,
     )
     val latestDraft by rememberUpdatedState(draft)
     val latestSaved by rememberUpdatedState(s)
@@ -477,6 +492,41 @@ fun SettingsScreen(
                 onMinus = { streakWindowDays = (streakWindowDays - 15).coerceIn(30, 365) },
                 onPlus = { streakWindowDays = (streakWindowDays + 15).coerceIn(30, 365) },
             )
+            SettingStepper(
+                label = stringResource(R.string.set_min_reminder),
+                description = stringResource(R.string.desc_min_reminder),
+                value = "$minReminderMl ml",
+                onMinus = { minReminderMl = (minReminderMl - 50).coerceIn(50, 500) },
+                onPlus = { minReminderMl = (minReminderMl + 50).coerceIn(50, 500) },
+            )
+            SettingStepper(
+                label = stringResource(R.string.set_max_reminder),
+                description = stringResource(R.string.desc_max_reminder),
+                value = "$maxReminderMl ml",
+                onMinus = { maxReminderMl = (maxReminderMl - 50).coerceIn(100, 2000).coerceAtLeast(minReminderMl) },
+                onPlus = { maxReminderMl = (maxReminderMl + 50).coerceIn(100, 2000) },
+            )
+            SettingStepper(
+                label = stringResource(R.string.set_max_hints),
+                description = stringResource(R.string.desc_max_hints),
+                value = "$maxHints",
+                onMinus = { maxHints = (maxHints - 1).coerceIn(1, 10) },
+                onPlus = { maxHints = (maxHints + 1).coerceIn(1, 10) },
+            )
+            SettingStepper(
+                label = stringResource(R.string.set_network_timeout),
+                description = stringResource(R.string.desc_network_timeout),
+                value = "$networkTimeoutSec s",
+                onMinus = { networkTimeoutSec = (networkTimeoutSec - 1).coerceIn(3, 30) },
+                onPlus = { networkTimeoutSec = (networkTimeoutSec + 1).coerceIn(3, 30) },
+            )
+            SettingStepper(
+                label = stringResource(R.string.set_bg_weather_timeout),
+                description = stringResource(R.string.desc_bg_weather_timeout),
+                value = "$backgroundWeatherTimeoutSec s",
+                onMinus = { backgroundWeatherTimeoutSec = (backgroundWeatherTimeoutSec - 1).coerceIn(3, 30) },
+                onPlus = { backgroundWeatherTimeoutSec = (backgroundWeatherTimeoutSec + 1).coerceIn(3, 30) },
+            )
         }
 
         // 5. Veri, Yedekleme ve Sıfırlama (katlanabilir)
@@ -646,7 +696,7 @@ private fun CollapsibleSettingsGroup(
 
 /** Şehir adı yazılır; yalnızca bu metin Open-Meteo arama servisine gider. */
 @Composable
-internal fun CityDialog(onDismiss: () -> Unit, onPick: (WeatherApi.City) -> Unit) {
+internal fun CityDialog(onDismiss: () -> Unit, onPick: (WeatherApi.City) -> Unit, timeoutMs: Int = 10_000) {
     var query by remember { mutableStateOf("") }
     var results by remember { mutableStateOf<List<WeatherApi.City>?>(null) }
     var busy by remember { mutableStateOf(false) }
@@ -667,7 +717,7 @@ internal fun CityDialog(onDismiss: () -> Unit, onPick: (WeatherApi.City) -> Unit
                     onClick = {
                         busy = true
                         scope.launch {
-                            results = WeatherApi.searchCities(query)
+                            results = WeatherApi.searchCities(query, timeoutMs)
                             busy = false
                         }
                     },

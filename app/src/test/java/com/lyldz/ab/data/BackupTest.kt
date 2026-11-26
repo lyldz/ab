@@ -17,6 +17,7 @@ class BackupTest {
         widgetQuickAmounts = listOf(300, 600), tileToastEnabled = false, mlPerKg = 30, minGoalMl = 1800,
         goalWarnMl = 6000, paceToleranceMl = 80, waterWaveAnimation = false, showOverflowEffect = false,
         showHints = false, undoBannerMs = 3000, defaultStatsDays = 30, historyDays = 60, streakWindowDays = 120,
+        minReminderMl = 150, maxReminderMl = 700, maxHints = 5, networkTimeoutSec = 15, backgroundWeatherTimeoutSec = 9,
     )
     private val data = BackupData(
         intakes = listOf(Intake(7, 2_000, 250, SOURCE_NOTIFICATION), Intake(3, 1_000, 200, SOURCE_APP)),

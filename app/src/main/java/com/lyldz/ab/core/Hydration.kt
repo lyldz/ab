@@ -100,6 +100,8 @@ fun nextPlan(
     drankMl: Int,
     intervalMin: Int,
     anchorMin: Int?,
+    minReminderMl: Int = MIN_REMINDER_ML,
+    maxReminderMl: Int = MAX_REMINDER_ML,
 ): Plan? {
     if (goalMl <= 0 || intervalMin <= 0) return null
     val remainingMl = goalMl - drankMl.coerceAtLeast(0)
@@ -109,7 +111,9 @@ fun nextPlan(
     if (next >= windowEndMin) return null
     val slots = (windowEndMin - 1 - next) / intervalMin + 1
     val rounded = (remainingMl.toDouble() / slots / REMINDER_STEP_ML).roundToInt() * REMINDER_STEP_ML
-    val amount = rounded.coerceIn(MIN_REMINDER_ML, MAX_REMINDER_ML).coerceAtMost(remainingMl)
+    val lo = minReminderMl.coerceAtLeast(1)
+    val hi = maxReminderMl.coerceAtLeast(lo)
+    val amount = rounded.coerceIn(lo, hi).coerceAtMost(remainingMl)
     return Plan(next, intervalMin, amount)
 }
 

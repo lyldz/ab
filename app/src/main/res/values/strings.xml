@@ -358,6 +358,16 @@
     <string name="desc_history_days">Number of past days displayed on the History tab (7–365 days).</string>
     <string name="set_streak_window">Streak calculation window</string>
     <string name="desc_streak_window">Maximum lookback days counted for consecutive goal streaks (30–365 days).</string>
+    <string name="set_min_reminder">Minimum reminder amount</string>
+    <string name="desc_min_reminder">Smallest amount a reminder will suggest you drink (50–500 ml).</string>
+    <string name="set_max_reminder">Maximum reminder amount</string>
+    <string name="desc_max_reminder">Largest amount a reminder will suggest at once (100–2000 ml, never below the minimum).</string>
+    <string name="set_max_hints">Hint display count</string>
+    <string name="desc_max_hints">How many app launches the long-press tip is shown for (1–10). Has no effect when hints are turned off.</string>
+    <string name="set_network_timeout">Network timeout</string>
+    <string name="desc_network_timeout">How long weather and city lookups wait for a response (3–30 s).</string>
+    <string name="set_bg_weather_timeout">Background weather limit</string>
+    <string name="desc_bg_weather_timeout">Longest the morning weather check may take while a reminder is being prepared (3–30 s).</string>
     <string name="reset_defaults_title">Reset settings to defaults</string>
     <string name="reset_defaults_desc">Restores all settings and toggles to factory defaults. Your water records stay intact.</string>
     <string name="reset_defaults_btn">Reset to defaults</string>

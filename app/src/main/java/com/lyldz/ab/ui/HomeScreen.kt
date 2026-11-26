@@ -142,8 +142,8 @@ fun HomeScreen(
             hintVisible = false
             return@LaunchedEffect
         }
-        // uygulama başına bir kez, ilk MAX_HINTS açılışta; sekme değiştirince tekrar çıkmaz
-        if (!hintShownThisRun && hintsShown < MAX_HINTS) {
+        // uygulama başına bir kez, ilk maxHints açılışta; sekme değiştirince tekrar çıkmaz
+        if (!hintShownThisRun && hintsShown < s.maxHints) {
             hintShownThisRun = true
             onHintCount(hintsShown + 1)
             delay(700)
@@ -165,7 +165,7 @@ fun HomeScreen(
     val remaining = today.goalMl - today.drankMl
     val pace = paceMl(today.goalMl, s.windowStartMin, s.windowEndMin, nowMin)
     val plan = if (s.remindersEnabled) {
-        nextPlan(nowMin, s.windowStartMin, s.windowEndMin, today.goalMl, today.drankMl, s.reminderIntervalMin(), today.anchorMin)
+        nextPlan(nowMin, s.windowStartMin, s.windowEndMin, today.goalMl, today.drankMl, s.reminderIntervalMin(), today.anchorMin, s.minReminderMl, s.maxReminderMl)
     } else {
         null
     }
@@ -298,7 +298,7 @@ fun HomeScreen(
                                 // basınca bardak boyutu kadar ekler, uzun basınca ölçü seçtirir
                                 .combinedClickable(
                                     role = Role.Button,
-                                    onLongClick = { hintVisible = false; onHintCount(MAX_HINTS); cupDialog = true },
+                                    onLongClick = { hintVisible = false; onHintCount(s.maxHints.coerceAtLeast(MAX_HINTS)); cupDialog = true },
                                 ) { add(s.cupMl) }
                                 .semantics { contentDescription = addDesc }
                                 .padding(horizontal = 16.dp),
