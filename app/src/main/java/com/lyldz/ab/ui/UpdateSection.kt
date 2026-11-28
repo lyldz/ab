@@ -75,12 +75,14 @@ fun UpdateSection(showCurrentVersion: Boolean = true) {
                     onClick = {
                         if (!ctx.packageManager.canRequestPackageInstalls()) {
                             permHint = true
+                            val appDetails = Intent(AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${ctx.packageName}"))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             runCatching {
                                 ctx.startActivity(
                                     Intent(AndroidSettings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}"))
                                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                                 )
-                            }
+                            }.onFailure { runCatching { ctx.startActivity(appDetails) } }
                         } else {
                             permHint = false
                             scope.launch {
@@ -88,8 +90,8 @@ fun UpdateSection(showCurrentVersion: Boolean = true) {
                                 val res = Updater.download(ctx, st.info) { state = UpdateState.Downloading(it) }
                                 when (res) {
                                     is DownloadResult.Ok -> {
-                                        Updater.install(ctx, res.file)
-                                        state = UpdateState.Available(st.info)
+                                        val launched = runCatching { Updater.install(ctx, res.file) }.isSuccess
+                                        state = if (launched) UpdateState.Available(st.info) else UpdateState.Failed(R.string.update_download_failed)
                                     }
                                     DownloadResult.HashMismatch -> state = UpdateState.Failed(R.string.update_hash_failed)
                                     DownloadResult.WrongSignature -> state = UpdateState.Failed(R.string.update_sig_failed)
