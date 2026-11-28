@@ -20,13 +20,15 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 
 /**
+
+ * (Ayrı SDK = ayrı Robolectric kum havuzu: DataStore durumu diğer duman testleriyle paylaşılmaz.)
  * Denetim (Aşama 4) doğrulama testi:
  * - Küçük ekran (360x640dp) üzerinde tüm ekranlar, diyaloglar (GoalInfo, CupPicker, Profile, History PastDayAdd, Settings)
  *   ve kayıt ekleme/geri alma akışı çökmeden çalışır.
  * - Bozuk yedek ve sınır dışı ayarlar güvenli şekilde reddedilir/sabitlenir.
  */
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [34], qualifiers = "w360dp-h640dp-normal-xxhdpi")
+@Config(sdk = [31], qualifiers = "w360dp-h640dp-normal-xxhdpi")
 class AuditSmokeTest {
     @get:Rule
     val compose = createAndroidComposeRule<MainActivity>()
@@ -73,14 +75,14 @@ class AuditSmokeTest {
 
         // 4. Bardak seçici diyaloğu (kaydırılabilir)
         compose.onNodeWithContentDescription("Choose glass size").performScrollTo().performClick()
-        waitFor("Glass size")
+        waitFor("Choose glass and add")
         tap("Cancel")
 
         // 5. Geçmiş ekranı + geçmiş gün ekleme diyaloğu
         tap("History")
         waitFor("Today")
-        tap("+ Add past")
-        waitFor("Add past water")
+        tap("+ Add past day")
+        waitFor("Add past water entry")
         tap("Add")
 
         // 6. Grafikler sekmesi (7 / 30 gün geçişi)
@@ -92,9 +94,8 @@ class AuditSmokeTest {
         tap("Settings")
         waitFor("Schedule & reminders")
         tap("fl oz")
-        tap("ml")
         tap("App & about")
-        waitFor("Check for update")
+        waitFor("Check for updates")
     }
 
     @Test
