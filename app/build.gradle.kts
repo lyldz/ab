@@ -56,6 +56,7 @@ android {
 
 // Robolectric duman testi ağırdır (düşük RAM'li makinede çöker): yalnızca CI'da ya da AB_SMOKE=1 ile çalışır.
 tasks.withType<Test>().configureEach {
+    maxHeapSize = "2g" // üç Robolectric kum havuzu (SDK 31/33/34) varsayılan 512 MB yığına sığmaz (OOM)
     testLogging {
         events("failed")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL

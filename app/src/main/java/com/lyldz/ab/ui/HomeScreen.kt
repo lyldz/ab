@@ -637,7 +637,7 @@ private fun CupDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.cup_dialog_title)) },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     list.forEach { ml ->
                         val selected = ml == current
