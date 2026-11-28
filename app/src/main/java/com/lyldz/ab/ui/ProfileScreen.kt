@@ -54,7 +54,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
 import com.lyldz.ab.core.Activity
-import com.lyldz.ab.core.GOAL_WARN_ML
 import com.lyldz.ab.core.tempExtraMl
 import com.lyldz.ab.data.Settings
 import com.lyldz.ab.data.currentCoarse
@@ -184,7 +183,7 @@ fun ProfileScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
         }
 
         SettingsGroup(stringResource(R.string.grp_goal)) {
-            Text(stringResource(R.string.onb_goal, fmtMl(goal)), style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.onb_goal_vol, fmtVol(goal, s.unit)), style = MaterialTheme.typography.titleLarge)
             SwitchRow(stringResource(R.string.set_use_activity), useActivity, stringResource(R.string.desc_use_activity)) { useActivity = it }
             SwitchRow(stringResource(R.string.set_use_weather), useWeather, stringResource(R.string.desc_use_weather)) { useWeather = it }
             if (useWeather) {
@@ -197,7 +196,7 @@ fun ProfileScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
                 Text(stringResource(R.string.weather_city, cityText), style = MaterialTheme.typography.bodyMedium, color = Ab.strong)
                 draft.tempToday(today)?.let {
                     Text(
-                        stringResource(R.string.weather_today, it.roundToInt().toString(), fmtMl(tempExtraMl(it))),
+                        stringResource(R.string.weather_today_vol, it.roundToInt().toString(), fmtVol(tempExtraMl(it), s.unit)),
                         style = MaterialTheme.typography.bodySmall,
                         color = Ab.muted,
                     )
@@ -248,6 +247,7 @@ fun ProfileScreen(s: Settings, onSave: (Settings) -> Unit, onBack: () -> Unit) {
 
     if (cityDialog) {
         CityDialog(
+            timeoutMs = s.networkTimeoutSec * 1_000,
             onDismiss = { cityDialog = false },
             onPick = { c ->
                 cityDialog = false

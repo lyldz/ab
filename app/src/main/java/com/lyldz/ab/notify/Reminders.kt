@@ -32,7 +32,7 @@ import kotlin.math.roundToInt
  * ayarı (SCHEDULE_EXACT_ALARM) istenirse eklenir.
  */
 class Reminders(private val context: Context, private val repo: AbRepository) {
-    private val alarm = context.getSystemService(AlarmManager::class.java)
+    private val alarm: AlarmManager? = context.getSystemService(AlarmManager::class.java)
 
     private fun pending(notify: Boolean): PendingIntent = PendingIntent.getBroadcast(
         context, 0,
@@ -51,16 +51,17 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
      * alarm kurar; izin yoksa veya kapalıysa inexact setAndAllowWhileIdle'a düşer.
      */
     private fun scheduleAt(triggerMs: Long, pi: PendingIntent, preferExact: Boolean = true) {
+        val am = alarm ?: return
         val safeMs = maxOf(triggerMs, System.currentTimeMillis() + 5_000L)
         val canExact = preferExact && (
             Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
-                runCatching { alarm.canScheduleExactAlarms() }.getOrDefault(false)
+                runCatching { am.canScheduleExactAlarms() }.getOrDefault(false)
             )
         if (canExact) {
-            runCatching { alarm.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, safeMs, pi) }
-                .onFailure { alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, safeMs, pi) }
+            runCatching { am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, safeMs, pi) }
+                .onFailure { runCatching { am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, safeMs, pi) } }
         } else {
-            alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, safeMs, pi)
+            runCatching { am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, safeMs, pi) }
         }
     }
 
@@ -91,8 +92,8 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         val today = LocalDate.now(zone).toString()
         if (!s.useWeather || lat == null || lon == null || s.tempDay == today) return null
         if (!isNetworkAvailable()) return null
-        val t = kotlinx.coroutines.withTimeoutOrNull(6_000) {
-            runCatching { WeatherApi.fetchMaxTemp(lat, lon) }.getOrNull()
+        val t = kotlinx.coroutines.withTimeoutOrNull(s.backgroundWeatherTimeoutSec * 1_000L) {
+            runCatching { WeatherApi.fetchMaxTemp(lat, lon, s.networkTimeoutSec * 1_000) }.getOrNull()
         } ?: return null
         repo.saveTemperature(t, today)
         return tempExtraMl(t)
@@ -113,7 +114,7 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         val s = t.settings
         val plan = if (!s.onboarded || !s.remindersEnabled) null else nextPlan(
             now.hour * 60 + now.minute, s.windowStartMin, s.windowEndMin,
-            t.goalMl, t.drankMl, s.reminderIntervalMin(), t.anchorMin,
+            t.goalMl, t.drankMl, s.reminderIntervalMin(), t.anchorMin, s.minReminderMl, s.maxReminderMl,
         )
         return t to plan
     }
@@ -129,14 +130,14 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
         val now = ZonedDateTime.now(zone)
         val (t, plan) = planNow(now)
         if (!t.settings.onboarded) {
-            alarm.cancel(pending(true))
-            alarm.cancel(morningPending())
+            runCatching { alarm?.cancel(pending(true)) }
+            runCatching { alarm?.cancel(morningPending()) }
             return
         }
         scheduleMorning(t.settings.windowStartMin, now, t.settings.preferExactAlarm)
         repo.recordGoal(now.toLocalDate(), t.goalMl)
         if (!t.settings.remindersEnabled) {
-            alarm.cancel(pending(true))
+            runCatching { alarm?.cancel(pending(true)) }
             Notifier.cancel(context)
             return
         }
@@ -148,7 +149,7 @@ class Reminders(private val context: Context, private val repo: AbRepository) {
             scheduleAt(day.plusMinutes(plan.nextAtMin.toLong()).toInstant().toEpochMilli(), pending(true), t.settings.preferExactAlarm)
         } else {
             // hedef doldu ya da pencere bitti: yarın rutin başında ACTION_MORNING yeniden hesaplar
-            alarm.cancel(pending(true))
+            runCatching { alarm?.cancel(pending(true)) }
         }
     }
 

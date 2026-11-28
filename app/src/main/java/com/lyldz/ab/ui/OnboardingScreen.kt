@@ -19,6 +19,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -137,6 +139,7 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
     var locDenied by remember { mutableStateOf(false) }
     var cityDialog by remember { mutableStateOf(false) }
     var timeDialog by remember { mutableStateOf<Int?>(null) } // 0 kalkış, 1 yatış
+    var finishing by remember { mutableStateOf(false) }
 
     val kg = weight.toIntOrNull()
     val kgOk = kg != null && kg in 30..250
@@ -166,14 +169,18 @@ fun OnboardingScreen(onDone: (Settings) -> Unit) {
             }
         }
     }
-    fun finish() = onDone(
-        Settings(
-            weightKg = kg ?: 70, activity = activity, cupMl = cup, windowStartMin = wake, windowEndMin = end,
-            lat = lat, lon = lon, city = city,
-            tempC = temp, tempDay = if (temp != null) LocalDate.now().toString() else null,
-            onboarded = true,
-        ),
-    )
+    fun finish() {
+        if (finishing) return
+        finishing = true
+        onDone(
+            Settings(
+                weightKg = kg ?: 70, activity = activity, cupMl = cup, windowStartMin = wake, windowEndMin = end,
+                lat = lat, lon = lon, city = city,
+                tempC = temp, tempDay = if (temp != null) LocalDate.now().toString() else null,
+                onboarded = true,
+            ),
+        )
+    }
 
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { notifOk = it }
     val locLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -315,6 +322,7 @@ private fun StepColumn(content: @Composable androidx.compose.foundation.layout.C
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp), content = content)
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun BiometricsStep(weight: String, kgOk: Boolean, onWeight: (String) -> Unit, activityIdx: Int, onActivity: (Int) -> Unit) {
     StepColumn {
@@ -329,7 +337,7 @@ private fun BiometricsStep(weight: String, kgOk: Boolean, onWeight: (String) -> 
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth(),
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             listOf(60, 70, 80, 90, 100).forEach { q ->
                 FilterChip(selected = weight == q.toString(), onClick = { onWeight(q.toString()) }, label = { Text("$q") })
             }
@@ -356,6 +364,7 @@ private fun BiometricsStep(weight: String, kgOk: Boolean, onWeight: (String) -> 
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun RoutineStep(wake: Int, bed: Int, end: Int, cup: Int, onPickTime: (Int) -> Unit, onCup: (Int) -> Unit) {
     StepColumn {
@@ -367,7 +376,7 @@ private fun RoutineStep(wake: Int, bed: Int, end: Int, cup: Int, onPickTime: (In
         }
         Text(stringResource(R.string.window_note, fmtTime(wake), fmtTime(end % 1440)), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
         Text(stringResource(R.string.onb_cup_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             val mlUnit = stringResource(R.string.unit_ml)
             listOf(200, 250, 330, 500).forEach { ml ->
                 FilterChip(selected = cup == ml, onClick = { onCup(ml) }, label = { Text("$ml $mlUnit") })
@@ -419,7 +428,7 @@ private fun PermissionsStep(
                     Text(stringResource(R.string.onb_perm_notif_t), fontWeight = FontWeight.Bold)
                     Text(stringResource(R.string.onb_perm_notif_d), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
                 }
-                Button(onClick = onNotif, enabled = !notifOk) { Text(stringResource(if (notifOk) R.string.perm_status_on else R.string.onb_allow)) }
+                Button(onClick = onNotif, enabled = !notifOk, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(if (notifOk) R.string.perm_status_on else R.string.onb_allow)) }
             }
         }
 
@@ -430,7 +439,7 @@ private fun PermissionsStep(
                         Text(stringResource(R.string.onb_perm_loc_t), fontWeight = FontWeight.Bold)
                         Text(stringResource(R.string.onb_perm_loc_d), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
                     }
-                    Button(onClick = onLoc, enabled = !busy) { Text(stringResource(if (locOk && temp != null) R.string.perm_status_on else R.string.onb_allow)) }
+                    Button(onClick = onLoc, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(if (locOk && temp != null) R.string.perm_status_on else R.string.onb_allow)) }
                 }
                 if (busy) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -507,9 +516,10 @@ fun activityLabel(a: Activity): Int = when (a) {
     Activity.HIGH -> R.string.activity_high
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ActivityChips(selected: Int, onSelect: (Int) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Activity.entries.forEachIndexed { i, a ->
             FilterChip(
                 selected = i == selected,

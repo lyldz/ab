@@ -290,6 +290,10 @@
     <string name="back_desc">Geri</string>
     <string name="backup_filename_prefix">ab-yedek</string>
     <string name="added_vol">%1$s eklendi</string>
+    <string name="deleted_vol">%1$s silindi</string>
+    <string name="onb_goal_vol">Günlük hedef: %1$s</string>
+    <string name="weather_today_vol">Bugün: %1$s°C (+%2$s)</string>
+    <string name="gi_temp_value_vol">%1$s°C → +%2$s</string>
     <string name="goal_label_vol">Hedef: %1$s</string>
     <string name="home_weather_vol">Bugün %1$s°C · hedefe +%2$s</string>
     <string name="pace_behind_vol">%1$s geridesin</string>
@@ -358,6 +362,16 @@
     <string name="desc_history_days">Geçmiş sekmesinde listelenecek geçmiş gün sayısı (7–365 gün).</string>
     <string name="set_streak_window">Seri hesaplama penceresi</string>
     <string name="desc_streak_window">Üst üste hedefe ulaşma serisinin geriye dönük hesaplama sınırı (30–365 gün).</string>
+    <string name="set_min_reminder">En az hatırlatma miktarı</string>
+    <string name="desc_min_reminder">Hatırlatmanın önereceği en küçük su miktarı (50–500 ml).</string>
+    <string name="set_max_reminder">En çok hatırlatma miktarı</string>
+    <string name="desc_max_reminder">Hatırlatmanın tek seferde önereceği en büyük miktar (100–2000 ml, en azdan küçük olamaz).</string>
+    <string name="set_max_hints">İpucu gösterim sayısı</string>
+    <string name="desc_max_hints">Uzun basma ipucunun kaç açılışta gösterileceği (1–10). İpuçları kapalıysa etkisizdir.</string>
+    <string name="set_network_timeout">Ağ zaman aşımı</string>
+    <string name="desc_network_timeout">Hava durumu ve şehir aramalarının yanıt için bekleme süresi (3–30 sn).</string>
+    <string name="set_bg_weather_timeout">Arka plan hava sınırı</string>
+    <string name="desc_bg_weather_timeout">Hatırlatma hazırlanırken sabah hava denetiminin en fazla sürebileceği süre (3–30 sn).</string>
     <string name="reset_defaults_title">Ayarları varsayılanlara sıfırla</string>
     <string name="reset_defaults_desc">Tüm ayarları ve anahtarları fabrika varsayılanlarına döndürür. Su kayıtların silinmez.</string>
     <string name="reset_defaults_btn">Varsayılanlara sıfırla</string>

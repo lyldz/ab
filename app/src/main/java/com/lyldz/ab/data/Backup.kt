@@ -56,6 +56,11 @@ object Backup {
             .put("defaultStatsDays", s.defaultStatsDays)
             .put("historyDays", s.historyDays)
             .put("streakWindowDays", s.streakWindowDays)
+            .put("minReminderMl", s.minReminderMl)
+            .put("maxReminderMl", s.maxReminderMl)
+            .put("maxHints", s.maxHints)
+            .put("networkTimeoutSec", s.networkTimeoutSec)
+            .put("backgroundWeatherTimeoutSec", s.backgroundWeatherTimeoutSec)
         s.customReminderIntervalMin?.let { settings.put("customReminderIntervalMin", it) }
         s.goalOverrideMl?.let { settings.put("goalOverrideMl", it) }
         s.city?.let { settings.put("city", it) }
@@ -122,6 +127,11 @@ object Backup {
             defaultStatsDays = so.optInt("defaultStatsDays", def.defaultStatsDays).takeIf { it == 7 || it == 30 } ?: def.defaultStatsDays,
             historyDays = so.optInt("historyDays", def.historyDays).takeIf { it in 7..365 } ?: def.historyDays,
             streakWindowDays = so.optInt("streakWindowDays", def.streakWindowDays).takeIf { it in 30..365 } ?: def.streakWindowDays,
+            minReminderMl = so.optInt("minReminderMl", def.minReminderMl).takeIf { it in 50..500 } ?: def.minReminderMl,
+            maxReminderMl = so.optInt("maxReminderMl", def.maxReminderMl).takeIf { it in 100..2000 } ?: def.maxReminderMl,
+            maxHints = so.optInt("maxHints", def.maxHints).takeIf { it in 1..10 } ?: def.maxHints,
+            networkTimeoutSec = so.optInt("networkTimeoutSec", def.networkTimeoutSec).takeIf { it in 3..30 } ?: def.networkTimeoutSec,
+            backgroundWeatherTimeoutSec = so.optInt("backgroundWeatherTimeoutSec", def.backgroundWeatherTimeoutSec).takeIf { it in 3..30 } ?: def.backgroundWeatherTimeoutSec,
             onboarded = true,
         )
         val intakes = mutableListOf<Intake>()

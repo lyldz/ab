@@ -17,6 +17,8 @@ import com.lyldz.ab.core.MAX_WEIGHT_KG
 import com.lyldz.ab.core.MIN_CUP_ML
 import com.lyldz.ab.core.MIN_GOAL_ML
 import com.lyldz.ab.core.MIN_MANUAL_GOAL_ML
+import com.lyldz.ab.core.MAX_REMINDER_ML
+import com.lyldz.ab.core.MIN_REMINDER_ML
 import com.lyldz.ab.core.MIN_WEIGHT_KG
 import com.lyldz.ab.core.ML_PER_KG
 import com.lyldz.ab.core.PACE_TOLERANCE_ML
@@ -121,6 +123,16 @@ data class Settings(
     val historyDays: Int = 30,
     /** Seri (streak) hesaplama penceresi (30..365 gün). */
     val streakWindowDays: Int = 60,
+    /** Hatırlatmada önerilen en az miktar (50..500 ml). */
+    val minReminderMl: Int = MIN_REMINDER_ML,
+    /** Hatırlatmada önerilen en çok miktar (100..2000 ml). */
+    val maxReminderMl: Int = MAX_REMINDER_ML,
+    /** Ana ekrandaki uzun-basma ipucunun kaç açılışta gösterileceği (1..10). */
+    val maxHints: Int = 3,
+    /** Hava durumu ve şehir sorgusunda bağlantı/okuma zaman aşımı (3..30 sn). */
+    val networkTimeoutSec: Int = 10,
+    /** Hatırlatma sırasında arka planda hava çekme üst süresi (3..30 sn). */
+    val backgroundWeatherTimeoutSec: Int = 6,
 ) {
     /** Sıcaklık yalnızca bugün alındıysa ve sonlu bir sayıysa geçerli; eski gün değeri hedefi etkilemez. */
     fun tempToday(today: LocalDate): Double? = tempC?.takeIf { it.isFinite() && tempDay == today.toString() }
@@ -175,6 +187,11 @@ data class Settings(
             defaultStatsDays = if (defaultStatsDays == 30) 30 else 7,
             historyDays = historyDays.coerceIn(7, 365),
             streakWindowDays = streakWindowDays.coerceIn(30, 365),
+            minReminderMl = minReminderMl.coerceIn(50, 500),
+            maxReminderMl = maxReminderMl.coerceIn(100, 2000).coerceAtLeast(minReminderMl.coerceIn(50, 500)),
+            maxHints = maxHints.coerceIn(1, 10),
+            networkTimeoutSec = networkTimeoutSec.coerceIn(3, 30),
+            backgroundWeatherTimeoutSec = backgroundWeatherTimeoutSec.coerceIn(3, 30),
         )
     }
 }
@@ -221,6 +238,11 @@ class SettingsStore(private val context: Context) {
             p[DEFAULT_STATS_DAYS] = s.defaultStatsDays
             p[HISTORY_DAYS] = s.historyDays
             p[STREAK_WINDOW_DAYS] = s.streakWindowDays
+            p[MIN_REMINDER] = s.minReminderMl
+            p[MAX_REMINDER] = s.maxReminderMl
+            p[MAX_HINTS_KEY] = s.maxHints
+            p[NETWORK_TIMEOUT] = s.networkTimeoutSec
+            p[BG_WEATHER_TIMEOUT] = s.backgroundWeatherTimeoutSec
             p.putOrRemove(GOAL, s.goalOverrideMl)
             p.putOrRemove(CITY, s.city)
             p.putOrRemove(LAT, s.lat)
@@ -309,6 +331,11 @@ class SettingsStore(private val context: Context) {
             defaultStatsDays = this[DEFAULT_STATS_DAYS]?.takeIf { it == 7 || it == 30 } ?: d.defaultStatsDays,
             historyDays = this[HISTORY_DAYS]?.takeIf { it in 7..365 } ?: d.historyDays,
             streakWindowDays = this[STREAK_WINDOW_DAYS]?.takeIf { it in 30..365 } ?: d.streakWindowDays,
+            minReminderMl = this[MIN_REMINDER]?.takeIf { it in 50..500 } ?: d.minReminderMl,
+            maxReminderMl = this[MAX_REMINDER]?.takeIf { it in 100..2000 } ?: d.maxReminderMl,
+            maxHints = this[MAX_HINTS_KEY]?.takeIf { it in 1..10 } ?: d.maxHints,
+            networkTimeoutSec = this[NETWORK_TIMEOUT]?.takeIf { it in 3..30 } ?: d.networkTimeoutSec,
+            backgroundWeatherTimeoutSec = this[BG_WEATHER_TIMEOUT]?.takeIf { it in 3..30 } ?: d.backgroundWeatherTimeoutSec,
         )
     }
 
@@ -355,5 +382,10 @@ class SettingsStore(private val context: Context) {
         val DEFAULT_STATS_DAYS = intPreferencesKey("default_stats_days")
         val HISTORY_DAYS = intPreferencesKey("history_days")
         val STREAK_WINDOW_DAYS = intPreferencesKey("streak_window_days")
+        val MIN_REMINDER = intPreferencesKey("min_reminder_ml")
+        val MAX_REMINDER = intPreferencesKey("max_reminder_ml")
+        val MAX_HINTS_KEY = intPreferencesKey("max_hints")
+        val NETWORK_TIMEOUT = intPreferencesKey("network_timeout_sec")
+        val BG_WEATHER_TIMEOUT = intPreferencesKey("bg_weather_timeout_sec")
     }
 }

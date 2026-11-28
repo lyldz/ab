@@ -113,8 +113,8 @@ fun HistoryScreen(
                 elevation = CardDefaults.cardElevation(0.dp),
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(dayText, fontWeight = FontWeight.SemiBold, color = Ab.strong)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(dayText, Modifier.weight(1f), fontWeight = FontWeight.SemiBold, color = Ab.strong)
                         Text(
                             "${fmtVolNum(d.ml, unit)} / ${fmtVol(d.goalMl, unit)}" + if (d.reached) "  \u2713" else "",
                             fontWeight = if (d.reached) FontWeight.SemiBold else FontWeight.Normal,
@@ -172,7 +172,7 @@ private fun PastDayAddDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.history_add_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.history_pick_day), style = MaterialTheme.typography.labelLarge, color = Ab.muted)
                 Row(
                     Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),

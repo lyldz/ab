@@ -61,6 +61,11 @@ class SettingsStoreTest {
             defaultStatsDays = 30,
             historyDays = 90,
             streakWindowDays = 180,
+            minReminderMl = 150,
+            maxReminderMl = 700,
+            maxHints = 5,
+            networkTimeoutSec = 15,
+            backgroundWeatherTimeoutSec = 9,
         )
         store.save(custom)
         val loaded = store.flow.first()

@@ -37,29 +37,29 @@ object WeatherApi {
         }
     }.getOrDefault(emptyList())
 
-    suspend fun fetchMaxTemp(lat: Double, lon: Double): Double? {
+    suspend fun fetchMaxTemp(lat: Double, lon: Double, timeoutMs: Int = 10_000): Double? {
         val url = "https://api.open-meteo.com/v1/forecast?latitude=${coord(lat)}&longitude=${coord(lon)}" +
             "&daily=temperature_2m_max&timezone=auto&forecast_days=1"
-        return get(url)?.let(::parseMaxTemp)
+        return get(url, timeoutMs)?.let(::parseMaxTemp)
     }
 
-    suspend fun searchCities(query: String): List<City> {
+    suspend fun searchCities(query: String, timeoutMs: Int = 10_000): List<City> {
         val q = query.trim().take(60)
         if (q.length < 2) return emptyList()
         val url = "https://geocoding-api.open-meteo.com/v1/search?name=${Uri.encode(q)}&count=5" +
             "&language=${Locale.getDefault().language}&format=json"
-        return get(url)?.let(::parseCities) ?: emptyList()
+        return get(url, timeoutMs)?.let(::parseCities) ?: emptyList()
     }
 
     private fun coord(v: Double) = String.format(Locale.ROOT, "%.1f", v)
 
-    private suspend fun get(url: String): String? = withContext(Dispatchers.IO) {
+    private suspend fun get(url: String, timeoutMs: Int): String? = withContext(Dispatchers.IO) {
         runCatching {
             val c = URL(url).openConnection() as HttpURLConnection
             try {
                 c.setRequestProperty("User-Agent", Updater.USER_AGENT) // Open-Meteo uygulama adını ister
-                c.connectTimeout = 10_000
-                c.readTimeout = 10_000
+                c.connectTimeout = timeoutMs
+                c.readTimeout = timeoutMs
                 if (c.responseCode == 200) c.inputStream.bufferedReader().use { it.readText() } else null
             } finally {
                 c.disconnect()
