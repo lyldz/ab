@@ -290,6 +290,10 @@
     <string name="back_desc">Back</string>
     <string name="backup_filename_prefix">ab-backup</string>
     <string name="added_vol">Added %1$s</string>
+    <string name="deleted_vol">Deleted %1$s</string>
+    <string name="onb_goal_vol">Daily goal: %1$s</string>
+    <string name="weather_today_vol">Today: %1$s°C (+%2$s)</string>
+    <string name="gi_temp_value_vol">%1$s°C → +%2$s</string>
     <string name="goal_label_vol">Goal: %1$s</string>
     <string name="home_weather_vol">Today %1$s°C · goal +%2$s</string>
     <string name="pace_behind_vol">%1$s behind</string>

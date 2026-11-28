@@ -52,7 +52,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -78,9 +77,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lyldz.ab.R
-import com.lyldz.ab.core.PACE_TOLERANCE_ML
 import com.lyldz.ab.core.baseGoalMl
 import com.lyldz.ab.core.nextPlan
 import com.lyldz.ab.core.paceMl
@@ -190,6 +189,7 @@ fun HomeScreen(
                     Text(
                         if (s.name.isBlank()) "" else stringResource(R.string.greet_hello, s.name),
                         color = Ab.muted, style = MaterialTheme.typography.bodyMedium, maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
                     )
                     val profileDesc = stringResource(R.string.profile_desc)
@@ -308,6 +308,7 @@ fun HomeScreen(
                                 "${stringResource(R.string.add_water)} (${fmtVol(s.cupMl, s.unit)})",
                                 style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = AbColors.Navy,
                                 maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                         Box(Modifier.width(1.dp).height(28.dp).background(AbColors.Navy.copy(alpha = 0.18f)))
@@ -315,7 +316,7 @@ fun HomeScreen(
                             Modifier.widthIn(min = 56.dp).height(54.dp)
                                 .clickable(role = Role.Button) {
                                     hintVisible = false
-                                    onHintCount(MAX_HINTS)
+                                    onHintCount(s.maxHints.coerceAtLeast(MAX_HINTS))
                                     cupDialog = true
                                 }
                                 .semantics { contentDescription = pickCupDesc }
@@ -349,18 +350,22 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(msg, style = MaterialTheme.typography.labelLarge, color = Ab.strong)
-                        Text(
-                            stringResource(R.string.undo),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.clip(pillShape)
+                        Box(
+                            Modifier.heightIn(min = 44.dp).clip(pillShape)
                                 .clickable(role = Role.Button) {
                                     undoBanner = null
                                     action()
                                 }
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                        )
+                                .padding(horizontal = 12.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                stringResource(R.string.undo),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
                 }
             }
@@ -386,7 +391,7 @@ fun HomeScreen(
             onDelete = {
                 editing = null
                 onDelete(e)
-                showUndo(context.getString(R.string.deleted, fmtMl(e.ml))) { onRestore(e) }
+                showUndo(context.getString(R.string.deleted_vol, fmtVol(e.ml, s.unit))) { onRestore(e) }
             },
         )
     }
@@ -525,7 +530,7 @@ private fun TimelineCard(entries: List<Intake>, nextAtMin: Int?, nextNeedMl: Int
                     if (nextAtMin != null) {
                         TimelineNode(
                             done = false, time = stringResource(R.string.tl_next),
-                            detail = fmtTime(nextAtMin) + if (nextNeedMl > 0) " · +${fmtMl(roundTo10(nextNeedMl))}" else "",
+                            detail = fmtTime(nextAtMin) + if (nextNeedMl > 0) " · +${fmtVol(roundTo10(nextNeedMl), unit)}" else "",
                         )
                     }
                 }
@@ -632,7 +637,7 @@ private fun CupDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.cup_dialog_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     list.forEach { ml ->
                         val selected = ml == current
@@ -711,19 +716,19 @@ private fun GoalInfoDialog(today: AbRepository.Today, temp: Double?, onDismiss: 
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.goal_info_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 InfoRow(stringResource(R.string.gi_weight, s.weightKg.toString()), fmtVol(baseGoalMl(s.weightKg, s.mlPerKg, s.minGoalMl), s.unit))
                 Text(stringResource(R.string.gi_formula_dyn, s.mlPerKg, fmtMl(s.minGoalMl)), style = MaterialTheme.typography.bodySmall, color = Ab.muted)
                 InfoRow(
                     stringResource(R.string.gi_activity, stringResource(activityLabel(s.activity))),
-                    if (s.useActivity) "+${fmtMl(s.activity.extraMl)} ml" else off,
+                    if (s.useActivity) "+${fmtVol(s.activity.extraMl, s.unit)}" else off,
                 )
                 InfoRow(
                     stringResource(R.string.gi_temp),
                     when {
                         !s.useWeather -> off
                         temp == null -> stringResource(R.string.gi_no_temp)
-                        else -> stringResource(R.string.gi_temp_value, temp.roundToInt().toString(), fmtMl(tempExtra))
+                        else -> stringResource(R.string.gi_temp_value_vol, temp.roundToInt().toString(), fmtVol(tempExtra, s.unit))
                     },
                 )
                 InfoRow(
@@ -732,7 +737,7 @@ private fun GoalInfoDialog(today: AbRepository.Today, temp: Double?, onDismiss: 
                 )
                 Box(Modifier.fillMaxWidth().height(1.dp).background(Ab.line))
                 if (s.goalOverrideMl != null) Text(stringResource(R.string.gi_manual), color = MaterialTheme.colorScheme.tertiary)
-                InfoRow(stringResource(R.string.gi_total), "${fmtMl(today.goalMl)} ml", bold = true)
+                InfoRow(stringResource(R.string.gi_total), fmtVol(today.goalMl, s.unit), bold = true)
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.ok)) } },
