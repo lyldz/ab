@@ -124,11 +124,16 @@ fun SettingsScreen(
     var timeDialog by remember { mutableStateOf<Int?>(null) } // 0 kalkış, 1 yatış
     var resetDialog by remember { mutableStateOf(false) }
     var restoredFromBackup by remember { mutableStateOf(false) }
+    var lastSentDraft by remember { mutableStateOf<Settings?>(null) }
     val ctx = LocalContext.current
     BackHandler(onBack = onBack)
 
-    // Dışarıdan sıfırlama/geri yükleme yapıldığında yerel alanları güncelle
+    // Dışarıdan sıfırlama/geri yükleme yapıldığında yerel alanları güncelle; kendi kaydetme yankımızı ezme (B-02)
     LaunchedEffect(s) {
+        if (lastSentDraft != null && s == lastSentDraft) {
+            lastSentDraft = null
+            return@LaunchedEffect
+        }
         themeMode = s.themeMode
         language = s.language
         unit = s.unit
@@ -209,6 +214,7 @@ fun SettingsScreen(
     LaunchedEffect(draft) {
         if (draft != s) {
             delay(150)
+            lastSentDraft = draft.sanitized()
             onSave(draft)
         }
     }
@@ -386,13 +392,13 @@ fun SettingsScreen(
         // 3. Görünüm ve Etkileşim
         SettingsGroup(stringResource(R.string.grp_look)) {
             SettingLabel(stringResource(R.string.set_theme), stringResource(R.string.desc_theme))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 listOf(R.string.theme_system, R.string.theme_light, R.string.theme_dark).forEachIndexed { i, label ->
                     FilterChip(selected = themeMode == i, onClick = { themeMode = i }, label = { Text(stringResource(label)) })
                 }
             }
             SettingLabel(stringResource(R.string.set_language), stringResource(R.string.desc_language))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 listOf("" to R.string.lang_system, "tr" to R.string.lang_tr, "en" to R.string.lang_en).forEach { (tag, label) ->
                     FilterChip(
                         selected = language == tag,
@@ -411,7 +417,7 @@ fun SettingsScreen(
                 }
             }
             SettingLabel(stringResource(R.string.set_unit), stringResource(R.string.desc_unit))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 listOf(UNIT_ML to R.string.unit_ml, UNIT_OZ to R.string.unit_oz).forEach { (u, label) ->
                     FilterChip(
                         selected = unit == u,
@@ -474,7 +480,7 @@ fun SettingsScreen(
             )
             HorizontalDivider(color = Ab.line)
             SettingLabel(stringResource(R.string.set_default_stats_days), stringResource(R.string.desc_default_stats_days))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 FilterChip(selected = defaultStatsDays == 7, onClick = { defaultStatsDays = 7 }, label = { Text(stringResource(R.string.stats_week)) })
                 FilterChip(selected = defaultStatsDays == 30, onClick = { defaultStatsDays = 30 }, label = { Text(stringResource(R.string.stats_month)) })
             }
@@ -495,14 +501,18 @@ fun SettingsScreen(
             SettingStepper(
                 label = stringResource(R.string.set_min_reminder),
                 description = stringResource(R.string.desc_min_reminder),
-                value = "$minReminderMl ml",
+                value = fmtVol(minReminderMl, unit),
                 onMinus = { minReminderMl = (minReminderMl - 50).coerceIn(50, 500) },
-                onPlus = { minReminderMl = (minReminderMl + 50).coerceIn(50, 500) },
+                onPlus = {
+                    val next = (minReminderMl + 50).coerceIn(50, 500)
+                    minReminderMl = next
+                    if (next > maxReminderMl) maxReminderMl = next
+                },
             )
             SettingStepper(
                 label = stringResource(R.string.set_max_reminder),
                 description = stringResource(R.string.desc_max_reminder),
-                value = "$maxReminderMl ml",
+                value = fmtVol(maxReminderMl, unit),
                 onMinus = { maxReminderMl = (maxReminderMl - 50).coerceIn(100, 2000).coerceAtLeast(minReminderMl) },
                 onPlus = { maxReminderMl = (maxReminderMl + 50).coerceIn(100, 2000) },
             )
@@ -705,7 +715,7 @@ internal fun CityDialog(onDismiss: () -> Unit, onPick: (WeatherApi.City) -> Unit
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.city_dialog_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it.take(60) },
