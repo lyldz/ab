@@ -4,7 +4,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.AlertDialog
@@ -41,6 +42,7 @@ private const val MAX_BACKUP_BYTES = 20_000_000
  * dosya seçicisi kaydeder/açar (izin gerekmez); hiçbir yere gönderilmez. Geri yükleme [onRestored] ile ana ekrana döner,
  * böylece Ayarlar'daki eski değerler yeni ayarların üstüne yazılmaz.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BackupSection(onRestored: () -> Unit) {
     val ctx = LocalContext.current
@@ -48,9 +50,11 @@ fun BackupSection(onRestored: () -> Unit) {
     val scope = rememberCoroutineScope()
     var message by remember { mutableStateOf<String?>(null) }
     var pending by remember { mutableStateOf<BackupData?>(null) }
+    var busy by remember { mutableStateOf(false) }
 
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        if (uri != null) scope.launch {
+        if (uri != null && !busy) scope.launch {
+            busy = true
             val ok = runCatching {
                 val json = Backup.toJson(app.repo.exportData(), Updater.currentVersion(ctx), System.currentTimeMillis())
                 withContext(Dispatchers.IO) {
@@ -58,16 +62,19 @@ fun BackupSection(onRestored: () -> Unit) {
                 }
             }.isSuccess
             message = ctx.getString(if (ok) R.string.backup_exported else R.string.backup_export_failed)
+            busy = false
         }
     }
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) scope.launch {
+        if (uri != null && !busy) scope.launch {
+            busy = true
             val data = withContext(Dispatchers.IO) {
                 runCatching {
                     val bytes = ctx.contentResolver.openInputStream(uri)!!.use { it.readBytes() }
                     if (bytes.size > MAX_BACKUP_BYTES) null else Backup.parse(String(bytes, Charsets.UTF_8))
                 }.getOrNull()
             }
+            busy = false
             if (data == null) message = ctx.getString(R.string.backup_invalid) else pending = data
         }
     }
@@ -76,12 +83,17 @@ fun BackupSection(onRestored: () -> Unit) {
         Text(stringResource(R.string.backup_text), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(stringResource(R.string.backup_privacy), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         message?.let { Text(it, color = MaterialTheme.colorScheme.tertiary) }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(
                 onClick = { exportLauncher.launch("${ctx.getString(R.string.backup_filename_prefix)}-${LocalDate.now()}.json") },
+                enabled = !busy,
                 modifier = Modifier.heightIn(min = 48.dp),
             ) { Text(stringResource(R.string.backup_export)) }
-            OutlinedButton(onClick = { importLauncher.launch(arrayOf("*/*")) }, modifier = Modifier.heightIn(min = 48.dp)) {
+            OutlinedButton(
+                onClick = { importLauncher.launch(arrayOf("*/*")) },
+                enabled = !busy,
+                modifier = Modifier.heightIn(min = 48.dp),
+            ) {
                 Text(stringResource(R.string.backup_import))
             }
         }
@@ -91,22 +103,27 @@ fun BackupSection(onRestored: () -> Unit) {
         val zone = ZoneId.systemDefault()
         val days = d.intakes.map { Instant.ofEpochMilli(it.atMs).atZone(zone).toLocalDate() }.toSet().size
         AlertDialog(
-            onDismissRequest = { pending = null },
+            onDismissRequest = { if (!busy) pending = null },
             title = { Text(stringResource(R.string.backup_confirm_title)) },
             text = { Text(stringResource(R.string.backup_confirm_text, d.intakes.size, days)) },
             confirmButton = {
-                TextButton(onClick = {
-                    pending = null
-                    scope.launch {
-                        val n = runCatching { app.importBackup(d) }.getOrNull()
-                        if (n == null) message = ctx.getString(R.string.backup_import_failed) else {
-                            message = ctx.getString(R.string.backup_imported, n)
-                            val recreate = AppLocale.apply(ctx, d.settings.language)
-                            onRestored()
-                            if (recreate) (ctx as? android.app.Activity)?.recreate()
+                TextButton(
+                    enabled = !busy,
+                    onClick = {
+                        pending = null
+                        busy = true
+                        scope.launch {
+                            val n = runCatching { app.importBackup(d) }.getOrNull()
+                            busy = false
+                            if (n == null) message = ctx.getString(R.string.backup_import_failed) else {
+                                message = ctx.getString(R.string.backup_imported, n)
+                                val recreate = AppLocale.apply(ctx, d.settings.language)
+                                onRestored()
+                                if (recreate) (ctx as? android.app.Activity)?.recreate()
+                            }
                         }
-                    }
-                }) { Text(stringResource(R.string.backup_restore)) }
+                    },
+                ) { Text(stringResource(R.string.backup_restore)) }
             },
             dismissButton = { TextButton(onClick = { pending = null }) { Text(stringResource(R.string.cancel)) } },
         )

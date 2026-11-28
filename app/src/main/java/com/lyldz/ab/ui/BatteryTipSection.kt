@@ -7,7 +7,8 @@ import android.os.PowerManager
 import android.provider.Settings as AndroidSettings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +40,7 @@ internal fun isBatteryRestricted(ctx: Context): Boolean = runCatching {
  * (MIUI'de otomatik başlatma orada) götürür. Pil muafiyeti isteme izni (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
  * kullanılmaz; yalnızca ayar sayfaları açılır.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BatteryTipSection() {
     val ctx = LocalContext.current
@@ -62,7 +64,7 @@ fun BatteryTipSection() {
             color = if (restricted) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
         )
         Text(stringResource(R.string.battery_text), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(
                 onClick = { open(Intent(AndroidSettings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS), appDetails) },
                 modifier = Modifier.heightIn(min = 48.dp),
